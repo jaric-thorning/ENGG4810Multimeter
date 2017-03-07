@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.net.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+
+<Pane id="mainWholePane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="401.0" prefWidth="600.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.GuiController">
+   <children>
+      <AnchorPane id="leftAnchor" layoutX="3.0" layoutY="3.0" prefHeight="394.0" prefWidth="200.0">
+         <stylesheets>
+            <URL value="@tabstyle.css" />
+            <URL value="@buttonstyle.css" />
+         </stylesheets>
+         <children>
+            <Label id="dataSource" prefHeight="31.0" prefWidth="200.0" text="Data Source">
+               <padding>
+                  <Insets left="5.0" />
+               </padding>
+            </Label>
+            <RadioButton layoutX="13.0" layoutY="70.0" mnemonicParsing="false" text="Connected" />
+            <RadioButton layoutX="14.0" layoutY="119.0" mnemonicParsing="false" text="Disconnected" />
+         </children>
+      </AnchorPane>
+      <AnchorPane id="leftAnchor" layoutX="206.0" layoutY="3.0" prefHeight="394.0" prefWidth="390.0">
+         <stylesheets>
+            <URL value="@tabstyle.css" />
+            <URL value="@buttonstyle.css" />
+         </stylesheets>
+         <children>
+            <Label id="dataSource" prefHeight="31.0" prefWidth="390.0" stylesheets="@tabstyle.css" text="Measurements">
+               <padding>
+                  <Insets left="5.0" />
+               </padding>
+            </Label>
+         </children>
+      </AnchorPane>
+   </children>
+</Pane>
