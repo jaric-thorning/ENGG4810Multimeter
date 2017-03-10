@@ -88,6 +88,15 @@
       </AnchorPane>
       <AnchorPane id="leftAnchor" layoutX="331.0" layoutY="4.0" prefHeight="493.0" prefWidth="435.0" stylesheets="@tabstyle.css" SplitPane.resizableWithParent="false">
          <children>
+            <Canvas fx:id="canvas" height="417.0" layoutX="48.0" layoutY="50.0" width="375.0" />
+            <LineChart disable="true" layoutX="-12.0" layoutY="30.0" prefHeight="458.0" prefWidth="488.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
+              <xAxis>
+                <CategoryAxis side="BOTTOM" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis side="LEFT" />
+              </yAxis>
+            </LineChart>
             <Label id="dataSource" fx:id="measurements" prefHeight="35.0" prefWidth="435.0" stylesheets="@tabstyle.css" text=" Measurements">
                <font>
                   <Font size="14.0" />
@@ -96,7 +105,6 @@
                   <Insets left="5.0" />
                </padding>
             </Label>
-            <Label layoutX="80.0" layoutY="237.0" text="TODO: PUT GRID HERE OR HAND DRAW IT" />
          </children>
       </AnchorPane>
    </children>

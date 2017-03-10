@@ -12,6 +12,8 @@ public class GuiView extends Application {
 		
 		System.out.println("Initialised GuiView");
 	}
+	
+	// PUT IN LISTENERS FOR RE-SIZING THE ELEMENTS ON THE SCREEN
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
