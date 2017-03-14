@@ -6,39 +6,24 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Set;
-
-import com.sun.javafx.cursor.CursorType;
-
-import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Polygon;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
@@ -73,26 +58,31 @@ public class GuiController implements Initializable {
 	/* Elements relating to mask-testing */
 	@FXML
 	private Button maskTestingBtn;
-	private boolean isSelected = false;
+	private boolean maskTestingSelected = false;
+
+	/* Higher Boundary */
 	@FXML
 	private Button setHighBtn;
 	@FXML
 	private CheckBox highBoundaryCheckbox;
-	private boolean highBoundarySelected = false;
+
+	/* Lower Boundary */
 	@FXML
 	private Button setLowBtn;
 	@FXML
 	private CheckBox lowBoundaryCheckbox;
-	private boolean lowBoundarySelected = false;
 
 	/* Elements relating to the line chart. */
 	@FXML
 	LineChart<Number, Number> lineChart;
 	private ArrayList<Number> coordinates = new ArrayList<>();
-	/* the x/y coordinates of any possible points on the line chart */
-	// private ArrayList<Number> upperBoundaryCoordinates = new ArrayList<>();
-	// private ArrayList<Number> lowerBoundaryCoordinates = new ArrayList<>();
+	int i = 0;
 
+	// Store last place of node
+	Number lastPlaceX = 0;
+	Number lastPlaceY = 0;
+
+	/* Holds the upper and lower boundaries */
 	XYChart.Series<Number, Number> upperSeries = new XYChart.Series<>();
 	XYChart.Series<Number, Number> lowerSeries = new XYChart.Series<>();
 
@@ -103,6 +93,8 @@ public class GuiController implements Initializable {
 	private Label xCoordValues;
 	@FXML
 	private Label coordLabel;
+
+	DecimalFormat oneDecimal = new DecimalFormat("0.0");
 
 	public GuiController() {
 		System.out.println("Initialised GuiController");
@@ -366,72 +358,128 @@ public class GuiController implements Initializable {
 	private ArrayList<Number> getMouseToChartCoords(MouseEvent event) {
 		ArrayList<Number> foundCoordinates = new ArrayList<>();
 
-		DecimalFormat oneDecimal = new DecimalFormat("0.0");
+		foundCoordinates.add(getMouseChartCoords(event, true)); // add x
+		foundCoordinates.add(getMouseChartCoords(event, false)); // add y
 
-		double x = lineChart.getXAxis().sceneToLocal(event.getSceneX(), event.getSceneY()).getX();
-		double y = lineChart.getYAxis().sceneToLocal(event.getSceneX(), event.getSceneY()).getY();
-
-		Number coordX = lineChart.getXAxis().getValueForDisplay(x);
-		Number coordY = lineChart.getYAxis().getValueForDisplay(y);
-
-		foundCoordinates.add(coordX);
-		foundCoordinates.add(coordY);
-
-		System.out.println("X3: " + oneDecimal.format(foundCoordinates.get(0)) + " " + "Y3: "
-				+ oneDecimal.format(foundCoordinates.get(1)));
+		// System.out.println("X3: " + oneDecimal.format(foundCoordinates.get(0)) + " " + "Y3: "
+		// + oneDecimal.format(foundCoordinates.get(1)));
 		return foundCoordinates;
 	}
 
+	private EventHandler<MouseEvent> deleteData(XYChart.Data<Number, Number> dataPoints,
+			XYChart.Series<Number, Number> series) {
+		EventHandler<MouseEvent> removeSelectedDataPoints = new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				System.out.println("DELETE NODE FROM: " + series);
+				series.getData().remove(dataPoints);
+			}
+		};
+		return removeSelectedDataPoints;
+	}
+
+	/**
+	 * 
+	 * @param dataPoints
+	 * @return
+	 */
+	private EventHandler<MouseEvent> moveData(XYChart.Data<Number, Number> dataPoints) {
+		EventHandler<MouseEvent> moveDataPoints = new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				dataPoints.setXValue(getMouseChartCoords(event, true));
+				dataPoints.setYValue(getMouseChartCoords(event, false));
+
+				// System.out.println(oneDecimal.format(dataPoints.getXValue()) + " || "
+				// + i + " :: " + oneDecimal.format(dataPoints.getYValue()));
+			}
+		};
+		return moveDataPoints;
+	}
+
+	/**
+	 * 
+	 * @param series
+	 * @param coordinates
+	 * @param seriesName
+	 */
+	private void setUpBoundaries(XYChart.Series<Number, Number> series,
+			ArrayList<Number> coordinates, String seriesName) {
+
+		// Add data to specified series.
+		series.setName(seriesName);
+		series.getData()
+				.add(new XYChart.Data<Number, Number>(coordinates.get(0), coordinates.get(1)));
+
+		// Modified the for loop for IDing the line chart data points from:
+		// https://gist.github.com/TheItachiUchiha/c0ae68ef8e6273a7ac10
+		System.out.println("SIZE: " + series.getData().size());
+
+		// TODO: MAKE SURE i IS OK.
+		for (i = 0; i < series.getData().size(); i++) {
+			Data<Number, Number> dataPoints = series.getData().get(i);
+
+			// Display x and y values.
+			dataPoints.getNode().setOnMouseEntered(new EventHandler<MouseEvent>() {
+				@Override
+				public void handle(MouseEvent event) {
+					System.out.println(oneDecimal.format(dataPoints.getXValue()) + " || " + i
+							+ " :: " + oneDecimal.format(dataPoints.getYValue()));
+				}
+			});
+
+			// Deletes the point that was clicked
+			// TODO: CHANGE THE MOUSE EVENT TO SOMETHING LESS COMMON.
+			// FIXME: something wrong with deleting dataPoints.
+			dataPoints.getNode().addEventFilter(MouseEvent.MOUSE_CLICKED,
+					deleteData(dataPoints, series));
+
+			// Moves the point that was hovered over
+			dataPoints.getNode().addEventHandler(MouseEvent.MOUSE_MOVED, moveData(dataPoints));
+		}
+	}
+
+	//TODO: NOT WORKING
+//	private void removeLowBoundaries(XYChart.Series<Number, Number> series) {
+//		for (XYChart.Data<Number, Number> data : series.getData()) {
+//			data.getNode().removeEventHandler(MouseEvent.MOUSE_MOVED, moveData(data));
+//			data.getNode().removeEventHandler(MouseEvent.MOUSE_CLICKED,
+//					deleteData(data, lowerSeries));
+//		}
+//	}
+
 	////////////
+	// TODO: NEED A SELECTION OF WHETHER OR NOT IT'S UPPER/LOWER BOUNDARY
 	/**
 	 * Gets the values of the mouse within the line chart graph. Modified off:
 	 * http://stackoverflow.com/questions/28562195/how-to-get-mouse-position-in-chart-space. To be
 	 */
-	private void getMouseCoordsInChart(Node chartBackground) {
+	private void setBoundaries(Node chartBackground) {
 
-		// TODO: MAKE SURE THIS CAN'T HAPPEN IF MASK_TESTING ISN"T CLICKED ON
 		chartBackground.setOnMouseClicked(new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
-				// TODO: NEED A SELECTION OF WHETHER OR NOT IT'S UPPER/LOWER BOUNDARY
-				// Remove for now the animation/autoscaling.
-				lineChart.setAnimated(false);
-				lineChart.getXAxis().setAutoRanging(false);
-				lineChart.getYAxis().setAutoRanging(false);
+				if (maskTestingSelected) {
 
-				// Gets the coordinates
-				coordinates = getMouseToChartCoords(event);
+					// Remove for now the animation/autoscaling.
+					lineChart.setAnimated(false);
+					lineChart.getXAxis().setAutoRanging(false);
+					lineChart.getYAxis().setAutoRanging(false);
 
-				// Do stuff for high boundary
-				if (highBoundaryCheckbox.isSelected()) {
-					upperSeries.setName("Upper Boundary");
-					upperSeries.getData().add(new XYChart.Data<Number, Number>(coordinates.get(0),
-							coordinates.get(1)));
+					// Gets the coordinates
+					coordinates = getMouseToChartCoords(event);
 
-				} else if (lowBoundaryCheckbox.isSelected()) {
-					lowerSeries.setName("Lower Boundary");
-					lowerSeries.getData().add(new XYChart.Data<Number, Number>(coordinates.get(0),
-							coordinates.get(1)));
-				} else {
-					System.out.println("NAH NAH NAH NAH NAH");
-				}
-				
-				System.out.println("SIZE: " + upperSeries.getData().size());
-				for (Data<Number, Number> dataPoints : upperSeries.getData()) {
-					System.out.println("JEY");
-					dataPoints.getNode().setOnMouseEntered(new EventHandler<MouseEvent>() {
-
-						@Override
-						public void handle(MouseEvent event) {
-							System.out.println(dataPoints.getXValue() + " :: " +
-									 dataPoints.getYValue());
-//							 Tooltip t = new Tooltip(dataPoints.getXValue() + " :: " +
-//							 dataPoints.getYValue());
-//							 Tooltip.install(dataPoints.getNode(), t);
-						}
-						
-					});
+					if (highBoundaryCheckbox.isSelected()) {
+						// removeLowBoundaries(lowerSeries);
+						// Set up high boundary
+						setUpBoundaries(upperSeries, coordinates, "Upper Boundary");
+					} else {
+						// Set up low boundary
+						setUpBoundaries(lowerSeries, coordinates, "Lower Boundary");
+					}
 
 				}
 			}
@@ -444,8 +492,8 @@ public class GuiController implements Initializable {
 	@FXML
 	private void editMask() {
 		// Selected
-		if (!isSelected) {
-			isSelected = true;
+		if (!maskTestingSelected) {
+			maskTestingSelected = true;
 			xCoordValues.setDisable(false);
 			yCoordValues.setDisable(false);
 			coordLabel.setVisible(true);
@@ -454,7 +502,7 @@ public class GuiController implements Initializable {
 			System.out.println("MASK TESTING SELECTED");
 		} else {
 			// Not Selected
-			isSelected = false;
+			maskTestingSelected = false;
 			xCoordValues.setText("X:");
 			yCoordValues.setText("Y:");
 			xCoordValues.setDisable(true);
@@ -481,6 +529,12 @@ public class GuiController implements Initializable {
 	private void setHighBoundary() {
 		System.out.println("SETTING HIGH BOUNDARY");
 		System.out.println(upperSeries.getData().size());
+
+		// for (Data<Number, Number> dataPoints : upperSeries.getData()) {
+		//
+		//// System.out.println(oneDecimal.format(dataPoints.getXValue()) + "::"
+		//// + oneDecimal.format(dataPoints.getYValue()));
+		// }
 	}
 
 	// TODO: MAKE SURE ONLY ONE OR THE OTHER CAN BE SELECTED.
@@ -495,10 +549,26 @@ public class GuiController implements Initializable {
 	@FXML
 	private void setLowBoundary() {
 		System.out.println("SETTING LOW BOUNDARY");
-		// XYChart.Series<Number, Number> series = new XYChart.Series<>();
-		// series.getData()
-		// .add(new XYChart.Data<Number, Number>(coordinates.get(0), coordinates.get(1)));
-		// lineChart.getData().add(series);
+	}
+
+	private Number getMouseChartCoords(MouseEvent event, boolean isX) {
+		Number returnedCoord = 0;
+
+		// return x coord
+		if (isX) {
+			double x = lineChart.getXAxis().sceneToLocal(event.getSceneX(), event.getSceneY())
+					.getX();
+
+			returnedCoord = lineChart.getXAxis().getValueForDisplay(x);
+
+		} else {
+			// return y coord
+			double y = lineChart.getYAxis().sceneToLocal(event.getSceneX(), event.getSceneY())
+					.getY();
+
+			returnedCoord = lineChart.getYAxis().getValueForDisplay(y);
+		}
+		return returnedCoord;
 	}
 
 	@Override
@@ -510,13 +580,12 @@ public class GuiController implements Initializable {
 		lineChart.getData().add(upperSeries);
 		lineChart.getData().add(lowerSeries);
 
-
 		// the lookup function found from https://gist.github.com/avitry/5598699
 		Node chartBackground = lineChart.lookup(".chart-plot-background");
 		chartBackground.setCursor(Cursor.CROSSHAIR);
 
-		// Get the coords from clicking
-		getMouseCoordsInChart(chartBackground);
+		// set the upper and lower boundary coordinates
+		setBoundaries(chartBackground);
 
 		// Display mouse coordinates. FEATURE OF MASK-TESTING ONLY
 		chartBackground.setOnMouseMoved(new EventHandler<MouseEvent>() {
@@ -524,27 +593,10 @@ public class GuiController implements Initializable {
 			@Override
 			public void handle(MouseEvent event) {
 				// Get coordinates
-				// TODO: MODULARIZE IT
-				double x = lineChart.getXAxis().sceneToLocal(event.getSceneX(), event.getSceneY())
-						.getX();
-				double y = lineChart.getYAxis().sceneToLocal(event.getSceneX(), event.getSceneY())
-						.getY();
-
-				Number coordX = lineChart.getXAxis().getValueForDisplay(x);
-				Number coordY = lineChart.getYAxis().getValueForDisplay(y);
-
-				DecimalFormat oneDecimal = new DecimalFormat("0.0");
-				xCoordValues.setText("X: " + oneDecimal.format(coordX));
-				yCoordValues.setText("Y: " + oneDecimal.format(coordY));
+				xCoordValues.setText("X: " + oneDecimal.format(getMouseChartCoords(event, true)));
+				yCoordValues.setText("Y: " + oneDecimal.format(getMouseChartCoords(event, false)));
 			}
 		});
-		
-	
-
-////		// Tooltip on linechart
-////		// https://gist.github.com/TheItachiUchiha/c0ae68ef8e6273a7ac10
-
-
 	}
 
 }

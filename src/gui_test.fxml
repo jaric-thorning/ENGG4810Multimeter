@@ -90,20 +90,20 @@
                         <Button fx:id="maskTestingBtn" minWidth="116.0" mnemonicParsing="false" onAction="#editMask" text="Mask-Testing" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
                         <Group GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3">
                            <children>
-                              <Label disable="true" layoutY="20.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="X:" visible="false" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" fx:id="xCoordValues">
-                                 <GridPane.margin>
-                                    <Insets bottom="25.0" />
-                                 </GridPane.margin>
-                              </Label>
                               <Label fx:id="coordLabel" text="Coordinates:" visible="false" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                                  <GridPane.margin>
                                     <Insets bottom="50.0" left="35.0" />
                                  </GridPane.margin>
                               </Label>
                               <Label fx:id="yCoordValues" disable="true" layoutY="40.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="Y:" visible="false" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                              <Label disable="true" layoutY="20.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="X:" visible="false" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" fx:id="xCoordValues">
+                                 <GridPane.margin>
+                                    <Insets bottom="25.0" />
+                                 </GridPane.margin>
+                              </Label>
                            </children>
                         </Group>
-                        <CheckBox fx:id="highBoundaryCheckbox" mnemonicParsing="false" onAction="#setToHighBoundary" text="High Boundary" textFill="WHITE" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
+                        <CheckBox fx:id="highBoundaryCheckbox" mnemonicParsing="false" onAction="#setToHighBoundary" selected="true" text="High Boundary" textFill="WHITE" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
                         <Button fx:id="setHighBtn" mnemonicParsing="false" onAction="#setHighBoundary" text="Set High Boundary" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                            <GridPane.margin>
                               <Insets />
