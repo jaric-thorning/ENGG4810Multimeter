@@ -6,13 +6,16 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
+
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Bounds;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.control.Alert.AlertType;
@@ -21,9 +24,11 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.shape.Polygon;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
@@ -33,6 +38,8 @@ public class GuiController implements Initializable {
 	Group root;
 	@FXML
 	Pane appPane;
+	@FXML
+	Pane maskPane;
 	@FXML
 	AnchorPane rightAnchor = new AnchorPane();
 	@FXML
@@ -72,11 +79,25 @@ public class GuiController implements Initializable {
 	@FXML
 	private CheckBox lowBoundaryCheckbox;
 
+	// For some reason the bounds aren't showing up here...
+	@FXML
+	private NumberAxis yAxis = new NumberAxis();
+	@FXML
+	private NumberAxis xAxis = new NumberAxis();
+
 	/* Elements relating to the line chart. */
 	@FXML
 	LineChart<Number, Number> lineChart;
+
+	Node chartBackground;
+
 	private ArrayList<Number> coordinates = new ArrayList<>();
-	int i = 0;
+
+	@FXML
+	Polygon upperBoundary;
+
+	@FXML
+	Polygon lowerBoundary;
 
 	// Store last place of node
 	Number lastPlaceX = 0;
@@ -86,13 +107,19 @@ public class GuiController implements Initializable {
 	XYChart.Series<Number, Number> upperSeries = new XYChart.Series<>();
 	XYChart.Series<Number, Number> lowerSeries = new XYChart.Series<>();
 
-	/* Holds x and y values of mouse position. */
+	/* Holds x and y coordinates of mouse position. */
 	@FXML
 	private Label yCoordValues;
 	@FXML
 	private Label xCoordValues;
 	@FXML
 	private Label coordLabel;
+
+	/* Holds x and y coordinates of every data point (boundary/loaded data) */
+	@FXML
+	private Label xDataCoord;
+	@FXML
+	private Label yDataCoord;
 
 	DecimalFormat oneDecimal = new DecimalFormat("0.0");
 
@@ -366,37 +393,140 @@ public class GuiController implements Initializable {
 		return foundCoordinates;
 	}
 
-	private EventHandler<MouseEvent> deleteData(XYChart.Data<Number, Number> dataPoints,
+	/**
+	 * An event handler which deals with deleting boundary data points when the user right clicks.
+	 * 
+	 * @param dataPoint
+	 *            a single data point from the series.
+	 * @param series
+	 *            the specified upper or lower boundary series which holds all of the boundary data
+	 *            points
+	 * @return an event handler to deal with deleting elements from the series.
+	 */
+	// FIXME: THE DELTE NODE FROM APPEARS MORE THAN ONCE...
+	// private EventHandler<MouseEvent> deleteData(XYChart.Data<Number, Number> dataPoint,
+	// XYChart.Series<Number, Number> series) {
+	// EventHandler<MouseEvent> removeSelectedDataPoints = new EventHandler<MouseEvent>() {
+	//
+	// @Override
+	// public void handle(MouseEvent event) {
+	// if (event.getButton() == MouseButton.SECONDARY) {
+	// System.out.println("OLD SIZE: " + series.getData().size());
+	// series.getData().remove(dataPoint);
+	// System.out.println("DELETE NODE FROM: " + series.getName() + " NEW SIZE: "
+	// + series.getData().size());
+	// }
+	// }
+	// };
+	// return removeSelectedDataPoints;
+	// }
+	private void deleteData(XYChart.Data<Number, Number> dataPoint,
 			XYChart.Series<Number, Number> series) {
-		EventHandler<MouseEvent> removeSelectedDataPoints = new EventHandler<MouseEvent>() {
+		dataPoint.getNode().setOnMouseClicked(new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
-				System.out.println("DELETE NODE FROM: " + series);
-				series.getData().remove(dataPoints);
+				if (event.getButton() == MouseButton.SECONDARY) {
+					System.out.println("OLD SIZE: " + series.getData().size());
+					series.getData().remove(dataPoint);
+					System.out.println("DELETE NODE FROM: " + series.getName() + " NEW SIZE: "
+							+ series.getData().size());
+				}
 			}
-		};
-		return removeSelectedDataPoints;
+		});
 	}
 
 	/**
 	 * 
-	 * @param dataPoints
+	 * @param dataPoint
 	 * @return
 	 */
-	private EventHandler<MouseEvent> moveData(XYChart.Data<Number, Number> dataPoints) {
-		EventHandler<MouseEvent> moveDataPoints = new EventHandler<MouseEvent>() {
+	private void moveData(XYChart.Data<Number, Number> dataPoint) {
+		dataPoint.getNode().setOnMouseMoved(new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
-				dataPoints.setXValue(getMouseChartCoords(event, true));
-				dataPoints.setYValue(getMouseChartCoords(event, false));
+				if (event.isShiftDown()) {
 
-				// System.out.println(oneDecimal.format(dataPoints.getXValue()) + " || "
-				// + i + " :: " + oneDecimal.format(dataPoints.getYValue()));
+					// Change cursor
+					dataPoint.getNode().setCursor(Cursor.HAND);
+
+					// Change position to match the mouse coords.
+					dataPoint.setXValue(getMouseChartCoords(event, true));
+					dataPoint.setYValue(getMouseChartCoords(event, false));
+				}
+			}
+		});
+	}
+	// private EventHandler<MouseEvent> moveData(XYChart.Data<Number, Number> dataPoint) {
+	// EventHandler<MouseEvent> moveDataPoints = new EventHandler<MouseEvent>() {
+	//
+	// @Override
+	// public void handle(MouseEvent event) {
+	// if (event.isShiftDown()) {
+	//
+	// // Change cursor
+	// dataPoint.getNode().setCursor(Cursor.HAND);
+	//
+	// // Change position to match the mouse coords.
+	// dataPoint.setXValue(getMouseChartCoords(event, true));
+	// dataPoint.setYValue(getMouseChartCoords(event, false));
+	//
+	// // System.out.println(oneDecimal.format(dataPoints.getXValue()) + " || "
+	// // + i + " :: " + oneDecimal.format(dataPoints.getYValue()));
+	// }
+	// }
+	// };
+	// return moveDataPoints;
+	// }
+
+	private EventHandler<MouseEvent> changeCursor(XYChart.Data<Number, Number> dataPoint) {
+		EventHandler<MouseEvent> changeCursorType = new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				// Change cursor
+				dataPoint.getNode().setCursor(Cursor.HAND);
 			}
 		};
-		return moveDataPoints;
+
+		return changeCursorType;
+	}
+
+	/**
+	 * displays the x,y values of the node when it's passed over
+	 * 
+	 * @param dataPoint
+	 * @param index
+	 * @return
+	 */
+	private EventHandler<MouseEvent> getDataXYValues(XYChart.Data<Number, Number> dataPoint,
+			int index) {
+		EventHandler<MouseEvent> getValues = new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				// CHANGE TEXT HERE
+				// IF LOADED FROM SD CARD -> USE ISO 8601 DURATION FORMAT
+				// ELSE IF LOADED FROM REAL DATA -> USE ISO 8601 FORMAT
+				xDataCoord.setText(
+						"X: Sample: " + index + " :: " + oneDecimal.format(dataPoint.getXValue()));
+				yDataCoord.setText("Y: " + oneDecimal.format(dataPoint.getYValue()));
+			}
+		};
+		return getValues;
+	}
+
+	private EventHandler<MouseEvent> resetDataXYValues() {
+		EventHandler<MouseEvent> getValues = new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				xDataCoord.setText("X: ");
+				yDataCoord.setText("Y: ");
+			}
+		};
+		return getValues;
 	}
 
 	/**
@@ -406,51 +536,38 @@ public class GuiController implements Initializable {
 	 * @param seriesName
 	 */
 	private void setUpBoundaries(XYChart.Series<Number, Number> series,
-			ArrayList<Number> coordinates, String seriesName) {
+			ArrayList<Number> coordinates) {
 
 		// Add data to specified series.
-		series.setName(seriesName);
 		series.getData()
 				.add(new XYChart.Data<Number, Number>(coordinates.get(0), coordinates.get(1)));
 
 		// Modified the for loop for IDing the line chart data points from:
 		// https://gist.github.com/TheItachiUchiha/c0ae68ef8e6273a7ac10
-		System.out.println("SIZE: " + series.getData().size());
+		for (int i = 0; i < series.getData().size(); i++) {
+			Data<Number, Number> dataPoint = series.getData().get(i);
 
-		// TODO: MAKE SURE i IS OK.
-		for (i = 0; i < series.getData().size(); i++) {
-			Data<Number, Number> dataPoints = series.getData().get(i);
+			// Display x and y values of data points of each boundary point, and remove them when
+			// leaving the node
+			// FIXME: PUT THIS ALSO ELSEWHERE THIS IS FOR THE ACTUAL DATA POINTS I THINK
+			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
+					getDataXYValues(dataPoint, i));
+			dataPoint.getNode().addEventFilter(MouseEvent.MOUSE_EXITED, resetDataXYValues());
 
-			// Display x and y values.
-			dataPoints.getNode().setOnMouseEntered(new EventHandler<MouseEvent>() {
-				@Override
-				public void handle(MouseEvent event) {
-					System.out.println(oneDecimal.format(dataPoints.getXValue()) + " || " + i
-							+ " :: " + oneDecimal.format(dataPoints.getYValue()));
-				}
-			});
+			// Changes mouse cursor type
+			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED, changeCursor(dataPoint));
 
 			// Deletes the point that was clicked
-			// TODO: CHANGE THE MOUSE EVENT TO SOMETHING LESS COMMON.
-			// FIXME: something wrong with deleting dataPoints.
-			dataPoints.getNode().addEventFilter(MouseEvent.MOUSE_CLICKED,
-					deleteData(dataPoints, series));
+			// dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_CLICKED,
+			// deleteData(dataPoint,series));
+			deleteData(dataPoint, series);
 
-			// Moves the point that was hovered over
-			dataPoints.getNode().addEventHandler(MouseEvent.MOUSE_MOVED, moveData(dataPoints));
+			// Moves the point that was hovered over + changes mouse cursor type
+			// dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_MOVED, moveData(dataPoint));
+			moveData(dataPoint);
 		}
 	}
 
-	//TODO: NOT WORKING
-//	private void removeLowBoundaries(XYChart.Series<Number, Number> series) {
-//		for (XYChart.Data<Number, Number> data : series.getData()) {
-//			data.getNode().removeEventHandler(MouseEvent.MOUSE_MOVED, moveData(data));
-//			data.getNode().removeEventHandler(MouseEvent.MOUSE_CLICKED,
-//					deleteData(data, lowerSeries));
-//		}
-//	}
-
-	////////////
 	// TODO: NEED A SELECTION OF WHETHER OR NOT IT'S UPPER/LOWER BOUNDARY
 	/**
 	 * Gets the values of the mouse within the line chart graph. Modified off:
@@ -462,28 +579,35 @@ public class GuiController implements Initializable {
 
 			@Override
 			public void handle(MouseEvent event) {
-				if (maskTestingSelected) {
+				// left mouse button and mask testing is selected
+				if (event.getButton() == MouseButton.PRIMARY && maskTestingSelected) {
 
 					// Remove for now the animation/autoscaling.
 					lineChart.setAnimated(false);
 					lineChart.getXAxis().setAutoRanging(false);
 					lineChart.getYAxis().setAutoRanging(false);
 
+					yAxis.setAnimated(false);
+					yAxis.setForceZeroInRange(false);
+
 					// Gets the coordinates
 					coordinates = getMouseToChartCoords(event);
 
 					if (highBoundaryCheckbox.isSelected()) {
 						// removeLowBoundaries(lowerSeries);
+
 						// Set up high boundary
-						setUpBoundaries(upperSeries, coordinates, "Upper Boundary");
+						setUpBoundaries(upperSeries, coordinates);
+
 					} else {
 						// Set up low boundary
-						setUpBoundaries(lowerSeries, coordinates, "Lower Boundary");
+						setUpBoundaries(lowerSeries, coordinates);
 					}
 
 				}
 			}
 		});
+
 	}
 
 	/**
@@ -516,7 +640,7 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * 
+	 * Sets the upperboundary to be selected
 	 */
 	@FXML
 	private void setToHighBoundary() {
@@ -525,20 +649,28 @@ public class GuiController implements Initializable {
 		System.out.println("HIGH");
 	}
 
-	@FXML
-	private void setHighBoundary() {
-		System.out.println("SETTING HIGH BOUNDARY");
-		System.out.println(upperSeries.getData().size());
+	//FIXME: FOR SOME REASON IT DOESN"T WORK WITH REMOVEEVENTHANDLER...
+	/**
+	 * Private helper function to remove listeners
+	 */
+	private void removeAllListeners(XYChart.Series<Number, Number> series) {
+		chartBackground.setOnMouseClicked(null);
 
-		// for (Data<Number, Number> dataPoints : upperSeries.getData()) {
-		//
-		//// System.out.println(oneDecimal.format(dataPoints.getXValue()) + "::"
-		//// + oneDecimal.format(dataPoints.getYValue()));
-		// }
+		for (XYChart.Data<Number, Number> dataPoint : series.getData()) {
+			dataPoint.getNode().setOnMouseClicked(null); // remove deleting option
+			dataPoint.getNode().setOnMouseMoved(null); // remove moving option
+		}
 	}
 
-	// TODO: MAKE SURE ONLY ONE OR THE OTHER CAN BE SELECTED.
-	// FIXME: CAN ONLY HAVE ONE OR THE OTHER IN TERMS OF MASK UPPER OR LOWER NOT BOTH
+	// FIXME: remove all listeners to the series.
+	@FXML
+	private void setHighBoundary() {
+		// Remove all data listeners
+		removeAllListeners(upperSeries);
+		addMask(upperSeries, upperBoundary, true);
+	}
+
+	// FIXME: MAKE EITHER A RADIO BTN
 	@FXML
 	private void setToLowBoundary() {
 		highBoundaryCheckbox.setSelected(false);
@@ -546,9 +678,89 @@ public class GuiController implements Initializable {
 		System.out.println("LOW");
 	}
 
+	// FIXME: make sure that the original points of the polygon match the expanded size
+	/**
+	 * Modifies the specified polygon's points (also adding points) to create a mask over the points
+	 * specified from the specified series.
+	 * 
+	 * @param series
+	 * @param mask
+	 * @param upperMask
+	 */
+	private void addMask(XYChart.Series<Number, Number> series, Polygon mask, boolean upperMask) {
+		System.out.println("SETTING UP MASK FOR: " + series.getName());
+		System.out.println("SERIES SIZE: " + series.getData().size());
+
+		int k = 0;
+		double maxChartBackgroundHeight = chartBackground.getLayoutBounds().getHeight();
+
+		for (int j = 0; j < series.getData().size(); j++) {
+			k = 2;
+			// Each saved data point of the series
+			Data<Number, Number> dataPoint = series.getData().get(j);
+
+			// X and Y of each data pints
+			double x = lineChart.getXAxis().getDisplayPosition(dataPoint.getXValue());
+			double y = 0D;
+
+			if (upperMask) {
+				y = lineChart.getYAxis().getDisplayPosition(dataPoint.getYValue());
+			} else {
+				// reversed y for the lower boundary
+				y = -1 * (maxChartBackgroundHeight
+						+ (-lineChart.getYAxis().getDisplayPosition(dataPoint.getYValue())));
+			}
+
+			// double x1 = lineChart.getXAxis().getDisplayPosition(xAxis.getLowerBound());
+			// double y1 = lineChart.getYAxis().getDisplayPosition(yAxis.getLowerBound());
+
+			System.out.println("YO:" + x + " :: y2: " + y);
+
+			if (j == 0) {
+				// FIXME: maybe better way of doing this
+				// upperBoundary.getPoints().set(1, y);
+				mask.getPoints().add(2, x);
+				mask.getPoints().add(3, y);
+
+				// TODO: FIX ONE POINT SETTING
+				if (series.getData().size() == 1) {
+					mask.getPoints().set(5, y);
+				}
+			} else {
+				// Move around the points as needed
+				while (x > mask.getPoints().get(k)) {
+					k += 2; // keep looking at x values.
+				}
+
+				mask.getPoints().add(k, x); // add x after the x,y pair
+				mask.getPoints().add(k + 1, y); // add y after x,y pair. //ERROR
+												// HERE...
+
+				// Use closest boundary if start and end not supplied.
+				if (j == series.getData().size() - 1) {
+					// Set it to the last mask point and first mask point at y-axis level.
+					Double lastMaskValue = mask.getPoints().get(1 + (2 * (j + 1)));
+					Double firstMaskValue = mask.getPoints().get(3);
+
+					mask.getPoints().set(1, firstMaskValue);
+					mask.getPoints().set(3 + (2 * (j + 1)), lastMaskValue);
+				}
+			}
+		}
+
+		for (Double d : mask.getPoints()) {
+			System.out.println("Point: " + d);
+		}
+	}
+
+	///////////// b
+	/**
+	 * FIXME: set up initial position of polygon boundaries to match the maximised/expanded GUI.
+	 */
 	@FXML
 	private void setLowBoundary() {
-		System.out.println("SETTING LOW BOUNDARY");
+		removeAllListeners(lowerSeries);
+		addMask(lowerSeries, lowerBoundary, false);
 	}
 
 	private Number getMouseChartCoords(MouseEvent event, boolean isX) {
@@ -576,12 +788,33 @@ public class GuiController implements Initializable {
 		// TODO: DO A PING TEST TO SEE IF THERE'S A CONNECTION.
 		testConnection(connRBtn);
 
+		upperSeries.setName("Upper Boundary");
+		lowerSeries.setName("LowerBoundary");
 		// Add to lineChart
 		lineChart.getData().add(upperSeries);
 		lineChart.getData().add(lowerSeries);
 
+		yAxis.setLowerBound(-10D); // MAKE SURE MATCHES LINECHART.GETYAXIS
+		yAxis.setUpperBound(50D);
+
+		xAxis.setLowerBound(0D);
+		xAxis.setUpperBound(50D);
+
+		System.out.println(yAxis.getLowerBound());
+		System.out.println(yAxis.getUpperBound());
+		System.out.println(xAxis.getLowerBound());
+		System.out.println(xAxis.getUpperBound());
+
+		// lowerBoundary.getPoints().set(0, lineChart.getXAxis().getDisplayPosition(0));//0
+		// lowerBoundary.getPoints().set(1, lineChart.getYAxis().getDisplayPosition(-10));//-10
+
 		// the lookup function found from https://gist.github.com/avitry/5598699
-		Node chartBackground = lineChart.lookup(".chart-plot-background");
+		// in order to get the chart background.
+		chartBackground = lineChart.lookup(".chart-plot-background");
+		Bounds chartAreaBounds = chartBackground.localToScene(chartBackground.getBoundsInLocal());
+		//
+		// System.out.println("X: " + chartAreaBounds.getMaxX());
+		// System.out.println("Y: " + chartAreaBounds.getMaxY());
 		chartBackground.setCursor(Cursor.CROSSHAIR);
 
 		// set the upper and lower boundary coordinates
@@ -598,5 +831,6 @@ public class GuiController implements Initializable {
 			}
 		});
 	}
-
 }
+
+// FIXME: lines cannot be drawn over...

@@ -3,11 +3,17 @@ package main;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
+import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.Alert;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Alert.AlertType;
@@ -70,7 +76,6 @@ public class GuiView extends Application {
 		primaryStage.show();
 	}
 
-
 	/**
 	 * A private helper function which adds a listener to the width property of the scene, and to
 	 * some of the contained elements.
@@ -88,12 +93,23 @@ public class GuiView extends Application {
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneWidth,
 					Number newSceneWidth) {
 				double chartWidth = ((double) newSceneWidth) - 335D;
+				// double canvasWidth = ((double) newSceneWidth) - 417D;
 
 				controller.appPane.setMinWidth((double) newSceneWidth);
 				controller.lineChart.setMinWidth(chartWidth); // TODO: SEE IMPACT LATER OF USING RA
 																// INSTEAD OF LC
 				// controller.rightAnchor.setMinWidth(chartWidth);
 				controller.measurementsLabel.setMinWidth(chartWidth);
+
+				// DOESN"T RESIZE WITH MAXIMISING OF WINDOW..
+//				controller.lowerBoundary.getPoints().set(2,
+//						controller.chartBackground.getLayoutBounds().getWidth() - 1);
+//				controller.lowerBoundary.getPoints().set(4,
+//						controller.chartBackground.getLayoutBounds().getWidth() - 1);
+				
+				System.out.println(controller.lineChart.getWidth() + " :: "
+						+ (controller.chartBackground.getLayoutBounds().getWidth()));
+				// controller.maskCanvas.setWidth(canvasWidth);
 				// controller.leftAnchor.setMinWidth((double) newSceneWidth);
 			}
 
@@ -119,6 +135,7 @@ public class GuiView extends Application {
 				controller.appPane.setMinHeight((double) newSceneHeight);
 				controller.leftAnchor.setMinHeight((double) newSceneHeight - 10D);
 				controller.rightAnchor.setMinHeight((double) newSceneHeight - 10D);
+				// controller.maskCanvas.setHeight((double) newSceneHeight);
 			}
 
 		});
