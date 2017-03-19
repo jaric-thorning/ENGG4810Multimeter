@@ -330,6 +330,7 @@ public class GuiController implements Initializable {
 
 			if (selectedFile != null) {
 				// WRITE OUT DATA HERE
+				// FROM GUIMODEL
 				System.out.println("Saving Data");
 			}
 		}

@@ -80,7 +80,7 @@
                                     <Insets left="35.0" top="20.0" />
                                  </GridPane.margin>
                               </Label>
-                              <Button layoutY="17.0" minWidth="106.0" mnemonicParsing="false" text="Input Data" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.valignment="BOTTOM">
+                              <Button fx:id="loadSavedData" layoutY="17.0" minWidth="106.0" mnemonicParsing="false" text="Input Data" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.valignment="BOTTOM">
                                  <GridPane.margin>
                                     <Insets left="35.0" top="17.0" />
                                  </GridPane.margin>
