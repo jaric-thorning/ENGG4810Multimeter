@@ -10,8 +10,9 @@ import java.util.ArrayList;
 import javafx.scene.chart.XYChart;
 
 // the format for reading in files <x-value><y-value><y-value units>
+//TODO: MAKE IT SO THAT ONLY DATA OF CURRENT UNIT IS SAVED, SO WHEN THE UNIT CHANGES< THE SAVED DATA CHANGES TOO.
 public class GuiModel {
-	private ArrayList<Integer> readings = new ArrayList<>();
+	private ArrayList<Integer> multimeterReadings = new ArrayList<>();
 
 	private static final String DELIMITER = ",";
 	private static final String NEW_LINE_SEPARATOR = "\n";
@@ -105,13 +106,14 @@ public class GuiModel {
 	 *             occurs when there is a problem with the buffered writer.
 	 */
 	public void saveColumnData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
-			String unit) throws IOException {
-		
+			ArrayList<String> unit) throws IOException {
+		System.out.println(unit.size());
+		System.out.println(series.getData().size());
 		setupHeader(bufferedWriter);
-
+		
 		for (int i = 0; i < series.getData().size(); i++) {
 			writeColumnData(bufferedWriter, series.getData().get(i).getXValue(),
-					series.getData().get(i).getYValue(), unit);
+					series.getData().get(i).getYValue(), unit.get(i));
 		}
 	}
 

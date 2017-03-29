@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -49,6 +50,15 @@ public class GuiController implements Initializable {
 	// AnchorPane rightAnchor;
 	// @FXML
 	// AnchorPane leftAnchor;
+
+	private int stripPlotPosition = 0;
+	public volatile boolean resistance = false;
+	public volatile boolean voltage = false;
+	public volatile boolean current = false;
+	@FXML
+	private Button leftBtn;
+	@FXML
+	private Button rightBtn;
 
 	/* Elements relating to the connected mode. */
 	@FXML
@@ -103,13 +113,11 @@ public class GuiController implements Initializable {
 	private Label setBoundaryLabel;
 	@FXML
 	private Label addBoundaryLabel;
-	
+
 	@FXML
 	NumberAxis yAxis;
 	@FXML
 	NumberAxis xAxis;
-	@FXML
-	Slider xAxisSlider;
 
 	/* Elements relating to the line chart. */
 	@FXML
@@ -135,7 +143,7 @@ public class GuiController implements Initializable {
 
 	/* Holds the line chart */
 	XYChart.Series<Number, Number> readingSeries = new XYChart.Series<>();
-	private String yUnit = "";
+	ArrayList<String> yUnit = new ArrayList<>();
 
 	/* Holds x and y coordinates of mouse position. */
 	@FXML
@@ -166,23 +174,173 @@ public class GuiController implements Initializable {
 	private static String FILE_FORMAT_EXTENSION = "*.csv";
 	private static String FILE_FORMAT_TITLE = "Comma Separated Files";
 
+	private static GuiController instance;
+
 	public GuiController() {
 		System.out.println("Initialised GuiController");
+		instance = this;
+	}
+
+	public static GuiController getInstance() {
+		if (instance == null) {
+			instance = new GuiController();
+			System.out.println("Initialised GuiController[SINGLETON]");
+		}
+		return instance;
+	}
+
+	// Decrease the upper and lower bounds of the xaxis
+	@FXML
+	private void moveXAxisLeft() {
+
+		double newAxisUpperValue = xAxis.getUpperBound() - 1;
+		double newAxisLowerValue = xAxis.getLowerBound() - 1;
+
+		if (newAxisLowerValue >= 0) {
+			xAxis.setUpperBound(newAxisUpperValue);
+			xAxis.setLowerBound(newAxisLowerValue);
+		}
+
+	}
+
+	// Increase the upper and lower bounds of the xaxis
+	@FXML
+	private void moveXAxisRight() {
+		double newAxisUpperValue = xAxis.getUpperBound() + 1;
+		double newAxisLowerValue = xAxis.getLowerBound() + 1;
+
+		xAxis.setUpperBound(newAxisUpperValue);
+		xAxis.setLowerBound(newAxisLowerValue);
 	}
 
 	@FXML
 	private void measureVoltage() {
 		System.out.println("I clicked on voltage");
+		voltage = true;
+		resistance = false;
+		current = false;
+		// Reset the plot data
+		readingSeries.getData().clear();
+		yUnit.clear();
+		
+		yAxis.setLabel("Measurements [V]");
+		// Run thread here with 2nd column of data
+		RecordedResults.shutdownRecordedResultsThread();
+		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(
+				"/Users/dayakern/Downloads/voltage.csv");
+		Thread thread = new Thread(container);
+		RecordedResults.dataPlaybackContainer = container;
+		thread.start();
 	}
 
 	@FXML
 	private void measureCurrent() {
 		System.out.println("I clicked on current");
+		voltage = false;
+		resistance = false;
+		current = true;
+		// Reset the plot data
+		readingSeries.getData().clear();
+		yUnit.clear();
+		
+		yAxis.setLabel("Measurements [mA]");
+		// Run thread here with 2nd column of data
+		RecordedResults.shutdownRecordedResultsThread();
+		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(
+				"/Users/dayakern/Downloads/current.csv");
+		Thread thread = new Thread(container);
+		RecordedResults.dataPlaybackContainer = container;
+		thread.start();
 	}
 
 	@FXML
 	private void measureResistance() {
 		System.out.println("I clicked on resistance");
+		// Run thread here with 2nd column of data
+		resistance = true;
+		voltage = false;
+		current = false;
+		// Reset the plot data
+		readingSeries.getData().clear();
+		yUnit.clear();
+		
+		RecordedResults.shutdownRecordedResultsThread();
+		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(
+				"/Users/dayakern/Downloads/resistance.csv");
+		Thread thread = new Thread(container);
+		RecordedResults.dataPlaybackContainer = container;
+		thread.start();
+	}
+
+	/**
+	 * Updates the data displayed on the analog, digital and strip chart displays.
+	 */
+	public void recordAndDisplayDummyData(double multimeterReading) {
+		if (!Platform.isFxApplicationThread()) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					recordAndDisplayDummyData(multimeterReading);
+				}
+			});
+			return;
+		}
+
+		// Update all software displays
+		updateDisplay(multimeterReading);
+	}
+
+	private void updateDisplay(Double multimeterReading) {
+		if (!Platform.isFxApplicationThread()) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					updateDisplay(multimeterReading);
+				}
+			});
+			return;
+		}
+
+		// change units when ranges are overcome
+		autoRangeUnit(multimeterReading);
+
+		multimeterDisplay.setText(Character.toString((char) 177) + multimeterReading.toString()); // remember
+																									// symbol~
+
+		readingSeries.getData()
+				.add(new XYChart.Data<Number, Number>(stripPlotPosition / 2, multimeterReading));
+
+		stripPlotPosition++;
+
+		// Update chart
+		int dataBoundsRange = (int) Math.ceil(stripPlotPosition / 2); // 2 = samples / second
+
+		if (dataBoundsRange > 50) {
+			xAxis.setLowerBound(dataBoundsRange - 50);
+			xAxis.setUpperBound(dataBoundsRange);
+		}
+	}
+
+	public void autoRangeUnit(Double dataValue) {
+		String ohmSymbol = Character.toString((char) 8486);
+
+		if (voltage) {
+			yUnit.add("V");
+		} else if (current) {
+			yUnit.add("mA");
+		} else if (resistance) {
+			if (dataValue < 1000) {
+				yUnit.add(ohmSymbol);
+				yAxis.setLabel("Measurements [" + ohmSymbol + "]");
+			} else if (dataValue >= 1000 && dataValue < 1000000) {
+				yUnit.add("k" + ohmSymbol);
+				yAxis.setLabel("Measurements [" + "k" + ohmSymbol + "]");
+			} else if (dataValue >= 1000000) {
+				yUnit.add("M" + ohmSymbol);
+				yAxis.setLabel("Measurements [" + "M" + ohmSymbol + "]");
+			}
+		}
+
 	}
 
 	// TODO: Change around the test connection, either call it
@@ -270,6 +428,10 @@ public class GuiController implements Initializable {
 
 		if (result.get() == ButtonType.OK) {
 			// User was OK exiting connected mode
+			RecordedResults.shutdownRecordedResultsThread();
+			// Reset the plot data
+			readingSeries.getData().clear();
+			yUnit.clear();
 			return true;
 		} else {
 			// User was not OK exiting connected mode (cancelled or closed dialog box)
@@ -329,7 +491,7 @@ public class GuiController implements Initializable {
 				loadSavedData.setDisable(true);
 				loadFileLabel.setDisable(true);
 				maskTestingBtn.setDisable(true);
-				
+
 				// hide mask testing components
 				maskTestingSelected = false;
 				separatorLine.setVisible(false);
@@ -338,15 +500,15 @@ public class GuiController implements Initializable {
 				yDataCoord.setVisible(false);
 				importMaskBtn.setVisible(false);
 				exportMaskBtn.setVisible(false);
-				
+
 				addBoundaryLabel.setVisible(false);
 				highBoundaryCheckbox.setVisible(false);
 				lowBoundaryCheckbox.setVisible(false);
-				
+
 				setHighBtn.setVisible(false);
 				setLowBtn.setVisible(false);
 				setBoundaryLabel.setVisible(false);
-				
+
 			} else {
 				System.out.println("DISCONNECTED MODE STAYING");
 
@@ -373,6 +535,9 @@ public class GuiController implements Initializable {
 
 		if (result.get() == ButtonType.OK) {
 			// User was OK exiting disconnected mode
+			// Reset the plot data
+			readingSeries.getData().clear();
+			yUnit.clear();
 			return true;
 
 			// Clear all data related things.
@@ -395,13 +560,14 @@ public class GuiController implements Initializable {
 		if (!isPaused) {
 			isPaused = true;
 			pauseBtn.setText("Unpause");
+			RecordedResults.pauseRecordedResultsThread(true);
 			System.out.println("DATA IS PAUSED");
 		} else {
 			isPaused = false;
 			pauseBtn.setText("Pause");
+			RecordedResults.pauseRecordedResultsThread(false);
 			System.out.println("DATA IS UNPAUSED");
 		}
-
 	}
 
 	@FXML
@@ -438,8 +604,8 @@ public class GuiController implements Initializable {
 
 			// TODO: MAKE MORE EFFICIENT.
 			for (String s : GuiModel.getInstance().readColumnData(selectedFile.getPath(), 2)) {
-				yUnit = s;
-				yAxis.setLabel("Measurements [" + yUnit + "]");
+				yUnit.add(s);
+				yAxis.setLabel("Measurements [" + yUnit.get(0) + "]");
 				break;
 			}
 
@@ -452,9 +618,9 @@ public class GuiController implements Initializable {
 				Data<Number, Number> dataPoint = readingSeries.getData().get(i);
 				dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
 						getDataXYValues(dataPoint, i));
-				
+
 				// Update chart bounds
-				int dataBoundsRange = (int) Math.ceil(i / 2); //2 = SAMPLES/SECOND
+				int dataBoundsRange = (int) Math.ceil(i / 2); // 2 = SAMPLES/SECOND
 				if (dataBoundsRange > 50) {
 					xAxis.setLowerBound(dataBoundsRange - 50);
 					xAxis.setUpperBound(dataBoundsRange);
@@ -486,6 +652,8 @@ public class GuiController implements Initializable {
 			GuiView.getInstance().alertUser(title, warning, errorType, alertType).showAndWait();
 		} else {
 			// Save out data
+			// RecordedResults.shutdownRecordedResultsThread();
+			// reset maybe?
 			FileChooser saveFileOptions = new FileChooser();
 			saveFileOptions.setTitle("Save Acquired Data");
 
@@ -803,20 +971,20 @@ public class GuiController implements Initializable {
 			yDataCoord.setVisible(true);
 			importMaskBtn.setVisible(true);
 			exportMaskBtn.setVisible(true);
-			
+
 			addBoundaryLabel.setVisible(true);
 			highBoundaryCheckbox.setVisible(true);
 			lowBoundaryCheckbox.setVisible(true);
-			
+
 			setHighBtn.setVisible(true);
 			setLowBtn.setVisible(true);
 			setBoundaryLabel.setVisible(true);
-			
+
 			System.out.println("MASK TESTING SELECTED");
 		} else {
 			// Not Selected
 			maskTestingSelected = false;
-			
+
 			// hide mask testing components
 			separatorLine.setVisible(false);
 			plotCoordLabel.setVisible(false);
@@ -824,16 +992,15 @@ public class GuiController implements Initializable {
 			yDataCoord.setVisible(false);
 			importMaskBtn.setVisible(false);
 			exportMaskBtn.setVisible(false);
-			
+
 			addBoundaryLabel.setVisible(false);
 			highBoundaryCheckbox.setVisible(false);
 			lowBoundaryCheckbox.setVisible(false);
-			
+
 			setHighBtn.setVisible(false);
 			setLowBtn.setVisible(false);
 			setBoundaryLabel.setVisible(false);
-			
-			
+
 			System.out.println("MASK TESTING DE-SELECTED");
 		}
 	}

@@ -47,6 +47,16 @@ public class GuiView extends Application {
 	public Stage getStage() {
 		return this.stage;
 	}
+	
+	/**
+	 * Hooks onto GUI shutdown event and does relevant tasks (i.e. close any open ports, shutdown threads).
+	 */
+	@Override
+	public void stop() throws Exception {
+		RecordedResults.shutdownRecordedResultsThread();
+		// Close ports
+		super.stop();
+	}
 
 	// PUT IN LISTENERS FOR RE-SIZING THE ELEMENTS ON THE SCREEN
 	@Override
@@ -70,47 +80,11 @@ public class GuiView extends Application {
 		sceneWidthChange(scene, controller);
 		sceneHeightChange(scene, controller);
 
-		// Have a slider
-		//FIXME: NOT WORKING ANYMORE?
-		// IF IT"S GOT AUTORANGING FOR XAXIS IT DOESN"T WORK..
-		setupXAxisListener(controller);
-
 		// Set window title
 		primaryStage.setTitle(GuiTitle);
 
 		// Display the GUI
 		primaryStage.show();
-	}
-
-	/**
-	 * A private helper function which increases/decreases the xAxis when a slider is moved
-	 * 
-	 * @param controller
-	 */
-	private void setupXAxisListener(GuiController controller) {
-		//TODO: incorporate autoranging.
-		// initial upper bound
-		double xAxisMinUpperBound = controller.xAxis.getUpperBound();
-
-		controller.xAxisSlider.valueProperty().addListener(new ChangeListener<Number>() {
-
-			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue,
-					Number newValue) {
-
-				// Increase the upper and lower bounds of the xaxis
-				if (newValue.doubleValue() >= controller.xAxis.getUpperBound()) {
-					controller.xAxis.setUpperBound(newValue.doubleValue());
-					controller.xAxis.setLowerBound(newValue.doubleValue() - xAxisMinUpperBound);
-				} else {
-					// Decrease the upper and lower bounds of the xaxis
-					if (newValue.doubleValue() >= xAxisMinUpperBound) {
-						controller.xAxis.setUpperBound(newValue.doubleValue());
-						controller.xAxis.setLowerBound(newValue.doubleValue() - xAxisMinUpperBound);
-					}
-				}
-			}
-		});
 	}
 
 	/**

@@ -228,8 +228,8 @@
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
                      </columnConstraints>
                      <rowConstraints>
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="531.9202270507812" minHeight="10.0" prefHeight="518.2407836914062" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="38.75921630859375" minHeight="10.0" prefHeight="38.75921630859375" vgrow="SOMETIMES" />
                      </rowConstraints>
                      <children>
                         <LineChart fx:id="lineChart" horizontalZeroLineVisible="false" layoutX="-12.0" layoutY="30.0" legendVisible="false" prefHeight="547.0" prefWidth="861.0" stylesheets="@chartstyle.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0" GridPane.valignment="BOTTOM">
@@ -249,11 +249,12 @@
                               <Insets right="40.0" />
                            </padding>
                         </LineChart>
-                        <Slider max="200.0" min="50.0" prefHeight="68.0" prefWidth="435.0" snapToTicks="true" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP" fx:id="xAxisSlider">
-                           <padding>
-                              <Insets bottom="10.0" left="60.0" right="33.0" />
-                           </padding>
-                        </Slider>
+                        <Button fx:id="rightBtn" mnemonicParsing="false" onAction="#moveXAxisRight" stylesheets="@buttonstyle.css" text="&gt;" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                           <GridPane.margin>
+                              <Insets left="70.0" />
+                           </GridPane.margin>
+                        </Button>
+                        <Button fx:id="leftBtn" mnemonicParsing="false" onAction="#moveXAxisLeft" stylesheets="@buttonstyle.css" text="&lt;" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP" />
                      </children>
                   </GridPane>
                   <Group layoutX="100.0">
