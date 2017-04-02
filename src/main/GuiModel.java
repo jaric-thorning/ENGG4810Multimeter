@@ -22,13 +22,14 @@ public class GuiModel {
 
 	public GuiModel() {
 		instance = this;
-		// TODO: GET DATA FROM SERIAL.
-		// TODO: SAVE DATA TO FILE.
 	}
 
-	// public static GuiModel getInstance() {
-	// return instance;
-	// }
+	/**
+	 * Enables other classes to access methods within this class, once the program has been
+	 * launched.
+	 * 
+	 * @return an instance of the GuiModel class.
+	 */
 	public static GuiModel getInstance() {
 		if (instance == null) {
 			instance = new GuiModel();
@@ -45,7 +46,6 @@ public class GuiModel {
 		// }
 	}
 
-	// TODO: GET DATA FROM FILE.
 	/**
 	 * Reads the contents of a selected .csv file and returns an array of the read data. If the
 	 * filename is not found or there is a problem with the buffered reader, exceptions will be
@@ -110,7 +110,7 @@ public class GuiModel {
 		System.out.println(unit.size());
 		System.out.println(series.getData().size());
 		setupHeader(bufferedWriter);
-		
+
 		for (int i = 0; i < series.getData().size(); i++) {
 			writeColumnData(bufferedWriter, series.getData().get(i).getXValue(),
 					series.getData().get(i).getYValue(), unit.get(i));
@@ -122,17 +122,17 @@ public class GuiModel {
 	 * 
 	 * @param bufferedWriter
 	 *            the buffered writer needed to write data to the file.
-	 * @param tempData
-	 *            is a single data value for temperature data values.
-	 * @param airData
-	 *            is a single data value for windspeed data values.
-	 * @param lightData
-	 *            is a single data value for the luminosity data values.
+	 * @param timeData
+	 *            is a single data value for time data values.
+	 * @param readingData
+	 *            is a single data value for the voltage/current/resistant values.
+	 * @param unitData
+	 *            is the unit value of the y-axis values.
 	 */
 	private void writeColumnData(BufferedWriter bufferedWriter, Number timeData, Number readingData,
 			String unitData) {
 		try {
-			bufferedWriter.write(timeData.toString()); 
+			bufferedWriter.write(timeData.toString());
 			bufferedWriter.write(DELIMITER);
 			bufferedWriter.write(readingData.toString());
 			bufferedWriter.write(DELIMITER);

@@ -1,5 +1,6 @@
 package main;
 
+import java.net.URL;
 import java.util.ArrayList;
 
 /** FIXME: WORK ON THIS SO THAT WHEN BUTTONS ARE PRESSED, DIFFERENT THINGS ARE LOADED In**/
@@ -62,7 +63,7 @@ public class RecordedResults {
 				if (!this.paused) {
 					final double yValue = Double
 							.parseDouble(multimeterReadingsDataY.get(dataIndex));
-
+					
 					GuiController.getInstance().recordAndDisplayDummyData(yValue);
 				}
 

@@ -234,7 +234,7 @@
                      <children>
                         <LineChart fx:id="lineChart" horizontalZeroLineVisible="false" layoutX="-12.0" layoutY="30.0" legendVisible="false" prefHeight="547.0" prefWidth="861.0" stylesheets="@chartstyle.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0" GridPane.valignment="BOTTOM">
                           <xAxis>
-                            <NumberAxis animated="false" autoRanging="false" forceZeroInRange="false" label="Time (seconds)" prefHeight="47.0" prefWidth="449.0" side="BOTTOM" tickLabelFill="WHITE" upperBound="50.0" fx:id="xAxis" />
+                            <NumberAxis animated="false" autoRanging="false" forceZeroInRange="false" label="Time (seconds)" prefHeight="47.0" prefWidth="449.0" side="BOTTOM" tickLabelFill="WHITE" upperBound="10.0" fx:id="xAxis" />
                           </xAxis>
                           <yAxis>
                             <NumberAxis fx:id="yAxis" forceZeroInRange="false" label="Measurement" lowerBound="-10.0" prefHeight="382.0" prefWidth="54.0" side="LEFT" tickLabelFill="WHITE" upperBound="50.0" />
