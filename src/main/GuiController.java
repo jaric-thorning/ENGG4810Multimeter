@@ -9,7 +9,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
-
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -27,11 +26,9 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
-import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
@@ -39,7 +36,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 public class GuiController implements Initializable {
-	/* Elements required for resizing the GUI correctly */
+	/* Components required for resizing the GUI when maximising or resizing */
 	@FXML
 	Group root;
 	@FXML
@@ -51,21 +48,18 @@ public class GuiController implements Initializable {
 	// @FXML
 	// AnchorPane leftAnchor;
 
-	private int stripPlotPosition = 0;
+	// Components to display dummy data
+	private int dataPlotPosition = 0;
 	public volatile boolean resistance = false;
 	public volatile boolean voltage = false;
 	public volatile boolean current = false;
-	@FXML
-	private Button leftBtn;
-	@FXML
-	private Button rightBtn;
 
-	/* Elements relating to the connected mode. */
+	/* Components relating to the connected mode. */
 	@FXML
 	private RadioButton connRBtn;
 	@FXML
 	private Button pauseBtn;
-	private boolean isPaused = false;
+	private boolean isPaused = false; // flag for if pauseBtn has been clicked
 	@FXML
 	private Button saveBtn;
 	@FXML
@@ -82,7 +76,7 @@ public class GuiController implements Initializable {
 	/* Elements relating to mask-testing */
 	@FXML
 	private Button maskTestingBtn;
-	private boolean maskTestingSelected = false;
+	private boolean maskTestingSelected = false; // flag for if maskTestingBtn has been clicked
 	@FXML
 	private Line separatorLine;
 	@FXML
@@ -114,36 +108,36 @@ public class GuiController implements Initializable {
 	@FXML
 	private Label addBoundaryLabel;
 
+	/* Components of the mask */
+	// Holds the upper and lower boundary points
+	XYChart.Series<Number, Number> upperSeries = new XYChart.Series<>();
+	XYChart.Series<Number, Number> lowerSeries = new XYChart.Series<>();
+
+	// The upper and lower boundary area
 	@FXML
-	NumberAxis yAxis;
+	Polygon upperBoundary;
 	@FXML
-	NumberAxis xAxis;
+	Polygon lowerBoundary;
 
 	/* Elements relating to the line chart. */
 	@FXML
 	LineChart<Number, Number> lineChart;
-
-	Node chartBackground;
-
-	private ArrayList<Number> coordinates = new ArrayList<>();
-
 	@FXML
-	Polygon upperBoundary;
-
+	NumberAxis yAxis;
 	@FXML
-	Polygon lowerBoundary;
+	NumberAxis xAxis;
+	Node chartBackground; // Handle on chart background for getting lineChart coords
+	private ArrayList<Number> coordinates = new ArrayList<>(); // ???
 
-	// Store last place of node
-	Number lastPlaceX = 0;
-	Number lastPlaceY = 0;
-
-	/* Holds the upper and lower boundaries */
-	XYChart.Series<Number, Number> upperSeries = new XYChart.Series<>();
-	XYChart.Series<Number, Number> lowerSeries = new XYChart.Series<>();
+	// Components for shifting left and right the x-axis
+	@FXML
+	private Button leftBtn;
+	@FXML
+	private Button rightBtn;
 
 	/* Holds the line chart */
 	XYChart.Series<Number, Number> readingSeries = new XYChart.Series<>();
-	ArrayList<String> yUnit = new ArrayList<>();
+	ArrayList<String> yUnit = new ArrayList<>(); // The y-unit displayed
 
 	/* Holds x and y coordinates of mouse position. */
 	@FXML
@@ -171,8 +165,11 @@ public class GuiController implements Initializable {
 	@FXML
 	private Button continuityBtn;
 
-	private static String FILE_FORMAT_EXTENSION = "*.csv";
-	private static String FILE_FORMAT_TITLE = "Comma Separated Files";
+	/* Constants */
+	private static final String FILE_FORMAT_EXTENSION = "*.csv";
+	private static final String FILE_FORMAT_TITLE = "Comma Separated Files";
+	private static final String FILE_DIR = "./Saved Data/";
+	private static final int UPPER_BOUND = 10;
 
 	private static GuiController instance;
 
@@ -219,15 +216,19 @@ public class GuiController implements Initializable {
 		voltage = true;
 		resistance = false;
 		current = false;
+		
+		resetXAxis();
 		// Reset the plot data
 		readingSeries.getData().clear();
 		yUnit.clear();
-		
+
 		yAxis.setLabel("Measurements [V]");
 		// Run thread here with 2nd column of data
 		RecordedResults.shutdownRecordedResultsThread();
-		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(
-				"/Users/dayakern/Downloads/voltage.csv");
+
+		String file = FILE_DIR + "voltage.csv";
+		System.out.println(file);
+		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
 		Thread thread = new Thread(container);
 		RecordedResults.dataPlaybackContainer = container;
 		thread.start();
@@ -239,15 +240,19 @@ public class GuiController implements Initializable {
 		voltage = false;
 		resistance = false;
 		current = true;
+		
+		resetXAxis();
+		
 		// Reset the plot data
 		readingSeries.getData().clear();
 		yUnit.clear();
-		
+
 		yAxis.setLabel("Measurements [mA]");
+
+		String file = FILE_DIR + "current.csv";
 		// Run thread here with 2nd column of data
 		RecordedResults.shutdownRecordedResultsThread();
-		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(
-				"/Users/dayakern/Downloads/current.csv");
+		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
 		Thread thread = new Thread(container);
 		RecordedResults.dataPlaybackContainer = container;
 		thread.start();
@@ -260,13 +265,16 @@ public class GuiController implements Initializable {
 		resistance = true;
 		voltage = false;
 		current = false;
+		
+		resetXAxis();
 		// Reset the plot data
 		readingSeries.getData().clear();
 		yUnit.clear();
-		
+
+		String file = FILE_DIR + "resistance.csv";
 		RecordedResults.shutdownRecordedResultsThread();
-		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(
-				"/Users/dayakern/Downloads/resistance.csv");
+
+		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
 		Thread thread = new Thread(container);
 		RecordedResults.dataPlaybackContainer = container;
 		thread.start();
@@ -308,16 +316,27 @@ public class GuiController implements Initializable {
 																									// symbol~
 
 		readingSeries.getData()
-				.add(new XYChart.Data<Number, Number>(stripPlotPosition / 2, multimeterReading));
+				.add(new XYChart.Data<Number, Number>(dataPlotPosition / 2, multimeterReading));
 
-		stripPlotPosition++;
+		dataPlotPosition++;
 
 		// Update chart
-		int dataBoundsRange = (int) Math.ceil(stripPlotPosition / 2); // 2 = samples / second
+		int dataBoundsRange = (int) Math.ceil(dataPlotPosition / 2); // 2 = samples / second
 
-		if (dataBoundsRange > 50) {
-			xAxis.setLowerBound(dataBoundsRange - 50);
+		if (dataBoundsRange > UPPER_BOUND) {
+			xAxis.setLowerBound(dataBoundsRange - UPPER_BOUND);
 			xAxis.setUpperBound(dataBoundsRange);
+		}
+		
+	}
+	
+	private void resetXAxis() {
+		if (voltage) {
+			dataPlotPosition = 0;
+		} else if (current) {
+			dataPlotPosition = 0;
+		} else if (resistance) {
+			dataPlotPosition = 0;
 		}
 	}
 
@@ -621,8 +640,8 @@ public class GuiController implements Initializable {
 
 				// Update chart bounds
 				int dataBoundsRange = (int) Math.ceil(i / 2); // 2 = SAMPLES/SECOND
-				if (dataBoundsRange > 50) {
-					xAxis.setLowerBound(dataBoundsRange - 50);
+				if (dataBoundsRange > UPPER_BOUND) {
+					xAxis.setLowerBound(dataBoundsRange - UPPER_BOUND);
 					xAxis.setUpperBound(dataBoundsRange);
 				}
 			}
