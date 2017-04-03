@@ -75,8 +75,8 @@ void defChar();
  *
  */
 
-#define RS GPIO_PIN_4 // Pin 5
-#define EN GPIO_PIN_5 // Pin 6
+#define RS GPIO_PIN_4 // Pin 4
+#define EN GPIO_PIN_5 // Pin 5
 #define D4 GPIO_PIN_0 // Pin 23
 #define D5 GPIO_PIN_1 // Pin 24
 #define D6 GPIO_PIN_2 // Pin 25
