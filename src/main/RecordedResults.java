@@ -69,7 +69,7 @@ public class RecordedResults {
 
 				// Delay for visual update.
 				try {
-					Thread.sleep((1000 / 2)); // 2 = SAMPLES_PER_SECOND
+					Thread.sleep((1000 / (int) GuiController.SAMPLES_PER_SECOND));
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
@@ -88,6 +88,7 @@ public class RecordedResults {
 	public static void shutdownRecordedResultsThread() {
 		if (dataPlaybackContainer != null) {
 			dataPlaybackContainer.shutdown();
+			System.out.println("SHUTTING DOWN THREAD");
 			dataPlaybackContainer = null;
 		}
 	}
@@ -99,9 +100,9 @@ public class RecordedResults {
 	 *            the pause status flag. (true = pause, false = unpause).
 	 */
 	public static void pauseRecordedResultsThread(boolean pause) {
-		System.out.println("Pause replaying results: " + pause);
 		if (dataPlaybackContainer != null) {
 			dataPlaybackContainer.setPause(pause);
+			System.out.println("Pause replaying results: " + pause);
 		}
 	}
 }

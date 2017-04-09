@@ -3,9 +3,13 @@ package main;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Data;
 import javafx.scene.control.Alert;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Alert.AlertType;
@@ -17,7 +21,7 @@ public class GuiView extends Application {
 	private String fxmlFileName = "/gui_test.fxml";
 	private String GuiTitle = "Digital Multimeter Mark 1.0";
 	private Stage stage = new Stage();
-	
+
 	private static GuiView instance;
 
 	public GuiView() {
@@ -38,9 +42,10 @@ public class GuiView extends Application {
 	public Stage getStage() {
 		return this.stage;
 	}
-	
+
 	/**
-	 * Hooks onto GUI shutdown event and does relevant tasks (i.e. close any open ports, shutdown threads).
+	 * Hooks onto GUI shutdown event and does relevant tasks (i.e. close any open ports, shutdown
+	 * threads).
 	 */
 	@Override
 	public void stop() throws Exception {
@@ -61,21 +66,62 @@ public class GuiView extends Application {
 		Scene scene = new Scene(loader.load()); // can customise height
 		primaryStage.setScene(scene);
 		primaryStage.setResizable(true); // enable maximisation of screen
-		primaryStage.setMinWidth(1274D);
+
+		// Original dimensions of stage
+		primaryStage.setMinWidth(1096D); // 1274D
 		primaryStage.setMinHeight(600D);
 
 		// Get access to the GUI controller
 		GuiController controller = loader.getController();
 
 		// Add width/height listeners.
-		sceneWidthChange(scene, controller);
-		sceneHeightChange(scene, controller);
+		sceneWidthChange(stage, scene, controller);
+		sceneHeightChange(stage, scene, controller);
 
+		testingMask(controller);
+		updateMaskDimensions(controller);
+		
 		// Set window title
 		primaryStage.setTitle(GuiTitle);
 
 		// Display the GUI
 		primaryStage.show();
+	}
+
+	private void testingMask(GuiController controller) {
+		System.out.println("Y");
+		System.out.println(controller.upperSeries.dataProperty().get().toString());
+
+		controller.upperSeries.getData()
+				.addListener(new ListChangeListener<Data<Number, Number>>() {
+
+					@Override
+					public void onChanged(
+							javafx.collections.ListChangeListener.Change<? extends Data<Number, Number>> c) {
+						System.out.println("TEST");
+
+					}
+
+				});
+
+		controller.upperSeries.dataProperty()
+				.addListener(new ChangeListener<ObservableList<XYChart.Data<Number, Number>>>() {
+
+					@Override
+					public void changed(
+							ObservableValue<? extends ObservableList<Data<Number, Number>>> observable,
+							ObservableList<Data<Number, Number>> oldValue,
+							ObservableList<Data<Number, Number>> newValue) {
+
+						System.out.println("X");
+						for (XYChart.Data<Number, Number> d : newValue) {
+							System.out.println(
+									"NEW X: " + d.getXValue() + " NEW Y: " + d.getYValue());
+						}
+
+					}
+
+				});
 	}
 
 	/**
@@ -87,7 +133,7 @@ public class GuiView extends Application {
 	 * @param controller
 	 *            the GuiController to access the elements of the scene.
 	 */
-	private void sceneWidthChange(Scene scene, GuiController controller) {
+	private void sceneWidthChange(Stage stage, Scene scene, GuiController controller) {
 		// Set up scene width listener
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
 
@@ -95,36 +141,72 @@ public class GuiView extends Application {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneWidth,
 					Number newSceneWidth) {
-				double chartWidth = ((double) newSceneWidth) - 450D;
-
-				controller.appPane.setMinWidth((double) newSceneWidth);
-				controller.lineChart.setMinWidth(chartWidth);
-				controller.GraphingResultsLabel.setMinWidth(chartWidth);
+				// double chartWidth = ((double) newSceneWidth) - 450D;
 
 				/* THIS IS TO RESIZE THE MASK */
+				// && stage.isFullScreen()
 				/* FIXME */
-				updateMaskDimensions(controller);
+				//updateMaskDimensions(controller);
+
+				if ((controller.upperSeries.getData().size() > 0)) {
+
+					for (int i = 0; i < controller.upperSeries.getData().size(); i++) {
+						XYChart.Data<Number, Number> dataPoints = controller.upperSeries.getData()
+								.get(i);
+						Double x = dataPoints.getXValue().doubleValue();
+						Double xx = controller.lineChart.getXAxis().getDisplayPosition(x);
+
+						controller.upperBoundary.getPoints().set(2, xx);
+
+						System.out.println("OS: " + x.toString() + " || XX:" + xx);
+					}
+				}
+
+				//FIXME: resizing doesn't work if too fast
+				controller.appPane.setMinWidth((double) newSceneWidth);
+				//controller.lineChart.setMinWidth((double) newSceneWidth - 451D - 100D);
+				//controller.rightAnchor.setMinWidth((double) newSceneWidth - 451D);
+				
+				// FIXME: THE CHART BACKGROUND DOESN'T
+				Double testWidthOld = oldSceneWidth.doubleValue();
+				Double testWidthNew = newSceneWidth.doubleValue();
+
+				testHeight(controller, testWidthOld, testWidthNew);
+				// System.out.println("CB: " +
+				// controller.lineChart.lookup(".chart-plot-background").getLayoutX());
+
+				// controller.GraphingResultsLabel.setMinWidth(chartWidth);
 			}
 
 		});
 	}
 
+	private void testHeight(GuiController controller, Double testWidthOld, Double testWidthNew) {
+		System.out.println("ACK: " + testWidthNew);
+		System.out.println("ACK OLD: " + testWidthOld);
+		System.out.println(
+				"ACK LINECHART: " + controller.chartBackground.getLayoutBounds().getWidth());
+	}
+
 	// FIXME: ERRORS IF I MODIFY HERE THE POLYGON POINTS
 	private void updateMaskDimensions(GuiController controller) {
-		//lower
+		// SET THE UPPER AND LOWER
+		// lower
 		controller.lowerBoundary.getPoints().set(2,
 				controller.chartBackground.getLayoutBounds().getWidth());
 		controller.lowerBoundary.getPoints().set(4,
 				controller.chartBackground.getLayoutBounds().getWidth());
-		
-		//Upper
+
+		// Upper
 		controller.upperBoundary.getPoints().set(2,
 				controller.chartBackground.getLayoutBounds().getWidth());
 		controller.upperBoundary.getPoints().set(4,
 				controller.chartBackground.getLayoutBounds().getWidth());
 
-//		System.out.println("CH: " + controller.lineChart.getWidth() + " :: "
-//				+ (controller.chartBackground.getLayoutBounds().getWidth()));
+		// System.out.println("CW: " + controller.lineChart.getWidth() + " CH: " +
+		// controller.lineChart.getHeight());
+		// System.out.println("CH: " + controller.lineChart.getWidth() + " :: "
+		// + (controller.chartBackground.getLayoutBounds().getWidth()));
 	}
 
 	/**
@@ -136,7 +218,7 @@ public class GuiView extends Application {
 	 * @param controller
 	 *            the GuiController to access the elements of the scene.
 	 */
-	private void sceneHeightChange(Scene scene, GuiController controller) {
+	private void sceneHeightChange(Stage stage, Scene scene, GuiController controller) {
 		// Set up scene height listener
 		scene.heightProperty().addListener(new ChangeListener<Number>() {
 
@@ -144,10 +226,26 @@ public class GuiView extends Application {
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneHeight,
 					Number newSceneHeight) {
 				double chartHeight = ((double) newSceneHeight);
-				
+
 				controller.appPane.setMinHeight((double) newSceneHeight);
-//				controller.leftAnchor.setMinHeight(chartHeight);
-//				controller.rightAnchor.setMinHeight(chartHeight);
+				
+				// System.out.println("MM: " + stage.isFullScreen());
+				// controller.lineChart.setMinHeight(chartHeight);
+				// controller.leftAnchor.setMinHeight(chartHeight);
+				// controller.rightAnchor.setMinHeight(chartHeight);
+
+				if ((controller.upperSeries.getData().size() > 0)) {
+					// myGrid.cellWidthProperty().bind(columnWidthSlider.valueProperty());
+
+					for (int i = 0; i < controller.upperSeries.getData().size(); i++) {
+						XYChart.Data<Number, Number> dataPoints = controller.upperSeries.getData()
+								.get(i);
+						Double y = dataPoints.getYValue().doubleValue();
+						Double yy = controller.lineChart.getYAxis().getDisplayPosition(y);
+
+						controller.upperBoundary.getPoints().set(3, yy);
+					}
+				}
 			}
 
 		});
