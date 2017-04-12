@@ -1,6 +1,6 @@
 #******************************************************************************
 #
-# Makefile - Rules for building the hello example.
+# Makefile - Rules for building the FreeRTOS example.
 #
 # Copyright (c) 2012-2014 Texas Instruments Incorporated.  All rights reserved.
 # Software License Agreement
@@ -32,31 +32,43 @@ PART=TM4C123GH6PM
 #
 # The base directory for TivaWare.
 #
+#ROOT=../../..
 ROOT=$(HOME)/tiva-c-master
 
 #
 # Include the common make definitions.
 #
-include $(ROOT)/makedefs
+include ${ROOT}/makedefs
 
 #
 # Where to find source files that do not live in this directory.
 #
-VPATH=.
-VPATH+=./LIB
-VPATH+=./utils
+VPATH=$(ROOT)/third_party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+VPATH+=$(ROOT)/third_party/FreeRTOS/Source/portable/MemMang/
+VPATH+=$(ROOT)/third_party/FreeRTOS/Source
+VPATH+=../drivers
 VPATH+=$(ROOT)/utils
+VPATH+=./LIB
+VPATH+=./TaskLib
+
 #
 # Where to find header files that do not live in the source directory.
 #
-
 IPATH=.
+IPATH+=..
 IPATH+=./LIB
 IPATH+=./utils
+IPATH+=./TaskLib
+IPATH+=$(ROOT)/boards/ek-tm4c123gxl
 IPATH+=$(ROOT)
+IPATH+=$(ROOT)/third_party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+IPATH+=$(ROOT)/third_party/FreeRTOS
+IPATH+=$(ROOT)/third_party/FreeRTOS/Source/include
+IPATH+=$(ROOT)/third_party
+
 
 #
-# The default rule, which causes the hello example to be built.
+# The default rule, which causes the FreeRTOS example to be built.
 #
 all: ${COMPILER}
 all: ${COMPILER}/$(PROJECT).axf
@@ -74,16 +86,29 @@ ${COMPILER}:
 	@mkdir -p ${COMPILER}
 
 #
-# Rules for building the hello example.
+# Rules for building the FreeRTOS example.
 #
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/buttons.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/$(PROJECT).o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/heap_2.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/led_task.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/list.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/port.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/queue.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/rgb.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/startup_${COMPILER}.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/switch_task.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/tasks.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uartstdio.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/ustdlib.o
+
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/LCD_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display_functions.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uart.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/general_functions.o
-${COMPILER}/$(PROJECT).axf: $(ROOT)/driverlib/${COMPILER}/libdriver.a
+
+${COMPILER}/$(PROJECT).axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
 ${COMPILER}/$(PROJECT).axf: $(PROJECT).ld
 SCATTERgcc_$(PROJECT)=$(PROJECT).ld
 ENTRY_$(PROJECT)=ResetISR

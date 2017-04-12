@@ -76,15 +76,19 @@ void setData() {
 
 void sendByte(char byteToSend, int isData)
 {
-	if (isData)
+
+	if (isData == 1){
 		setData();
-	else
+	}
+	else{
 		setCmd();
+	}
 	SysCtlDelay(400);
 	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, byteToSend >>4);
 	pulseLCD();
 	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, byteToSend);
 	pulseLCD();
+
 }
 
 void defChar(){
@@ -98,16 +102,17 @@ void defChar(){
     0b00000,
     };
 
-    
-    
+
+
     sendByte(0x40, FALSE); //send set ddram
+
     int i;
     for(i = 0; i < 8; i++){
         //printf("hello");
-        sendByte(smiley[i], TRUE);   
+        sendByte(smiley[i], TRUE);
     }
-    
-    
+
+
 }
 
 //
@@ -146,6 +151,7 @@ void clearLCD(void)
 	sendByte(0x01, FALSE); // Clear screen
 	sendByte(0x02, FALSE); // Back to home
 	SysCtlDelay(30000);
+
 }
 
 //
@@ -240,26 +246,26 @@ void initLCD(void)
 	//
 
 	SysCtlDelay(10000);
-	
+
 
 	//
 	// initialize the LCM module
 	// Set 4-bit input
 	//
-    
-    
+
+
 	setCmd();
 	SysCtlDelay(15000);
 	//defChar();
 	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 0b0010);
 	pulseLCD();
-	
+
 	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 0b0010);
 	pulseLCD();
-	
-	
+
+
 	defChar();
-	
+
 	sendByte(0x28,FALSE);  // Set two lines
 	cursorOffLCD();       // Cursor invisible
 	sendByte(0x06, FALSE); // Set insert mode

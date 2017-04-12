@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "display.h"
-#include "../utils/uart.h"
+#include "uart.h"
 #include "general_functions.h"
 
 void display(char* type, int range, int value, int decimal){
@@ -27,21 +27,24 @@ void display(char* type, int range, int value, int decimal){
 
     //UARTprintf("Converted to: %s", buf);
     if(strcmp(type, "voltage") == 0){
-        //UARTprintf("dec: %s\n", decimal_buf);//same type, outputting to display\n");
-        clearLCD();
-		printLCD("Voltage ( ");
-		sendByte(0x00, TRUE);
-		printLCD(range_buf);
-		printLCD("V )");
-		setCursorPositionLCD(1,0);
-		printLCD("V: ");
-		if(set_negative == 1){
-		    printLCD("-");
-		}
-		printLCD(value_buf);
-		printLCD(".");
-		printLCD(decimal_buf);
-		printLCD("V");
+      //UARTprintf("dec: %s\n", decimal_buf);//same type, outputting to display\n");
+      clearLCD();
+
+  		printLCD("Voltage ( ");
+  		sendByte(0x00, TRUE);
+  		printLCD(range_buf);
+  		printLCD("V )");
+  		setCursorPositionLCD(1,0);
+  		printLCD("V: ");
+
+  		if(set_negative == 1){
+  		    printLCD("-");
+  		}
+
+  		printLCD(value_buf);
+  		printLCD(".");
+  		printLCD(decimal_buf);
+  		printLCD("V");
     }
     else if(strcmp(type, "current") == 0){
       clearLCD();
@@ -62,5 +65,6 @@ void display(char* type, int range, int value, int decimal){
     else{
         UARTprintf("No Match!\n");
     }
+
     return;
 }

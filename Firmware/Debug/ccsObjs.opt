@@ -1,1 +1,0 @@
-"./main.obj" "./engg4810-firmware/LIB/display.obj" "./engg4810-firmware/LIB/display_functions.obj" "./engg4810-firmware/LIB/general_functions.obj" "./engg4810-firmware/main.obj" "./engg4810-firmware/startup_ccs.obj" "./engg4810-firmware/utils/uart.obj" "./engg4810-firmware/utils/uartstdio.obj" "../engg4810-firmware/main_ccs.cmd" 

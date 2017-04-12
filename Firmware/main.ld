@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * hello.ld - Linker configuration file for hello.
+ * freertos_demo.ld - Linker configuration file for freertos_demo.
  *
  * Copyright (c) 2012-2014 Texas Instruments Incorporated.  All rights reserved.
  * Software License Agreement
