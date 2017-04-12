@@ -3,29 +3,21 @@ package main;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.chart.XYChart.Data;
-import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.Alert;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 public class GuiView extends Application {
 	private String fxmlFileName = "/gui_test.fxml";
 	private String GuiTitle = "Digital Multimeter Mark 1.0";
 	private Stage stage = new Stage();
+	
 	private static GuiView instance;
 
 	public GuiView() {
@@ -46,6 +38,16 @@ public class GuiView extends Application {
 	public Stage getStage() {
 		return this.stage;
 	}
+	
+	/**
+	 * Hooks onto GUI shutdown event and does relevant tasks (i.e. close any open ports, shutdown threads).
+	 */
+	@Override
+	public void stop() throws Exception {
+		RecordedResults.shutdownRecordedResultsThread();
+		// Close ports
+		super.stop();
+	}
 
 	// PUT IN LISTENERS FOR RE-SIZING THE ELEMENTS ON THE SCREEN
 	@Override
@@ -59,8 +61,8 @@ public class GuiView extends Application {
 		Scene scene = new Scene(loader.load()); // can customise height
 		primaryStage.setScene(scene);
 		primaryStage.setResizable(true); // enable maximisation of screen
-		primaryStage.setMinWidth(771D);
-		primaryStage.setMinHeight(523D);
+		primaryStage.setMinWidth(1274D);
+		primaryStage.setMinHeight(600D);
 
 		// Get access to the GUI controller
 		GuiController controller = loader.getController();
@@ -89,31 +91,40 @@ public class GuiView extends Application {
 		// Set up scene width listener
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
 
+			// 23D is the padding...
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneWidth,
 					Number newSceneWidth) {
-				double chartWidth = ((double) newSceneWidth) - 335D;
-				// double canvasWidth = ((double) newSceneWidth) - 417D;
+				double chartWidth = ((double) newSceneWidth) - 450D;
 
 				controller.appPane.setMinWidth((double) newSceneWidth);
-				controller.lineChart.setMinWidth(chartWidth); // TODO: SEE IMPACT LATER OF USING RA
-																// INSTEAD OF LC
-				// controller.rightAnchor.setMinWidth(chartWidth);
-				controller.measurementsLabel.setMinWidth(chartWidth);
+				controller.lineChart.setMinWidth(chartWidth);
+				controller.GraphingResultsLabel.setMinWidth(chartWidth);
 
-				// DOESN"T RESIZE WITH MAXIMISING OF WINDOW..
-//				controller.lowerBoundary.getPoints().set(2,
-//						controller.chartBackground.getLayoutBounds().getWidth() - 1);
-//				controller.lowerBoundary.getPoints().set(4,
-//						controller.chartBackground.getLayoutBounds().getWidth() - 1);
-				
-				System.out.println(controller.lineChart.getWidth() + " :: "
-						+ (controller.chartBackground.getLayoutBounds().getWidth()));
-				// controller.maskCanvas.setWidth(canvasWidth);
-				// controller.leftAnchor.setMinWidth((double) newSceneWidth);
+				/* THIS IS TO RESIZE THE MASK */
+				/* FIXME */
+				updateMaskDimensions(controller);
 			}
 
 		});
+	}
+
+	// FIXME: ERRORS IF I MODIFY HERE THE POLYGON POINTS
+	private void updateMaskDimensions(GuiController controller) {
+		//lower
+		controller.lowerBoundary.getPoints().set(2,
+				controller.chartBackground.getLayoutBounds().getWidth());
+		controller.lowerBoundary.getPoints().set(4,
+				controller.chartBackground.getLayoutBounds().getWidth());
+		
+		//Upper
+		controller.upperBoundary.getPoints().set(2,
+				controller.chartBackground.getLayoutBounds().getWidth());
+		controller.upperBoundary.getPoints().set(4,
+				controller.chartBackground.getLayoutBounds().getWidth());
+
+//		System.out.println("CH: " + controller.lineChart.getWidth() + " :: "
+//				+ (controller.chartBackground.getLayoutBounds().getWidth()));
 	}
 
 	/**
@@ -132,10 +143,11 @@ public class GuiView extends Application {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneHeight,
 					Number newSceneHeight) {
+				double chartHeight = ((double) newSceneHeight);
+				
 				controller.appPane.setMinHeight((double) newSceneHeight);
-				controller.leftAnchor.setMinHeight((double) newSceneHeight - 10D);
-				controller.rightAnchor.setMinHeight((double) newSceneHeight - 10D);
-				// controller.maskCanvas.setHeight((double) newSceneHeight);
+//				controller.leftAnchor.setMinHeight(chartHeight);
+//				controller.rightAnchor.setMinHeight(chartHeight);
 			}
 
 		});
