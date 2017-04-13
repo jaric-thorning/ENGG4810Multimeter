@@ -102,6 +102,7 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/tasks.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uartstdio.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/ustdlib.o
 
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/comm_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/LCD_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display_functions.o

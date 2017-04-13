@@ -168,7 +168,7 @@ SwitchTaskInit(void)
     {
         return(1);
     }
-
+    UARTprintf("Switch initiated...\n\r");
     //
     // Success.
     //

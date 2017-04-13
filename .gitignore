@@ -26,3 +26,5 @@ obj_srf06-cc26xx
 
 .svn
 .depend
+
+gcc

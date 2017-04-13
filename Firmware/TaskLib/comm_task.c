@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// led_task.c - A simple flashing LED task.
+// comm_task.c - A simple flashing LED task.
 //
 // Copyright (c) 2012-2014 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
@@ -52,46 +52,48 @@
 // The stack size for the LED toggle task.
 //
 //*****************************************************************************
-#define LCDTASKSTACKSIZE        128         // Stack size in words
+#define COMMTASKSTACKSIZE        128         // Stack size in words
 
 //*****************************************************************************
 //
 // The item size and queue size for the LED message queue.
 //
 //*****************************************************************************
-#define LCD_ITEM_SIZE           sizeof(uint8_t)
-#define LCD_QUEUE_SIZE          5
+#define COMM_ITEM_SIZE           sizeof(uint8_t)
+#define COMM_QUEUE_SIZE          5
 
 
 
-#define LCD_REFRESH_TIME 500
+#define COMM_REFRESH_TIME 100
 //*****************************************************************************
 //
 // The queue that holds messages sent to the LED task.
 //
 //*****************************************************************************
-xQueueHandle g_pLCDQueue;
+xQueueHandle g_pCOMMQueue;
 
 extern xSemaphoreHandle g_pUARTSemaphore;
 
 
 static void
-LCDTask(void *pvParameters)
+CommTask(void *pvParameters)
 {
     portTickType ui32WakeTime;
-    uint32_t ui32LCDRefreshTime;
-    uint8_t i8Message;
+    uint32_t ui32COMMRefreshTime;
+    //uint8_t i8Message;
 
     //
     // Initialize the LED Toggle Delay to default value.
     //
-    ui32LCDRefreshTime = LCD_REFRESH_TIME;
+    ui32COMMRefreshTime = COMM_REFRESH_TIME;
 
     //
     // Get the current tick count.
     //
     ui32WakeTime = xTaskGetTickCount();
 
+
+    char buffer[64];
     //
     // Loop forever.
     //
@@ -105,11 +107,18 @@ LCDTask(void *pvParameters)
 
       }*/
 
-      display("voltage",0, 0, 0);
+      //UARTprintf("Getting UART...\n\r");
+      //display("voltage",0, 0, 0);
+      UARTgets(buffer, 64);
+      xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
+      UARTprintf("%s\n\r", buffer);
+      xSemaphoreGive(g_pUARTSemaphore);
+
+
       //
       // Wait for the required amount of time.
       //
-      vTaskDelayUntil(&ui32WakeTime, ui32LCDRefreshTime / portTICK_RATE_MS);
+      vTaskDelayUntil(&ui32WakeTime, ui32COMMRefreshTime / portTICK_RATE_MS);
     }
 }
 
@@ -119,24 +128,24 @@ LCDTask(void *pvParameters)
 //
 //*****************************************************************************
 uint32_t
-LCDTaskInit(void)
+CommTaskInit(void)
 {
     //
     // Create a queue for sending messages to the LED task.
     //
-    g_pLCDQueue = xQueueCreate(LCD_QUEUE_SIZE, LCD_ITEM_SIZE);
+    g_pCOMMQueue = xQueueCreate(COMM_QUEUE_SIZE, COMM_ITEM_SIZE);
 
-    initLCD();
+    //initLCD();
     //
     // Create the LED task.
     //
-    if(xTaskCreate(LCDTask, (signed portCHAR *)"LCD", LCDTASKSTACKSIZE, NULL,
-                   tskIDLE_PRIORITY + PRIORITY_LCD_TASK, NULL) != pdTRUE)
+    if(xTaskCreate(CommTask, (signed portCHAR *)"COMM", COMMTASKSTACKSIZE, NULL,
+                   tskIDLE_PRIORITY + PRIORITY_COMM_TASK, NULL) != pdTRUE)
     {
         return(1);
     }
 
-    UARTprintf("LCD initiated...\n\r");
+    UARTprintf("Comms initiated...\n\r");
     //
     // Success.
     //

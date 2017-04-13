@@ -229,7 +229,7 @@ LEDTaskInit(void)
     {
         return(1);
     }
-
+    UARTprintf("LEDs initiated...\n\r");
     //
     // Success.
     //

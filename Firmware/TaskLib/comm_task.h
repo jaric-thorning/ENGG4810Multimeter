@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// priorities.h - Priorities for the various FreeRTOS tasks.
+// comm_task.h - Prototypes for the LED task.
 //
 // Copyright (c) 2012-2014 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
@@ -22,19 +22,14 @@
 //
 //*****************************************************************************
 
-#ifndef __PRIORITIES_H__
-#define __PRIORITIES_H__
+#ifndef __COMM_TASK_H__
+#define __COMM_TASK_H__
 
 //*****************************************************************************
 //
-// The priorities of the various tasks.
+// Prototypes for the LED task.
 //
 //*****************************************************************************
-#define PRIORITY_COMM_TASK      1
-#define PRIORITY_LCD_TASK       4
-#define PRIORITY_SWITCH_TASK    3
-#define PRIORITY_LED_TASK       2
+extern uint32_t CommTaskInit(void);
 
-
-
-#endif // __PRIORITIES_H__
+#endif // __LED_TASK_H__
