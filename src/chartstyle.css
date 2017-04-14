@@ -1,12 +1,12 @@
 /* Line chart styling */
-.default-color0.chart-series-line { -fx-stroke:  #6495ED; }
-.default-color1.chart-series-line { -fx-stroke:  #F08080; }
+.default-color1.chart-series-line { -fx-stroke:  #6495ED; }
+.default-color0.chart-series-line { -fx-stroke:  #F08080; }
 
-.default-color0.chart-line-symbol {
+.default-color1.chart-line-symbol {
     -fx-background-color: black, #6495ED;
 }
 
-.default-color1.chart-line-symbol {
+.default-color0.chart-line-symbol {
     -fx-background-color: black, #F08080;
 }
 

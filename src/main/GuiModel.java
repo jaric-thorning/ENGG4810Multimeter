@@ -1,10 +1,12 @@
 package main;
 
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import javafx.scene.chart.XYChart;
@@ -12,11 +14,14 @@ import javafx.scene.chart.XYChart;
 // the format for reading in files <x-value><y-value><y-value units>
 //TODO: MAKE IT SO THAT ONLY DATA OF CURRENT UNIT IS SAVED, SO WHEN THE UNIT CHANGES< THE SAVED DATA CHANGES TOO.
 public class GuiModel {
-	private ArrayList<Integer> multimeterReadings = new ArrayList<>();
+	//private ArrayList<Integer> multimeterReadings = new ArrayList<>();
 
 	private static final String DELIMITER = ",";
 	private static final String NEW_LINE_SEPARATOR = "\n";
 	private static String[] fileHeaders = { "Time", "Value", "Units" };
+	
+	DecimalFormat oneDecimal = new DecimalFormat("0.000");
+	DecimalFormat timeDecimal = new DecimalFormat("0.0");
 
 	private static GuiModel instance;
 
@@ -160,6 +165,59 @@ public class GuiModel {
 				bufferedWriter.write(NEW_LINE_SEPARATOR);
 			}
 		}
+	}
+
+	public void saveMaskData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
+			String unit) throws IOException {
+
+		for (int i = 0; i < series.getData().size(); i++) {
+			writeMaskData(bufferedWriter, series.getName(), series.getData().get(i).getXValue(),
+					series.getData().get(i).getYValue(), unit);
+		}
+
+	}
+
+	private void writeMaskData(BufferedWriter bufferedWriter, String boundaryName, Number xValue,
+			Number yValue, String yUnit) {
+		try {
+			bufferedWriter.write(boundaryName);
+			bufferedWriter.write(DELIMITER);
+			bufferedWriter.write(timeDecimal.format(xValue).toString());
+			bufferedWriter.write(DELIMITER);
+			bufferedWriter.write(oneDecimal.format(yValue).toString());
+			bufferedWriter.write(DELIMITER);
+			bufferedWriter.write(yUnit);
+			bufferedWriter.write(NEW_LINE_SEPARATOR);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public ArrayList<String[]> readMaskData(String fileName) {
+		ArrayList<String[]> readData = new ArrayList<>();
+		String line = "";
+
+		try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
+			// MAY HAVE MASK FILE HEADER
+			// bufferedReader.readLine(); // Get rid of the csv file's first line (column headers)
+
+			while ((line = bufferedReader.readLine()) != null) {
+				String[] tokens = line.split(DELIMITER);
+
+				// Add each element into the array
+				if (tokens.length > 0) {
+					readData.add(tokens); // Add series name (high/low)
+				} else {
+					System.err.println("There are no elements");
+				}
+			}
+		} catch (FileNotFoundException e1) { // The file name supplied was incorrect.
+			e1.printStackTrace();
+		} catch (IOException e1) { // There was a problem using the buffered reader.
+			e1.printStackTrace();
+		}
+
+		return readData;
 	}
 
 }

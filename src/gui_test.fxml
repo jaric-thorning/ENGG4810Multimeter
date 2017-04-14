@@ -14,7 +14,7 @@
 
 <Group fx:id="root" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.GuiController">
    <children>
-      <Pane id="mainWholePane" fx:id="appPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1274.0" stylesheets="@style.css">
+      <Pane id="mainWholePane" fx:id="appPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1096.0" stylesheets="@style.css">
          <children>
             <AnchorPane id="leftAnchor" fx:id="leftAnchor" layoutX="4.0" layoutY="4.0" minHeight="271.0" prefHeight="592.0" prefWidth="275.0" SplitPane.resizableWithParent="false">
                <children>
@@ -31,9 +31,9 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="60.0" minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="50.0" minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
                         <RadioButton fx:id="connRBtn" disable="true" focusTraversable="false" minWidth="120.0" mnemonicParsing="false" onAction="#selectConnected" stylesheets="@buttonstyle.css" text="Connected   " GridPane.halignment="CENTER" GridPane.rowIndex="1">
@@ -90,69 +90,55 @@
                               <Insets left="250.0" />
                            </GridPane.margin>
                         </Group>
-                        <Button fx:id="maskTestingBtn" disable="true" minWidth="116.0" mnemonicParsing="false" onAction="#editMask" text="Mask-Testing" GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                        <Button fx:id="maskTestingBtn" disable="true" minWidth="116.0" mnemonicParsing="false" onAction="#editMask" text="Mask-Testing" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                            <GridPane.margin>
-                              <Insets left="10.0" top="25.0" />
+                              <Insets />
                            </GridPane.margin></Button>
-                        <Group GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                        <Group GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                            <children>
-                              <CheckBox fx:id="lowBoundaryCheckbox" layoutY="50.0" minWidth="134.0" mnemonicParsing="false" onAction="#setToLowBoundary" text="Low" textFill="WHITE" visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="CENTER">
-                                 <font>
-                                    <Font size="12.0" />
-                                 </font>
-                              </CheckBox>
-                              <CheckBox fx:id="highBoundaryCheckbox" layoutY="20.0" minWidth="134.0" mnemonicParsing="false" onAction="#setToHighBoundary" selected="true" text="High" textFill="WHITE" visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="TOP">
-                                 <font>
-                                    <Font size="12.0" />
-                                 </font>
-                              </CheckBox>
-                              <Label fx:id="addBoundaryLabel" text="Add Boundary:" visible="false" />
+                              <Button fx:id="setHighBtn" layoutY="20.0" minWidth="131.0" mnemonicParsing="false" onAction="#setHighBoundary" text="Add Upper Mask" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="240.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="setLowBtn" layoutY="50.0" minWidth="131.0" mnemonicParsing="false" onAction="#setLowBoundary" text="Add Lower Mask" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER">
+                                 <GridPane.margin>
+                                    <Insets left="240.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Label fx:id="setBoundaryLabel" text="Create Mask:" visible="false" />
                            </children>
                            <GridPane.margin>
-                              <Insets left="10.0" />
+                              <Insets left="10.0" top="40.0" />
                            </GridPane.margin>
                         </Group>
-                        <Group GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="TOP">
-                           <children>
-                              <Button fx:id="setHighBtn" layoutY="20.0" minWidth="77.0" mnemonicParsing="false" onAction="#setHighBoundary" text="Set High" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="TOP">
-                                 <GridPane.margin>
-                                    <Insets left="240.0" />
-                                 </GridPane.margin>
-                              </Button>
-                              <Button fx:id="setLowBtn" layoutY="50.0" minWidth="77.0" mnemonicParsing="false" onAction="#setLowBoundary" text="Set Low" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER">
-                                 <GridPane.margin>
-                                    <Insets left="240.0" />
-                                 </GridPane.margin>
-                              </Button>
-                              <Label fx:id="setBoundaryLabel" text="Set Boundary:" visible="false" />
-                           </children>
+                        <Button fx:id="exportMaskBtn" minWidth="110.0" mnemonicParsing="false" onAction="#exportMaskData" text="Export Mask" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                            <GridPane.margin>
                               <Insets left="250.0" />
                            </GridPane.margin>
-                        </Group>
-                        <Button fx:id="exportMaskBtn" minWidth="110.0" mnemonicParsing="false" text="Export Mask" visible="false" GridPane.halignment="LEFT" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+                        </Button>
+                        <Button fx:id="importMaskBtn" minWidth="110.0" mnemonicParsing="false" onAction="#importMaskData" text="Import Mask" visible="false" GridPane.halignment="LEFT" GridPane.rowIndex="4" GridPane.valignment="TOP">
                            <GridPane.margin>
                               <Insets left="10.0" />
                            </GridPane.margin>
                         </Button>
-                        <Button fx:id="importMaskBtn" minWidth="110.0" mnemonicParsing="false" text="Import Mask" visible="false" GridPane.halignment="LEFT" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                        <Button fx:id="runMTBtn" minWidth="106.0" mnemonicParsing="false" onAction="#runMaskTest" text="Run Mask-Test" visible="false" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.valignment="CENTER">
                            <GridPane.margin>
                               <Insets left="10.0" />
                            </GridPane.margin>
                         </Button>
-                        <Group GridPane.halignment="LEFT" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                        <Group GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                            <children>
-                              <Label layoutX="10.0" layoutY="30.0" minHeight="15.0" minWidth="70.0" prefHeight="15.0" text="X:" textFill="WHITE" visible="false" fx:id="xDataCoord" />
-                              <Label fx:id="yDataCoord" layoutX="10.0" layoutY="50.0" minHeight="15.0" minWidth="70.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" visible="false" />
-                              <Label fx:id="plotCoordLabel" layoutX="9.0" text="Plot Coordinates:" visible="false" />
+                              <Circle fill="LIGHTCORAL" layoutY="28.0" radius="10.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="4.0" />
+                              <Circle fill="CORNFLOWERBLUE" radius="10.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="4.0" />
                            </children>
                            <GridPane.margin>
-                              <Insets left="130.0" />
+                              <Insets left="170.0" top="65.0" />
                            </GridPane.margin>
                         </Group>
                      </children>
                   </GridPane>
-                  <Line fx:id="separatorLine" endX="275.0" layoutY="375.0" startX="1.0" stroke="#666699" strokeWidth="2.0" visible="false" />
+                  <Line fx:id="separatorLine" endX="275.0" layoutY="410.0" startX="1.0" stroke="#666699" strokeWidth="2.0" visible="false" />
                </children>
                <stylesheets>
                   <URL value="@tabstyle.css" />
@@ -200,7 +186,7 @@
                               <Insets />
                            </GridPane.margin>
                         </Group>
-                        <TextField fx:id="multimeterDisplay" disable="true" editable="false" prefHeight="28.0" promptText="± Multimeter" GridPane.rowIndex="2">
+                        <TextField fx:id="multimeterDisplay" disable="true" editable="false" prefHeight="28.0" promptText="± Mult Range" GridPane.rowIndex="2">
                            <GridPane.margin>
                               <Insets left="25.0" right="25.0" />
                            </GridPane.margin>
@@ -213,9 +199,9 @@
                   <URL value="@buttonstyle.css" />
                </stylesheets>
             </AnchorPane>
-            <AnchorPane id="leftAnchor" fx:id="rightAnchor" layoutX="446.0" layoutY="4.0" prefHeight="592.0" prefWidth="823.0" stylesheets="@tabstyle.css" SplitPane.resizableWithParent="false">
+            <AnchorPane id="leftAnchor" fx:id="rightAnchor" layoutX="446.0" layoutY="4.0" prefHeight="592.0" prefWidth="594.0" stylesheets="@tabstyle.css" SplitPane.resizableWithParent="false">
                <children>
-                  <Label id="dataSource" fx:id="GraphingResultsLabel" minWidth="823.0" prefHeight="35.0" stylesheets="@tabstyle.css" text="Graphing Results">
+                  <Label id="dataSource" fx:id="GraphingResultsLabel" minWidth="645.0" prefHeight="35.0" prefWidth="642.0" stylesheets="@tabstyle.css" text="Graphing Results">
                      <font>
                         <Font size="14.0" />
                      </font>
@@ -223,7 +209,7 @@
                         <Insets left="5.0" />
                      </padding>
                   </Label>
-                  <GridPane layoutX="-2.5" layoutY="35.0" prefHeight="458.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
+                  <GridPane fx:id="chartGrid" layoutX="-2.5" layoutY="35.0" prefHeight="592.0" prefWidth="645.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
                      <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
                      </columnConstraints>
@@ -232,12 +218,12 @@
                         <RowConstraints maxHeight="38.75921630859375" minHeight="10.0" prefHeight="38.75921630859375" vgrow="SOMETIMES" />
                      </rowConstraints>
                      <children>
-                        <LineChart fx:id="lineChart" horizontalZeroLineVisible="false" layoutX="-12.0" layoutY="30.0" legendVisible="false" prefHeight="547.0" prefWidth="861.0" stylesheets="@chartstyle.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0" GridPane.valignment="BOTTOM">
+                        <LineChart fx:id="lineChart" disable="true" horizontalZeroLineVisible="false" layoutX="-12.0" layoutY="30.0" legendVisible="false" prefHeight="547.0" prefWidth="861.0" stylesheets="@chartstyle.css" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0" GridPane.valignment="BOTTOM">
                           <xAxis>
-                            <NumberAxis animated="false" autoRanging="false" forceZeroInRange="false" label="Time (seconds)" prefHeight="47.0" prefWidth="449.0" side="BOTTOM" tickLabelFill="WHITE" upperBound="10.0" fx:id="xAxis" />
+                            <NumberAxis animated="false" autoRanging="false" forceZeroInRange="false" label="Time (seconds)" minorTickCount="2" prefHeight="47.0" prefWidth="449.0" side="BOTTOM" tickLabelFill="WHITE" tickUnit="1.0" upperBound="10.0" fx:id="xAxis" />
                           </xAxis>
                           <yAxis>
-                            <NumberAxis fx:id="yAxis" forceZeroInRange="false" label="Measurement" lowerBound="-10.0" prefHeight="382.0" prefWidth="54.0" side="LEFT" tickLabelFill="WHITE" upperBound="50.0" />
+                            <NumberAxis fx:id="yAxis" animated="false" forceZeroInRange="false" label="Measurement" lowerBound="-10.0" prefHeight="382.0" prefWidth="54.0" side="LEFT" tickLabelFill="WHITE" upperBound="50.0" />
                           </yAxis>
                            <cursor>
                               <Cursor fx:constant="DEFAULT" />
@@ -255,6 +241,24 @@
                            </GridPane.margin>
                         </Button>
                         <Button fx:id="leftBtn" mnemonicParsing="false" onAction="#moveXAxisLeft" stylesheets="@buttonstyle.css" text="&lt;" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP" />
+                        <Group GridPane.halignment="LEFT" GridPane.valignment="TOP">
+                           <children>
+                              <Label layoutX="10.0" layoutY="15.0" minHeight="15.0" minWidth="70.0" prefHeight="15.0" text="X:" textFill="WHITE" fx:id="xDataCoord" />
+                              <Label fx:id="yDataCoord" layoutX="10.0" layoutY="35.0" minHeight="15.0" minWidth="70.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" />
+                              <Label fx:id="plotCoordLabel" layoutX="9.0" text="Plot Coordinates:" />
+                           </children>
+                           <GridPane.margin>
+                              <Insets left="10.0" top="500.0" />
+                           </GridPane.margin>
+                        </Group>
+                        <Label fx:id="maskStatusLabel" text="FAIL" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                           <font>
+                              <Font size="34.0" />
+                           </font>
+                           <GridPane.margin>
+                              <Insets right="50.0" />
+                           </GridPane.margin>
+                        </Label>
                      </children>
                   </GridPane>
                   <Group layoutX="100.0">
@@ -263,12 +267,11 @@
                         <Label fx:id="yCoordValues" layoutX="445.0" layoutY="15.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="Y:" />
                      </children>
                   </Group>
-                  <Polygon fx:id="upperBoundary" fill="CORNFLOWERBLUE" layoutX="65.0" layoutY="45.0" opacity="0.5" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0">
+                  <Polygon fx:id="upperBoundary" disable="true" fill="CORNFLOWERBLUE" layoutX="65.0" layoutY="45.0" opacity="0.5" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false">
                     <points>
                     	<Double fx:value="0.0" />
-            	      	<Double fx:value="10.0" />
-            	      	        	      				
-                                          	      	<Double fx:value="351.0" />
+            	      	<Double fx:value="10.0" />        	      				
+                        <Double fx:value="351.0" />
             	      	<Double fx:value="10.0" />
             	      				
                                           	      	<Double fx:value="351.0" />
@@ -278,7 +281,7 @@
             	      	<Double fx:value="0.0" />
                     </points>
                   </Polygon>
-                  <Polygon fx:id="lowerBoundary" fill="LIGHTCORAL" layoutX="65.0" layoutY="496.0" opacity="0.5" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0">
+                  <Polygon fx:id="lowerBoundary" disable="true" fill="LIGHTCORAL" layoutX="65.0" layoutY="496.0" opacity="0.5" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false">
                      <points>
                         <Double fx:value="0.0" />
                         <Double fx:value="-10.0" />
