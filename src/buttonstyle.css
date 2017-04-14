@@ -19,6 +19,14 @@
 }
 
 .button:armed {
+ 	button-fill: #556699;
+    -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
+                          linear-gradient(derive(button-fill,80%), derive(button-fill, 0%)),
+                          linear-gradient(derive(button-fill,30%), derive(button-fill,-10%));
+    -fx-background-insets: 0,1,2;
+}
+
+.button:selected {
  	button-fill: #000033;
     -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
                           linear-gradient(derive(button-fill,80%), derive(button-fill, 0%)),

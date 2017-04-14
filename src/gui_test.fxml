@@ -90,44 +90,26 @@
                               <Insets left="250.0" />
                            </GridPane.margin>
                         </Group>
-                        <Button fx:id="maskTestingBtn" disable="true" minWidth="116.0" mnemonicParsing="false" onAction="#editMask" text="Mask-Testing" GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                        <Button fx:id="maskTestingBtn" disable="true" minWidth="116.0" mnemonicParsing="false" onAction="#editMask" text="Mask-Testing" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                            <GridPane.margin>
-                              <Insets left="10.0" />
+                              <Insets />
                            </GridPane.margin></Button>
                         <Group GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                            <children>
-                              <CheckBox fx:id="lowBoundaryCheckbox" layoutY="50.0" minWidth="134.0" mnemonicParsing="false" onAction="#setToLowBoundary" text="Low" textFill="WHITE" visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="CENTER">
-                                 <font>
-                                    <Font size="12.0" />
-                                 </font>
-                              </CheckBox>
-                              <CheckBox fx:id="highBoundaryCheckbox" layoutY="20.0" minWidth="134.0" mnemonicParsing="false" onAction="#setToHighBoundary" selected="true" text="High" textFill="WHITE" visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="TOP">
-                                 <font>
-                                    <Font size="12.0" />
-                                 </font>
-                              </CheckBox>
-                              <Label fx:id="addBoundaryLabel" text="Add Boundary:" visible="false" />
+                              <Button fx:id="setHighBtn" layoutY="20.0" minWidth="131.0" mnemonicParsing="false" onAction="#setHighBoundary" text="Add Upper Mask" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="240.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="setLowBtn" layoutY="50.0" minWidth="131.0" mnemonicParsing="false" onAction="#setLowBoundary" text="Add Lower Mask" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER">
+                                 <GridPane.margin>
+                                    <Insets left="240.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Label fx:id="setBoundaryLabel" text="Create Mask:" visible="false" />
                            </children>
                            <GridPane.margin>
                               <Insets left="10.0" top="40.0" />
-                           </GridPane.margin>
-                        </Group>
-                        <Group layoutY="50.0" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
-                           <children>
-                              <Button fx:id="setHighBtn" layoutY="20.0" minWidth="77.0" mnemonicParsing="false" onAction="#setHighBoundary" text="Set High" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="TOP">
-                                 <GridPane.margin>
-                                    <Insets left="240.0" />
-                                 </GridPane.margin>
-                              </Button>
-                              <Button fx:id="setLowBtn" layoutY="50.0" minWidth="77.0" mnemonicParsing="false" onAction="#setLowBoundary" text="Set Low" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER">
-                                 <GridPane.margin>
-                                    <Insets left="240.0" />
-                                 </GridPane.margin>
-                              </Button>
-                              <Label fx:id="setBoundaryLabel" text="Set Boundary:" visible="false" />
-                           </children>
-                           <GridPane.margin>
-                              <Insets left="250.0" top="40.0" />
                            </GridPane.margin>
                         </Group>
                         <Button fx:id="exportMaskBtn" minWidth="110.0" mnemonicParsing="false" onAction="#exportMaskData" text="Export Mask" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
@@ -145,6 +127,15 @@
                               <Insets left="10.0" />
                            </GridPane.margin>
                         </Button>
+                        <Group GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                           <children>
+                              <Circle fill="LIGHTCORAL" layoutY="28.0" radius="10.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="4.0" />
+                              <Circle fill="CORNFLOWERBLUE" radius="10.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="4.0" />
+                           </children>
+                           <GridPane.margin>
+                              <Insets left="170.0" top="65.0" />
+                           </GridPane.margin>
+                        </Group>
                      </children>
                   </GridPane>
                   <Line fx:id="separatorLine" endX="275.0" layoutY="410.0" startX="1.0" stroke="#666699" strokeWidth="2.0" visible="false" />
@@ -218,7 +209,7 @@
                         <Insets left="5.0" />
                      </padding>
                   </Label>
-                  <GridPane layoutX="-2.5" layoutY="35.0" prefHeight="592.0" prefWidth="645.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
+                  <GridPane fx:id="chartGrid" layoutX="-2.5" layoutY="35.0" prefHeight="592.0" prefWidth="645.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
                      <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
                      </columnConstraints>
@@ -227,7 +218,7 @@
                         <RowConstraints maxHeight="38.75921630859375" minHeight="10.0" prefHeight="38.75921630859375" vgrow="SOMETIMES" />
                      </rowConstraints>
                      <children>
-                        <LineChart fx:id="lineChart" horizontalZeroLineVisible="false" layoutX="-12.0" layoutY="30.0" legendVisible="false" prefHeight="547.0" prefWidth="861.0" stylesheets="@chartstyle.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0" GridPane.valignment="BOTTOM">
+                        <LineChart fx:id="lineChart" disable="true" horizontalZeroLineVisible="false" layoutX="-12.0" layoutY="30.0" legendVisible="false" prefHeight="547.0" prefWidth="861.0" stylesheets="@chartstyle.css" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0" GridPane.valignment="BOTTOM">
                           <xAxis>
                             <NumberAxis animated="false" autoRanging="false" forceZeroInRange="false" label="Time (seconds)" minorTickCount="2" prefHeight="47.0" prefWidth="449.0" side="BOTTOM" tickLabelFill="WHITE" tickUnit="1.0" upperBound="10.0" fx:id="xAxis" />
                           </xAxis>
@@ -276,7 +267,7 @@
                         <Label fx:id="yCoordValues" layoutX="445.0" layoutY="15.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="Y:" />
                      </children>
                   </Group>
-                  <Polygon fx:id="upperBoundary" disable="true" fill="CORNFLOWERBLUE" layoutX="65.0" layoutY="45.0" opacity="0.5" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0">
+                  <Polygon fx:id="upperBoundary" disable="true" fill="CORNFLOWERBLUE" layoutX="65.0" layoutY="45.0" opacity="0.5" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false">
                     <points>
                     	<Double fx:value="0.0" />
             	      	<Double fx:value="10.0" />        	      				
@@ -290,7 +281,7 @@
             	      	<Double fx:value="0.0" />
                     </points>
                   </Polygon>
-                  <Polygon fx:id="lowerBoundary" disable="true" fill="LIGHTCORAL" layoutX="65.0" layoutY="496.0" opacity="0.5" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0">
+                  <Polygon fx:id="lowerBoundary" disable="true" fill="LIGHTCORAL" layoutX="65.0" layoutY="496.0" opacity="0.5" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false">
                      <points>
                         <Double fx:value="0.0" />
                         <Double fx:value="-10.0" />

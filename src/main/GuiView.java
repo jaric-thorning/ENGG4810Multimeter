@@ -1,20 +1,25 @@
 package main;
 
+import java.text.DecimalFormat;
+
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.VPos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.chart.XYChart;
-import javafx.scene.chart.XYChart.Data;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.Alert;
-import javafx.scene.control.DialogPane;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.DialogPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GuiView extends Application {
@@ -78,9 +83,12 @@ public class GuiView extends Application {
 		sceneWidthChange(stage, scene, controller);
 		sceneHeightChange(stage, scene, controller);
 
-		testingMask(controller);
-		updateMaskDimensions(controller);
-		
+		// Set up linechart stlying + behaviour
+		setupLineChart(controller.xAxis1, controller.yAxis1, controller);
+		scene.getStylesheets().add(getClass().getResource("/chartstyle.css").toExternalForm());
+
+		// Display coordinates on the screen
+		displayPlotCoordinates(controller);
 		// Set window title
 		primaryStage.setTitle(GuiTitle);
 
@@ -88,40 +96,69 @@ public class GuiView extends Application {
 		primaryStage.show();
 	}
 
-	private void testingMask(GuiController controller) {
-		System.out.println("Y");
-		System.out.println(controller.upperSeries.dataProperty().get().toString());
+	void displayPlotCoordinates(GuiController controller) {
+		DecimalFormat oneDecimal = new DecimalFormat("0.000");
 
-		controller.upperSeries.getData()
-				.addListener(new ListChangeListener<Data<Number, Number>>() {
+		// Display mouse coordinates. FEATURE OF MASK-TESTING ONLY
+		controller.chartBackground.setOnMouseMoved(new EventHandler<MouseEvent>() {
 
-					@Override
-					public void onChanged(
-							javafx.collections.ListChangeListener.Change<? extends Data<Number, Number>> c) {
-						System.out.println("TEST");
+			@Override
+			public void handle(MouseEvent event) {
+				// Get coordinates
+				controller.xCoordValues.setText(
+						"X: " + oneDecimal.format(controller.getMouseChartCoords(event, true)));
+				controller.yCoordValues.setText(
+						"Y: " + oneDecimal.format(controller.getMouseChartCoords(event, false)));
+			}
+		});
+	}
 
-					}
+	private void setupLineChart(NumberAxis xAxis, NumberAxis yAxis, GuiController controller) {
+		// set up axes
+		setupAxes(xAxis, yAxis);
 
-				});
+		// creating the chart
+		controller.lineChart1 = new ModifiedLineChart(xAxis, yAxis);
 
-		controller.upperSeries.dataProperty()
-				.addListener(new ChangeListener<ObservableList<XYChart.Data<Number, Number>>>() {
+		// add line chart to grid pane
+		controller.chartGrid.add(controller.lineChart1, 0, 0);
+		GridPane.setValignment(controller.lineChart1, VPos.BOTTOM);
 
-					@Override
-					public void changed(
-							ObservableValue<? extends ObservableList<Data<Number, Number>>> observable,
-							ObservableList<Data<Number, Number>> oldValue,
-							ObservableList<Data<Number, Number>> newValue) {
+		controller.lineChart1.getData().add(controller.lowerSeries);
+		controller.lineChart1.getData().add(controller.upperSeries);
 
-						System.out.println("X");
-						for (XYChart.Data<Number, Number> d : newValue) {
-							System.out.println(
-									"NEW X: " + d.getXValue() + " NEW Y: " + d.getYValue());
-						}
+		controller.chartBackground = controller.lineChart1.lookup(".chart-plot-background");
+		controller.chartBackground.setCursor(Cursor.CROSSHAIR);
 
-					}
+		controller.setBoundaries(controller.chartBackground);
+	}
 
-				});
+	/**
+	 * A private function which sets up the necessary modifies on the x and y axes of the line chart
+	 * 
+	 * @param xAxis
+	 * @param yAxis
+	 */
+	private void setupAxes(NumberAxis xAxis, NumberAxis yAxis) {
+		xAxis.setLabel("Time (seconds)");
+		xAxis.setLowerBound(0D);
+		xAxis.setUpperBound(10D);
+		xAxis.setForceZeroInRange(false);
+		xAxis.setAutoRanging(false);
+		xAxis.setAnimated(false);
+		xAxis.setMinorTickCount(2);
+		xAxis.setTickUnit(1D);
+		xAxis.setTickLabelFill(Color.WHITE);
+
+		yAxis.setLabel("Measurements");
+		yAxis.setUpperBound(50D);
+		yAxis.setLowerBound(-10D);
+		yAxis.setForceZeroInRange(false);
+		yAxis.setAutoRanging(true);
+		yAxis.setAnimated(false);
+		yAxis.setMinorTickCount(5);
+		yAxis.setTickUnit(5D);
+		yAxis.setTickLabelFill(Color.WHITE);
 	}
 
 	/**
@@ -143,30 +180,11 @@ public class GuiView extends Application {
 					Number newSceneWidth) {
 				// double chartWidth = ((double) newSceneWidth) - 450D;
 
-				/* THIS IS TO RESIZE THE MASK */
-				// && stage.isFullScreen()
-				/* FIXME */
-				//updateMaskDimensions(controller);
-
-				if ((controller.upperSeries.getData().size() > 0)) {
-
-					for (int i = 0; i < controller.upperSeries.getData().size(); i++) {
-						XYChart.Data<Number, Number> dataPoints = controller.upperSeries.getData()
-								.get(i);
-						Double x = dataPoints.getXValue().doubleValue();
-						Double xx = controller.lineChart.getXAxis().getDisplayPosition(x);
-
-						controller.upperBoundary.getPoints().set(2, xx);
-
-						System.out.println("OS: " + x.toString() + " || XX:" + xx);
-					}
-				}
-
-				//FIXME: resizing doesn't work if too fast
+				// FIXME: resizing doesn't work if too fast, it's a bit iffy
 				controller.appPane.setMinWidth((double) newSceneWidth);
-				//controller.lineChart.setMinWidth((double) newSceneWidth - 451D - 100D);
-				//controller.rightAnchor.setMinWidth((double) newSceneWidth - 451D);
-				
+				// controller.lineChart.setMinWidth((double) newSceneWidth - 451D - 100D);
+				// controller.rightAnchor.setMinWidth((double) newSceneWidth - 451D);
+
 				// FIXME: THE CHART BACKGROUND DOESN'T
 				Double testWidthOld = oldSceneWidth.doubleValue();
 				Double testWidthNew = newSceneWidth.doubleValue();
@@ -188,27 +206,6 @@ public class GuiView extends Application {
 				"ACK LINECHART: " + controller.chartBackground.getLayoutBounds().getWidth());
 	}
 
-	// FIXME: ERRORS IF I MODIFY HERE THE POLYGON POINTS
-	private void updateMaskDimensions(GuiController controller) {
-		// SET THE UPPER AND LOWER
-		// lower
-		controller.lowerBoundary.getPoints().set(2,
-				controller.chartBackground.getLayoutBounds().getWidth());
-		controller.lowerBoundary.getPoints().set(4,
-				controller.chartBackground.getLayoutBounds().getWidth());
-
-		// Upper
-		controller.upperBoundary.getPoints().set(2,
-				controller.chartBackground.getLayoutBounds().getWidth());
-		controller.upperBoundary.getPoints().set(4,
-				controller.chartBackground.getLayoutBounds().getWidth());
-
-		// System.out.println("CW: " + controller.lineChart.getWidth() + " CH: " +
-		// controller.lineChart.getHeight());
-		// System.out.println("CH: " + controller.lineChart.getWidth() + " :: "
-		// + (controller.chartBackground.getLayoutBounds().getWidth()));
-	}
-
 	/**
 	 * A private helper function which adds a listener to the height property of the scene, and to
 	 * some of the contained elements.
@@ -228,24 +225,11 @@ public class GuiView extends Application {
 				double chartHeight = ((double) newSceneHeight);
 
 				controller.appPane.setMinHeight((double) newSceneHeight);
-				
+
 				// System.out.println("MM: " + stage.isFullScreen());
 				// controller.lineChart.setMinHeight(chartHeight);
 				// controller.leftAnchor.setMinHeight(chartHeight);
 				// controller.rightAnchor.setMinHeight(chartHeight);
-
-				if ((controller.upperSeries.getData().size() > 0)) {
-					// myGrid.cellWidthProperty().bind(columnWidthSlider.valueProperty());
-
-					for (int i = 0; i < controller.upperSeries.getData().size(); i++) {
-						XYChart.Data<Number, Number> dataPoints = controller.upperSeries.getData()
-								.get(i);
-						Double y = dataPoints.getYValue().doubleValue();
-						Double yy = controller.lineChart.getYAxis().getDisplayPosition(y);
-
-						controller.upperBoundary.getPoints().set(3, yy);
-					}
-				}
 			}
 
 		});

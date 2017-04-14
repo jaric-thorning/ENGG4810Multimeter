@@ -1,24 +1,27 @@
 package main;
 
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.List;
 
 import javafx.scene.chart.XYChart;
-import javafx.scene.chart.XYChart.Series;
 
 // the format for reading in files <x-value><y-value><y-value units>
 //TODO: MAKE IT SO THAT ONLY DATA OF CURRENT UNIT IS SAVED, SO WHEN THE UNIT CHANGES< THE SAVED DATA CHANGES TOO.
 public class GuiModel {
-	private ArrayList<Integer> multimeterReadings = new ArrayList<>();
+	//private ArrayList<Integer> multimeterReadings = new ArrayList<>();
 
 	private static final String DELIMITER = ",";
 	private static final String NEW_LINE_SEPARATOR = "\n";
 	private static String[] fileHeaders = { "Time", "Value", "Units" };
+	
+	DecimalFormat oneDecimal = new DecimalFormat("0.000");
+	DecimalFormat timeDecimal = new DecimalFormat("0.0");
 
 	private static GuiModel instance;
 
@@ -179,9 +182,9 @@ public class GuiModel {
 		try {
 			bufferedWriter.write(boundaryName);
 			bufferedWriter.write(DELIMITER);
-			bufferedWriter.write(GuiController.getInstance().timeDecimal.format(xValue).toString());
+			bufferedWriter.write(timeDecimal.format(xValue).toString());
 			bufferedWriter.write(DELIMITER);
-			bufferedWriter.write(GuiController.getInstance().oneDecimal.format(yValue).toString());
+			bufferedWriter.write(oneDecimal.format(yValue).toString());
 			bufferedWriter.write(DELIMITER);
 			bufferedWriter.write(yUnit);
 			bufferedWriter.write(NEW_LINE_SEPARATOR);
