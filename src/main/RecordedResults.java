@@ -64,7 +64,7 @@ public class RecordedResults {
 					final double yValue = Double
 							.parseDouble(multimeterReadingsDataY.get(dataIndex));
 					
-					//GuiController.getInstance().recordAndDisplayDummyData(yValue);
+					GuiController.instance.recordAndDisplayDummyData(yValue);
 				}
 
 				// Delay for visual update.

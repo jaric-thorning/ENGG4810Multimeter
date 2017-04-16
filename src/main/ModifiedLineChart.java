@@ -1,11 +1,11 @@
-// MODIFIED FROM http://stackoverflow.com/questions/38871202/how-to-add-shapes-on-javafx-linechart
-// & http://stackoverflow.com/questions/32639882/conditionally-color-background-javafx-linechart
 package main;
 
 import java.util.ArrayList;
 
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
+import javafx.geometry.Side;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -13,149 +13,238 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 
-//FIXME: MAKE SURE THAT THE CHARTS INCLUDE THE RIGHT INITIAL AND FINAL POINTS
+/**
+ * A modified version of the line chart class to add the mask area to the chart plot.
+ * 
+ * PARTS MODIFIED FROM:
+ * http://stackoverflow.com/questions/38871202/how-to-add-shapes-on-javafx-linechart (the idea of
+ * refreshing the chart background) &
+ * http://stackoverflow.com/questions/32601082/javafx-linechart-color-differences (the idea of
+ * adding polygons to the background of the chart to fake area between the line and a boundary).
+ */
 public class ModifiedLineChart extends LineChart<Number, Number> {
 
-	private boolean testUpper = false;
-	private boolean testLower = false;
-	private double tempX = 0D;
-	private double tempY = 0D;
+	// To determine whether or not the selected series relates to a high or low boundary area
+	private boolean isHighBoundary = false;
+	private boolean isLowBoundary = false;
 
-	private ArrayList<Polygon> polygonsLower = new ArrayList<>();
-	private ArrayList<Polygon> polygonsUpper = new ArrayList<>();
+	// Stores the boundary mask polygons
+	private ArrayList<Polygon> polygonsLowerBoundary = new ArrayList<>();
+	private ArrayList<Polygon> polygonsHigherBoundary = new ArrayList<>();
 
 	private NumberAxis yAxis;
-	// private NumberAxis xAxis;
+
+	private double chartWidth = 645D;
+	private double chartHeight = 518D;
 
 	public ModifiedLineChart(NumberAxis xAxis, NumberAxis yAxis) {
 		super(xAxis, yAxis);
 
-		// this.xAxis = xAxis;
+		setupLineChart(yAxis);
+	}
+
+	/**
+	 * Returns a copy of the polygons.
+	 * 
+	 * @param type
+	 *            determines which type of polygons are needed (high/low boundary).
+	 * @return a copy of the determined polygon arrays.
+	 */
+	protected ArrayList<Polygon> getPolygonArray(XYChart.Series<Number, Number> series) {
+		ArrayList<Polygon> returnedPolygons = new ArrayList<>();
+
+		if (series.getName().equals("high")) {
+			returnedPolygons.addAll(polygonsHigherBoundary);
+			return returnedPolygons;
+		} else {
+			returnedPolygons.addAll(polygonsLowerBoundary);
+			System.out.println(returnedPolygons.size());
+			return returnedPolygons;
+		}
+	}
+
+	/**
+	 * Sets up any necessary line chart properties.
+	 * 
+	 * @param yAxis
+	 *            the y-axis of the line chart.
+	 */
+	private void setupLineChart(NumberAxis yAxis) {
 		this.yAxis = yAxis;
 
 		this.setHorizontalZeroLineVisible(false);
-		this.setLegendVisible(false);
+		this.setLegendSide(Side.RIGHT);
 
-		this.setWidth(645);
-		this.setHeight(518);
-	}
-	
-	public boolean getLowerTest() {
-		return testLower;
+		this.setWidth(chartWidth);
+		this.setHeight(chartHeight);
 	}
 
-	public boolean getUpperTest() {
-		return testUpper;
+	/**
+	 * A setter value for the low boundary boolean 'isLowBoundary'.
+	 * 
+	 * @param newValue
+	 *            the new value of the isLowBoundary boolean.
+	 */
+	public void setLowBoundarySelected(boolean newValue) {
+		isLowBoundary = newValue;
 	}
 
-	public void setLowerTest(boolean value) {
-		testLower = value;
-	}
-
-	public void setUpperTest(boolean value) {
-		testUpper = value;
+	/**
+	 * A setter value for the high boundary boolean 'isHighBoundary'.
+	 * 
+	 * @param newValue
+	 *            the new value of the isHighBoundary boolean.
+	 */
+	public void setHighBoundarySelected(boolean newValue) {
+		isHighBoundary = newValue;
 	}
 
 	@Override
 	protected void layoutPlotChildren() {
 		super.layoutPlotChildren();
 
-		// Reset the position of the mask upper
-		getPlotChildren().removeAll(polygonsLower);
-		polygonsLower.clear();
+		// Clear the lower mask area
+		getPlotChildren().removeAll(polygonsLowerBoundary);
+		polygonsLowerBoundary.clear();
 
-		// Reset the position of the mask lower
-		getPlotChildren().removeAll(polygonsUpper);
-		polygonsUpper.clear();
+		// Clear the higher mask area
+		getPlotChildren().removeAll(polygonsHigherBoundary);
+		polygonsHigherBoundary.clear();
 
-		XYChart.Series<Number, Number> series = (XYChart.Series<Number, Number>) getData().get(0);
-		ObservableList<Data<Number, Number>> listOfData = series.getData();
+		XYChart.Series<Number, Number> lowSeries = (XYChart.Series<Number, Number>) getData()
+				.get(0);
+		ObservableList<Data<Number, Number>> lowSeriesData = lowSeries.getData();
 
-		XYChart.Series<Number, Number> series2 = (XYChart.Series<Number, Number>) getData().get(1);
-		ObservableList<Data<Number, Number>> listOfData2 = series2.getData();
+		XYChart.Series<Number, Number> highSeries = (XYChart.Series<Number, Number>) getData()
+				.get(1);
+		ObservableList<Data<Number, Number>> highSeriesData = highSeries.getData();
 
-		setupMaskArea(series, listOfData, polygonsLower);
-		setupMaskArea(series2, listOfData2, polygonsUpper);
+		// Create the mask
+		createMaskArea(lowSeries, lowSeriesData, polygonsLowerBoundary);
+		createMaskArea(highSeries, highSeriesData, polygonsHigherBoundary);
 
-		getPlotChildren().addAll(polygonsLower);
-		getPlotChildren().addAll(polygonsUpper);
+		getPlotChildren().addAll(polygonsLowerBoundary);
+		getPlotChildren().addAll(polygonsHigherBoundary);
 
-		// lower is selected and upper has been completed
-		System.out.println("upper: " + testUpper);
-		System.out.println("lower: " + testLower);
-		
-		setupBoundsCheck(polygonsUpper, testUpper);
-		setupBoundsCheck(polygonsLower, testLower);
+		// Check if any of the new mask points are invalid.
+		setupBoundsCheck(polygonsHigherBoundary, isHighBoundary);
+		setupBoundsCheck(polygonsLowerBoundary, isLowBoundary);
 
 	}
-	
-	private void setupBoundsCheck(ArrayList<Polygon> polygons, boolean isSelected) {
-		for (Polygon p : polygons) {
-			if (!isSelected) {
-				p.setMouseTransparent(false);
-				setupPolygonListener(p);
-			} else {
-				p.setMouseTransparent(true);
-			}
-		}
-	}
 
-	private void setupMaskArea(XYChart.Series<Number, Number> series,
-			ObservableList<Data<Number, Number>> listOfData, ArrayList<Polygon> polygonList) {
-		for (int i = 0; i < listOfData.size() - 1; i++) {
-			// [0,1]
-			double x1 = getXAxis().getDisplayPosition(listOfData.get(i).getXValue());
+	/**
+	 * Creates the mask area.
+	 * 
+	 * @param series
+	 *            either the high or low boundary series.
+	 * @param seriesData
+	 *            the list of all the data points withn the given series.
+	 * @param polygonList
+	 *            holds either the high or low boundary polygons.
+	 */
+	private void createMaskArea(XYChart.Series<Number, Number> series,
+			ObservableList<Data<Number, Number>> seriesData, ArrayList<Polygon> polygonList) {
+		for (int i = 0; i < seriesData.size() - 1; i++) {
+			// First polygon point
+			double x1 = getXAxis().getDisplayPosition(seriesData.get(i).getXValue());
 			double y1 = getYAxis().getDisplayPosition(this.yAxis.getUpperBound());
 
-			if (series.getName().equals("low")) {
+			if (series.getName().equals("low")) { // Special case if series is low.
 				y1 = getYAxis().getDisplayPosition(this.yAxis.getLowerBound());
 			}
 
-			// [2,3]
-			double x2 = getXAxis().getDisplayPosition(listOfData.get((i + 1)).getXValue());
+			double x2 = getXAxis().getDisplayPosition(seriesData.get((i + 1)).getXValue());
 
-			// if () {
-			// Recalculate the position of the mask
+			// Calculate the position of the mask.
 			Polygon polygon = new Polygon();
 			polygon.getPoints()
 					.addAll(new Double[] { x1, y1, x1,
-							getYAxis().getDisplayPosition(listOfData.get(i).getYValue()), x2,
-							getYAxis().getDisplayPosition(listOfData.get((i + 1)).getYValue()), x2,
+							getYAxis().getDisplayPosition(seriesData.get(i).getYValue()), x2,
+							getYAxis().getDisplayPosition(seriesData.get((i + 1)).getYValue()), x2,
 							y1 });
 
-			// // CHECK IF MOUSE IN BOUNDS
-			// // polygon.contains(x, y);
-			// setMouseTransparent(false);
-			// setupPolygonListener(polygon);
-
-			if (series.getName().equals("low")) {
+			if (series.getName().equals("low")) { // Special case if series is low.
 				polygon.setFill(Color.rgb(240, 128, 128, 0.3));
 			} else {
-				polygon.setFill(Color.rgb(100, 149, 237, 0.3));// //cornflower blue with alpha
+				polygon.setFill(Color.rgb(100, 149, 237, 0.3));
 			}
 
-			// Add polygons to arraylist
 			polygonList.add(polygon);
-
 		}
-		// }
 	}
 
+	// FIXME: Might not need this function as always starting with low boundary disabled.
+	/**
+	 * Sets up each polygon shape with a listener, so that if the user tries to select a new point
+	 * within the polygon's shape, the user will be notified of their wrong choice.
+	 * 
+	 * @param polygons
+	 *            the list of all the polygons which make up the mask bounary area under/over the
+	 *            line.
+	 * @param isSelected
+	 *            whether or not the high or low mask has been selected.
+	 */
+	private void setupBoundsCheck(ArrayList<Polygon> polygons, boolean isSelected) {
+		for (Polygon polygon : polygons) {
+			if (!isSelected) {
+				// Disable the selection of any chart space under the polygon.
+				polygon.setMouseTransparent(false);
+				setupPolygonListener(polygon);
+			} else {
+				// Enable the selection of any chart space under the polygon.
+				polygon.setMouseTransparent(true);
+			}
+		}
+	}
+
+	/**
+	 * A private helper function for 'setupBoundsCheck' which assigns a mouse clicked event handler
+	 * to the given polygon.
+	 * 
+	 * @param polygon
+	 *            a polygon belonging to either the low or high mask boundary areas.
+	 */
 	private void setupPolygonListener(Polygon polygon) {
 		polygon.addEventHandler(MouseEvent.MOUSE_CLICKED, addWarning(polygon));
 	}
 
+	/**
+	 * Creates an event handler to deal with the event when the user clicks on any space of the
+	 * opposite mask boundary area.
+	 * 
+	 * @param polygon
+	 *            the polygon that was clicked.
+	 * @return an event handler.
+	 */
 	private EventHandler<MouseEvent> addWarning(Polygon polygon) {
 		EventHandler<MouseEvent> onMouseClick = new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
-				// TODO Auto-generated method stub
-				System.out.println("CLICKED ON POLYGON");
+				if (isLowBoundary) { // Only error under specific conditions.
+					// Display warning box.
+					GuiView.getInstance().illegalMaskPoint();
+				}
 			}
 
 		};
 		return onMouseClick;
+	}
+
+	protected int maskTestOverlapCheck(ArrayList<Polygon> polygons,
+			XYChart.Data<Number, Number> dataPoint) {
+		int errorCounter = 0;
+
+		for (Polygon p : polygons) {
+			double tempX = this.getXAxis().getDisplayPosition(dataPoint.getXValue());
+			double tempY = this.getYAxis().getDisplayPosition(dataPoint.getYValue());
+
+			if (p.contains(new Point2D(tempX, tempY))) {
+				System.out.println("OVERLAP");
+				errorCounter++;
+			}
+		}
+		return errorCounter;
 	}
 
 }
