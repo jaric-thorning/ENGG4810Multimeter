@@ -1,6 +1,5 @@
 package main;
 
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -11,17 +10,17 @@ import java.util.ArrayList;
 
 import javafx.scene.chart.XYChart;
 
-// the format for reading in files <x-value><y-value><y-value units>
-//TODO: MAKE IT SO THAT ONLY DATA OF CURRENT UNIT IS SAVED, SO WHEN THE UNIT CHANGES< THE SAVED DATA CHANGES TOO.
 public class GuiModel {
-	//private ArrayList<Integer> multimeterReadings = new ArrayList<>();
+	// private ArrayList<Integer> multimeterReadings = new ArrayList<>();
 
 	private static final String DELIMITER = ",";
 	private static final String NEW_LINE_SEPARATOR = "\n";
+
+	// The format for reading/writing files <x-value><y-value><y-value units>
 	private static String[] fileHeaders = { "Time", "Value", "Units" };
-	
-	DecimalFormat oneDecimal = new DecimalFormat("0.000");
-	DecimalFormat timeDecimal = new DecimalFormat("0.0");
+
+	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
+	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
 
 	private static GuiModel instance;
 
@@ -41,14 +40,6 @@ public class GuiModel {
 			System.out.println("Initialised GuiModel[SINGLETON]");
 		}
 		return instance;
-	}
-
-	/* Clears the data values from the received data */
-	public void clearData() {
-		System.out.println("YO");
-		// for(Integer i : readings) {
-		// readings.set(new ArrayList<Integer>());
-		// }
 	}
 
 	/**
@@ -102,7 +93,7 @@ public class GuiModel {
 	}
 
 	/**
-	 * Save data to a file.
+	 * Saves data to a given file.
 	 * 
 	 * @precondition All data samples are the same length.
 	 * @param bufferedWriter
@@ -111,54 +102,31 @@ public class GuiModel {
 	 *             occurs when there is a problem with the buffered writer.
 	 */
 	public void saveColumnData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
-			ArrayList<String> unit) throws IOException {
-		System.out.println(unit.size());
-		System.out.println(series.getData().size());
+			ArrayList<String> yUnits) throws IOException {
+		// TODO: REMOVE ME
+		// System.out.println(unit.size());
+		// System.out.println(series.getData().size());
 		setupHeader(bufferedWriter);
 
 		for (int i = 0; i < series.getData().size(); i++) {
 			writeColumnData(bufferedWriter, series.getData().get(i).getXValue(),
-					series.getData().get(i).getYValue(), unit.get(i));
+					series.getData().get(i).getYValue(), yUnits.get(i));
 		}
 	}
 
 	/**
-	 * Writes the contents of the csv file after the header.
+	 * A private helper function to 'saveColumnData' which inserts the headers to be the first row
+	 * of the .csv file.
 	 * 
 	 * @param bufferedWriter
 	 *            the buffered writer needed to write data to the file.
-	 * @param timeData
-	 *            is a single data value for time data values.
-	 * @param readingData
-	 *            is a single data value for the voltage/current/resistant values.
-	 * @param unitData
-	 *            is the unit value of the y-axis values.
-	 */
-	private void writeColumnData(BufferedWriter bufferedWriter, Number timeData, Number readingData,
-			String unitData) {
-		try {
-			bufferedWriter.write(timeData.toString());
-			bufferedWriter.write(DELIMITER);
-			bufferedWriter.write(readingData.toString());
-			bufferedWriter.write(DELIMITER);
-			bufferedWriter.write(unitData);
-			bufferedWriter.write(NEW_LINE_SEPARATOR);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Inserts the headers to be the first row of the csv file.
-	 * 
-	 * @param bufferedWriter
-	 *            - the buffered writer needed to write data to the file.
 	 * @throws IOException
 	 *             occurs when there is a problem with the buffered writer.
 	 */
 	private void setupHeader(BufferedWriter bufferedWriter) throws IOException {
 		for (int i = 0; i < fileHeaders.length; i++) {
 			bufferedWriter.write(fileHeaders[i]);
+
 			if (i != (fileHeaders.length - 1)) {
 				bufferedWriter.write(DELIMITER);
 			} else {
@@ -167,24 +135,25 @@ public class GuiModel {
 		}
 	}
 
-	public void saveMaskData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
-			String unit) throws IOException {
-
-		for (int i = 0; i < series.getData().size(); i++) {
-			writeMaskData(bufferedWriter, series.getName(), series.getData().get(i).getXValue(),
-					series.getData().get(i).getYValue(), unit);
-		}
-
-	}
-
-	private void writeMaskData(BufferedWriter bufferedWriter, String boundaryName, Number xValue,
-			Number yValue, String yUnit) {
+	/**
+	 * A private helper function to 'saveColumnData' which writes the contents of the .csv file
+	 * after the header.
+	 * 
+	 * @param bufferedWriter
+	 *            the buffered writer needed to write data to the file.
+	 * @param xValue
+	 *            is a single data value for time data values.
+	 * @param yValue
+	 *            is a single data value for the voltage/current/resistant values.
+	 * @param yUnit
+	 *            is the unit value of the y-axis values.
+	 */
+	private void writeColumnData(BufferedWriter bufferedWriter, Number xValue, Number yValue,
+			String yUnit) {
 		try {
-			bufferedWriter.write(boundaryName);
+			bufferedWriter.write(xValue.toString());
 			bufferedWriter.write(DELIMITER);
-			bufferedWriter.write(timeDecimal.format(xValue).toString());
-			bufferedWriter.write(DELIMITER);
-			bufferedWriter.write(oneDecimal.format(yValue).toString());
+			bufferedWriter.write(yValue.toString());
 			bufferedWriter.write(DELIMITER);
 			bufferedWriter.write(yUnit);
 			bufferedWriter.write(NEW_LINE_SEPARATOR);
@@ -193,20 +162,26 @@ public class GuiModel {
 		}
 	}
 
+	/**
+	 * Reads the contents of a selected mask data .csv file and returns an array of the read data.
+	 * If the filename is not found or there is a problem with the buffered reader, exceptions will
+	 * be caught.
+	 * 
+	 * @param fileName
+	 *            the file to read the mask data from.
+	 * @return an array with elements made up of each row of mask data.
+	 */
 	public ArrayList<String[]> readMaskData(String fileName) {
 		ArrayList<String[]> readData = new ArrayList<>();
 		String line = "";
 
 		try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
-			// MAY HAVE MASK FILE HEADER
-			// bufferedReader.readLine(); // Get rid of the csv file's first line (column headers)
-
 			while ((line = bufferedReader.readLine()) != null) {
 				String[] tokens = line.split(DELIMITER);
 
-				// Add each element into the array
+				// Add each row into the array.
 				if (tokens.length > 0) {
-					readData.add(tokens); // Add series name (high/low)
+					readData.add(tokens);
 				} else {
 					System.err.println("There are no elements");
 				}
@@ -219,5 +194,63 @@ public class GuiModel {
 
 		return readData;
 	}
+
+	/**
+	 * Saves mask data to a given file.
+	 * 
+	 * @precondition All data samples are the same length.
+	 * @param bufferedWriter
+	 *            the buffered writer needed to write data to the file.
+	 * @throws IOException
+	 *             occurs when there is a problem with the buffered writer.
+	 */
+	public void saveMaskData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
+			String yUnit) throws IOException {
+
+		for (int i = 0; i < series.getData().size(); i++) {
+			writeMaskData(bufferedWriter, series.getName(), series.getData().get(i).getXValue(),
+					series.getData().get(i).getYValue(), yUnit);
+		}
+
+	}
+
+	/**
+	 * A private helper function to 'saveMaskData' which writes the contents of the mask .csv file.
+	 * 
+	 * @param bufferedWriter
+	 *            the buffered writer needed to write data to the file.
+	 * @param boundaryName
+	 *            the type of boundary (high or low).
+	 * @param xValue
+	 *            is a single data value for time data values.
+	 * @param yValue
+	 *            is a single data value for the voltage/current/resistant values.
+	 * @param yUnit
+	 *            is the unit value of the y-axis values.
+	 */
+	private void writeMaskData(BufferedWriter bufferedWriter, String boundaryName, Number xValue,
+			Number yValue, String yUnit) {
+		try {
+			bufferedWriter.write(boundaryName);
+			bufferedWriter.write(DELIMITER);
+			bufferedWriter.write(TIME_DECIMAL.format(xValue).toString());
+			bufferedWriter.write(DELIMITER);
+			bufferedWriter.write(MEASUREMENT_DECIMAL.format(yValue).toString());
+			bufferedWriter.write(DELIMITER);
+			bufferedWriter.write(yUnit);
+			bufferedWriter.write(NEW_LINE_SEPARATOR);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	// TODO: remove me or modify me
+	// /* Clears the data values from the received data */
+	// public void clearData() {
+	// System.out.println("YO");
+	// // for(Integer i : readings) {
+	// // readings.set(new ArrayList<Integer>());
+	// // }
+	// }
 
 }

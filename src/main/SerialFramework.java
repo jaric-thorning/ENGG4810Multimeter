@@ -125,7 +125,7 @@ public class SerialFramework {
 
 		OpenSerialPort = serialPort;
 		RecordedResults.shutdownRecordedResultsThread();
-		GuiModel.getInstance().clearData();
+		//GuiModel.getInstance().clearData();
 
 		return true;
 	}

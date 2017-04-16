@@ -1,4 +1,5 @@
-.dialog-pane{
+.dialog-pane
+{
 	-fx-color: #666699;
    	-fx-background-color: -fx-outer-border, -fx-inner-border, derive(-fx-color, -20%);
     -fx-effect: innershadow(two-pass-box, rgb(0, 0, 0, 0.4), 4, 0.0, 0, 0); 
@@ -14,7 +15,8 @@
     -fx-border-color: #040428;
 }
 
-.dialog-pane > *.label.content{
+.dialog-pane > *.label.content
+{
 	-fx-text-fill: white;
 	-fx-font-size: 14px;
     -fx-font-family: System;
@@ -22,19 +24,20 @@
 
 /* Button styling on the dialog box */
 
-.dialog-pane .button{
+.dialog-pane .button
+{
 	button-fill: #666699;
+	
 	-fx-text-fill: white;
- 	
     -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
                           linear-gradient(derive(button-fill,80%), derive(button-fill, 0%)),
                           linear-gradient(derive(button-fill,30%), derive(button-fill,-10%));
     -fx-background-insets: 0,1,2;
-    
  	-fx-cursor:hand;
  }
  
-.dialog-pane .button:hover {
+.dialog-pane .button:hover 
+{
  	button-fill: #000033;
     -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
                           linear-gradient(derive(button-fill,80%), derive(button-fill, 0%)),
@@ -42,10 +45,11 @@
     -fx-background-insets: 0,1,2;
 }
 
-.dialog-pane .button:armed {
+.dialog-pane .button:armed 
+{
 	button-fill: #000033;
+	
 	-fx-text-fill: white;
- 	
     -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
                           linear-gradient(derive(button-fill,90%), derive(button-fill, 30%)),
                           linear-gradient(derive(button-fill,50%), derive(button-fill,-10%));
