@@ -2,6 +2,8 @@ package main;
 
 import java.util.ArrayList;
 
+import com.sun.javafx.geom.Line2D;
+
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
@@ -58,7 +60,6 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 			return returnedPolygons;
 		} else {
 			returnedPolygons.addAll(polygonsLowerBoundary);
-			System.out.println(returnedPolygons.size());
 			return returnedPolygons;
 		}
 	}
@@ -232,15 +233,30 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	protected int maskTestOverlapCheck(ArrayList<Polygon> polygons,
-			XYChart.Data<Number, Number> dataPoint) {
+			XYChart.Data<Number, Number> currentDataPoint,
+			XYChart.Data<Number, Number> nextDataPoint) {
 		int errorCounter = 0;
 
 		for (Polygon p : polygons) {
-			double tempX = this.getXAxis().getDisplayPosition(dataPoint.getXValue());
-			double tempY = this.getYAxis().getDisplayPosition(dataPoint.getYValue());
+			double currentTempX = this.getXAxis().getDisplayPosition(currentDataPoint.getXValue());
+			double currentTempY = this.getYAxis().getDisplayPosition(currentDataPoint.getYValue());
 
-			if (p.contains(new Point2D(tempX, tempY))) {
-				System.out.println("OVERLAP");
+			double nextTempX = this.getXAxis().getDisplayPosition(nextDataPoint.getXValue());
+			double nextTempY = this.getYAxis().getDisplayPosition(nextDataPoint.getYValue());
+
+			if ((p.contains(new Point2D(currentTempX, currentTempY))
+					|| (p.contains(new Point2D(nextTempX, nextTempY))))) {
+
+				// Add to overlap array
+				Line2D segment = new Line2D();
+				segment.setLine(
+						new com.sun.javafx.geom.Point2D(currentDataPoint.getXValue().floatValue(),
+								currentDataPoint.getYValue().floatValue()),
+						new com.sun.javafx.geom.Point2D(nextDataPoint.getXValue().floatValue(),
+								nextDataPoint.getYValue().floatValue()));
+
+				GuiController.instance.getOverlappedIntervals().add(segment);
+
 				errorCounter++;
 			}
 		}

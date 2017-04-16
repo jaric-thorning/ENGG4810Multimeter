@@ -7,19 +7,16 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.sun.javafx.geom.Line2D;
 import com.sun.javafx.geom.Point2D;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -45,6 +42,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 
 public class GuiController implements Initializable {
 	EventHandlers event = new EventHandlers();
+	Comparators compare = new Comparators();
 
 	/* Components required for resizing the GUI when maximising or resizing */
 	@FXML
@@ -123,7 +121,10 @@ public class GuiController implements Initializable {
 	private Button setMaskBtn;
 	@FXML
 	private Button runMaskBtn;
-	private boolean retry = false;
+	private boolean retryInitialBounaryPoint = false; // Used to modify how points are compared
+	@FXML
+	protected TextArea maskTestResults;
+	private List<Line2D> overlappedIntervals = new ArrayList<>();
 
 	// To keep track of the previous mask boundary point
 	private int lowCounter = 0;
@@ -189,6 +190,10 @@ public class GuiController implements Initializable {
 	public GuiController() {
 		// I am empty :(
 		instance = this;
+	}
+
+	protected List<Line2D> getOverlappedIntervals() {
+		return overlappedIntervals;
 	}
 
 	/**
@@ -962,7 +967,7 @@ public class GuiController implements Initializable {
 				.add(new XYChart.Data<Number, Number>(coordinates.get(0), coordinates.get(1)));
 
 		// SORT IN INCREASING ORDER..
-		series.getData().sort(sortChart());
+		series.getData().sort(compare.sortChart());
 
 		// Modified the for loop for IDing the line chart data points from:
 		// https://gist.github.com/TheItachiUchiha/c0ae68ef8e6273a7ac10
@@ -1026,7 +1031,6 @@ public class GuiController implements Initializable {
 		return true;
 	}
 
-	//////////
 	/**
 	 * When the data-point is moved by the mouse, make sure the user cannot drag it into the other
 	 * mask area.
@@ -1038,7 +1042,6 @@ public class GuiController implements Initializable {
 	 */
 	protected void moveData(XYChart.Data<Number, Number> dataPoint,
 			XYChart.Series<Number, Number> series) {
-		highMaskBoundarySeries.getNode().setOnMouseEntered(event.testOverlap(dataPoint));
 
 		// Keep tabs on the original data
 		double originX = dataPoint.getXValue().doubleValue();
@@ -1066,7 +1069,7 @@ public class GuiController implements Initializable {
 					updateXYCoordinates(event);
 
 					// Make sure series is sorted.
-					series.getData().sort(sortChart());
+					series.getData().sort(compare.sortChart());
 					// TODO: REMOVE
 					// System.out.println(series.getData().toString());
 				}
@@ -1118,7 +1121,7 @@ public class GuiController implements Initializable {
 
 							lowCounter++;
 
-							if (retry) {
+							if (retryInitialBounaryPoint) {
 								lowCounter--;
 							}
 						}
@@ -1232,27 +1235,6 @@ public class GuiController implements Initializable {
 		}
 	}
 
-	/**
-	 * A comparator to help determine the order of sorting the data points by increasing x-value.
-	 * 
-	 * @return a comparator
-	 */
-	private Comparator<XYChart.Data<Number, Number>> sortChart() {
-		// Comparator.
-		final Comparator<XYChart.Data<Number, Number>> CHART_ORDER = new Comparator<XYChart.Data<Number, Number>>() {
-			public int compare(XYChart.Data<Number, Number> e1, XYChart.Data<Number, Number> e2) {
-
-				if (e2.getXValue().doubleValue() >= e1.getXValue().doubleValue()) {
-					return -1;
-				} else {
-					return 1;
-				}
-			}
-		};
-
-		return CHART_ORDER;
-	}
-
 	// FIXME: Make sure that these added points don't collide.
 	/**
 	 * Orders the specified series data-points by increasing x-axis values. If a first and last
@@ -1270,7 +1252,7 @@ public class GuiController implements Initializable {
 		boolean value = false;
 
 		// Sort in increasing order by x values
-		series.getData().sort(sortChart());
+		series.getData().sort(compare.sortChart());
 
 		// Add first and last points
 		Data<Number, Number> initialBoundaryPoint = new Data<>();
@@ -1306,14 +1288,14 @@ public class GuiController implements Initializable {
 			// Make sure the counter doesn't increase.
 			if (series.getName().equals("low")) {
 				lowCounter = 1;
-				retry = true;
+				retryInitialBounaryPoint = true;
 			}
 		}
 
 		// Return true if both boundary points didn't overlap.
 		if (initialBoundarySuccess && finalBoundarySuccess) {
 			value = true;
-			retry = false;
+			retryInitialBounaryPoint = false;
 		}
 
 		return value;
@@ -1439,6 +1421,7 @@ public class GuiController implements Initializable {
 		// Enable running of mask-testing
 		if (setHighBtn.isDisabled() && setLowBtn.isDisabled()) {
 			runMaskBtn.setDisable(false);
+			exportMaskBtn.setDisable(false);
 		}
 	}
 
@@ -1479,7 +1462,7 @@ public class GuiController implements Initializable {
 		System.out.println("RUN MASK TESTING");
 		int counter = 0;
 		int errorCounter = 0;
-		
+
 		if ((highMaskBoundarySeries.getData().size() > 0)
 				&& (lowMaskBoundarySeries.getData().size() > 0)
 				&& (readingSeries.getData().size() > 0)) {
@@ -1500,13 +1483,47 @@ public class GuiController implements Initializable {
 			// Set outcome to pass or fail
 			if ((errorCounter > 0) || (counter > 0)) {
 				maskStatusLabel.setText("FAIL");
+				maskTestResults.setText("-------------------------------------------" + "\n");
+				maskTestResults.appendText("TEST FAILED OVER INTERVALS: " + "\n");
+
+				// Display failed intervals
+				displayFailedIntervals();
 			} else {
 				maskStatusLabel.setText("PASS");
+				maskTestResults.setText("TEST PASSED" + "\n");
 			}
 		} else {
 			System.out.println("Either high/low/reading isn't loaded properly");
 		}
+	}
 
+	/**
+	 * Displays the intervals which failed + total time failed.
+	 */
+	private void displayFailedIntervals() {
+		double totalOverlapTime = 0;
+
+		// Remove duplicates
+		overlappedIntervals = overlappedIntervals.stream().distinct().collect(Collectors.toList());
+
+		// Sort in ascending order x-axis
+		overlappedIntervals.sort(compare.sortOverlap());
+
+		// Display intervals where overlapping occured.
+		for (int i = 0; i < overlappedIntervals.size(); i++) {
+			// Calculate total time in failed region.
+			totalOverlapTime += (overlappedIntervals.get(i).x2 - overlappedIntervals.get(i).x1);
+
+			String interval1 = "(" + overlappedIntervals.get(i).x1 + ", "
+					+ overlappedIntervals.get(i).y1 + ") - ";
+			String interval2 = "(" + overlappedIntervals.get(i).x2 + ", "
+					+ overlappedIntervals.get(i).y2 + ") ";
+
+			maskTestResults.appendText(interval1 + interval2 + "\n");
+		}
+
+		maskTestResults.appendText("-------------------------------------------" + "\n");
+		maskTestResults.appendText("FAILED AMOUNT OF TIME: " + totalOverlapTime + "s\n");
 	}
 
 	/**
@@ -1514,15 +1531,21 @@ public class GuiController implements Initializable {
 	 * mask area below the line.
 	 */
 	private int checkForMaskAreaOverlap(int counter) {
-		for (XYChart.Data<Number, Number> dataPoint : readingSeries.getData()) {
-			counter += lineChart.maskTestOverlapCheck(
-					lineChart.getPolygonArray(highMaskBoundarySeries), dataPoint); // high
+		for (int i = 0; i < readingSeries.getData().size() - 1; i++) {
+			XYChart.Data<Number, Number> currentDataPoint = readingSeries.getData().get(i);
+			XYChart.Data<Number, Number> nextDataPoint = readingSeries.getData().get(i + 1);
 
 			counter += lineChart.maskTestOverlapCheck(
-					lineChart.getPolygonArray(lowMaskBoundarySeries), dataPoint); // low
+					lineChart.getPolygonArray(highMaskBoundarySeries), currentDataPoint,
+					nextDataPoint); // high
+
+			counter += lineChart.maskTestOverlapCheck(
+					lineChart.getPolygonArray(lowMaskBoundarySeries), currentDataPoint,
+					nextDataPoint); // low
 		}
 
-		System.out.println("C: " + counter);
+		// TODO: REMOVE
+		// System.out.println("C: " + counter);
 		return counter;
 	}
 
@@ -1564,17 +1587,13 @@ public class GuiController implements Initializable {
 								dataPoint.getYValue().floatValue()),
 						new Point2D(dataPoint2.getXValue().floatValue(),
 								dataPoint2.getYValue().floatValue())))) {
+					Line2D segment = new Line2D();
+
+					segment.setLine(new com.sun.javafx.geom.Point2D(tempX, tempY),
+							new com.sun.javafx.geom.Point2D(nextX, nextY));
+					overlappedIntervals.add(segment);
 
 					errorCounter++;
-					System.out.println("COUNTER: " + errorCounter + " || overlap on: "
-							+ existingSeries.getName());
-					System.out.println(
-							"origin" + tempX + " | " + tempY + " | " + nextX + " | " + nextY);
-
-					System.out.println("mask: " + dataPoint.getXValue().floatValue() + " | "
-							+ dataPoint.getYValue().floatValue() + " | "
-							+ dataPoint2.getXValue().floatValue() + " | "
-							+ dataPoint2.getYValue().floatValue());
 				}
 			}
 		}
@@ -1626,9 +1645,6 @@ public class GuiController implements Initializable {
 				}
 			}
 		}
-
-		System.out.println(highMaskBoundarySeries.getData().size());
-		System.out.println(lowMaskBoundarySeries.getData().size());
 	}
 
 	private void errorMessageInvalidMask() {

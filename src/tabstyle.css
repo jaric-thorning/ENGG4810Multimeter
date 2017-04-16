@@ -21,10 +21,16 @@
 
 .label { -fx-text-fill: white; }
 
-.text-area:focused
+.scroll-pane 
 {
     -fx-background-color: derive(#666699, 80%), derive(#000033, 80%), -fx-control-inner-background;
     -fx-background-insets: -0.4, 1, 2;
     -fx-background-radius: 3.4, 2, 2;
-    -fx-prompt-text-fill: transparent;
+}
+
+.text-area
+{
+    -fx-background-color: derive(#666699, 80%), derive(#000033, 80%), -fx-control-inner-background;
+    -fx-background-insets: -0.4, 1, 2;
+    -fx-background-radius: 3.4, 2, 2;
 }
