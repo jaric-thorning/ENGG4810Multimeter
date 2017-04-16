@@ -111,28 +111,13 @@ public class EventHandlers {
 		});
 	}
 
-	// FIXME: FOR SOME REASON IT DOESN"T WORK WITH REMOVEEVENTHANDLER...
 	/**
 	 * Removes listeners of the mask so that they cannot be further edited after they have been set.
 	 */
 	protected void removeAllListeners(XYChart.Series<Number, Number> series) {
-		// chartBackground.setOnMouseClicked(null);
-
 		for (XYChart.Data<Number, Number> dataPoint : series.getData()) {
-			dataPoint.getNode().setOnMouseClicked(null); // remove deleting option
-			dataPoint.getNode().setOnMouseMoved(null); // remove moving option
+			dataPoint.getNode().setOnMouseClicked(null); // Remove deleting option
+			dataPoint.getNode().setOnMouseMoved(null); // Remove moving option
 		}
-	}
-
-	protected EventHandler<MouseEvent> testOverlap(XYChart.Data<Number, Number> dataPoint) {
-		EventHandler<MouseEvent> test = new EventHandler<MouseEvent>() {
-
-			@Override
-			public void handle(MouseEvent event) {
-				((Node) event.getSource()).setCursor(Cursor.CLOSED_HAND);
-			}
-		};
-
-		return test;
 	}
 }
