@@ -5,7 +5,6 @@ import java.time.Duration;
 
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
@@ -19,7 +18,7 @@ public class EventHandlers {
 		// I AM EMPTY :(
 	}
 
-	// FIXME
+	// TODO: Make sure the formatting is correct
 	/**
 	 * An event handler for displaying the x,y values of the node when it's passed over
 	 * 
@@ -106,6 +105,10 @@ public class EventHandlers {
 					series.getData().remove(dataPoint);
 					System.out.println("DELETE NODE FROM: " + series.getName() + " NEW SIZE: "
 							+ series.getData().size());
+
+					if (series.getName().equals("low")) {
+						GuiController.instance.lowCounter--;
+					}
 				}
 			}
 		});

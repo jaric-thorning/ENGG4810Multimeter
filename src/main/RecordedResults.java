@@ -1,16 +1,16 @@
 package main;
 
-import java.net.URL;
 import java.util.ArrayList;
 
 /** FIXME: WORK ON THIS SO THAT WHEN BUTTONS ARE PRESSED, DIFFERENT THINGS ARE LOADED In**/
 /**
  * A class which handles the display of recorded results.
  */
-public class RecordedResults {
+class RecordedResults {
 
 	// The instance of the thread playing back data.
 	public static PlaybackData dataPlaybackContainer = null;
+	static GuiModel model = new GuiModel();
 
 	/**
 	 * Thread handled to quit in GuiView.stop(), and when other data is told to be displayed.
@@ -55,7 +55,7 @@ public class RecordedResults {
 			ArrayList<String> multimeterReadingsDataY = null;
 
 			// Reads data from the file
-			multimeterReadingsDataY = GuiModel.getInstance().readColumnData(filename, 1);
+			multimeterReadingsDataY = model.readColumnData(filename, 1);
 
 			// Displays the data results from the saved file.
 			int dataIndex = -1;
