@@ -22,24 +22,7 @@ public class GuiModel {
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
 
-	private static GuiModel instance;
-
 	public GuiModel() {
-		instance = this;
-	}
-
-	/**
-	 * Enables other classes to access methods within this class, once the program has been
-	 * launched.
-	 * 
-	 * @return an instance of the GuiModel class.
-	 */
-	public static GuiModel getInstance() {
-		if (instance == null) {
-			instance = new GuiModel();
-			System.out.println("Initialised GuiModel[SINGLETON]");
-		}
-		return instance;
 	}
 
 	/**

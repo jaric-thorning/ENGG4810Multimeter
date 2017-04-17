@@ -226,11 +226,11 @@ public class SerialFramework {
 				}
 			}
 
-			int temperature = 0;
-			double windSpeed = 0.0F;
-			int luminosity = 0;
-
 			try {
+				int temperature = 0;
+				double windSpeed = 0.0F;
+				int luminosity = 0;
+				
 				temperature = Integer.parseInt(data[0]);
 				windSpeed = Double.parseDouble(data[1]);
 				luminosity = Integer.parseInt(data[2]);

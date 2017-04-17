@@ -78,6 +78,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 
 		this.setWidth(chartWidth);
 		this.setHeight(chartHeight);
+		
+		this.getXAxis().setAutoRanging(false);
 	}
 
 	/**
@@ -98,6 +100,10 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	 */
 	public void setHighBoundarySelected(boolean newValue) {
 		isHighBoundary = newValue;
+	}
+	
+	public boolean getLowBoundarySelected() {
+		return isLowBoundary;
 	}
 
 	@Override
