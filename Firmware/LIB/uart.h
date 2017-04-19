@@ -2,7 +2,7 @@
 #define UART_H_
 
 //Configure UART
-ConfigureUART(void);
+void ConfigureUART(void);
 
 
 #endif // UART_H_

@@ -40,12 +40,14 @@
 #include "semphr.h"
 #include "comm_task.h"
 
+#include "LCD_task.h"
+#include "uart.h"
 
 // --------------- TASK CONTROL ------------------
 
 #define COMMTASK 1
 #define LEDTASK 1
-#define LCDTASK 0
+#define LCDTASK 1
 #define SWITCHTASK 1
 //*****************************************************************************
 //

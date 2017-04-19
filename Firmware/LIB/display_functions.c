@@ -5,6 +5,7 @@
 #include "display.h"
 #include "uart.h"
 #include "general_functions.h"
+#include "utils/uartstdio.h"
 
 void display(char* type, int range, int value, int decimal){
     // convert 123 to string [buf]

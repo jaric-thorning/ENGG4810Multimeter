@@ -47,7 +47,7 @@ void pulseLCD(void);
 void sendByte(char, int);
 void setCursorPositionLCD(char, char);
 void clearLCD(void);
-void initLCD(void);
+extern void initLCD(void);
 void printLCD(char*);
 void setBlockCursorLCD(void);
 void setLineCursorLCD(void);
