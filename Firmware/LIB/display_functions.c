@@ -7,7 +7,7 @@
 #include "general_functions.h"
 #include "utils/uartstdio.h"
 
-void display(char* type, int range, int value, int decimal){
+void display(char type, int range, int value, int decimal){
     // convert 123 to string [buf]
     char value_buf[10];
     char range_buf[10];
@@ -27,7 +27,7 @@ void display(char* type, int range, int value, int decimal){
     int2str(range, range_buf, 10);
 
     //UARTprintf("Converted to: %s", buf);
-    if(strcmp(type, "voltage") == 0){
+    if(type == 'V'){
       //UARTprintf("dec: %s\n", decimal_buf);//same type, outputting to display\n");
       clearLCD();
 
@@ -47,7 +47,7 @@ void display(char* type, int range, int value, int decimal){
   		printLCD(decimal_buf);
   		printLCD("V");
     }
-    else if(strcmp(type, "current") == 0){
+    else if(type == 'C'){
       clearLCD();
       printLCD("Current (");
       sendByte(0x00, TRUE);

@@ -82,11 +82,10 @@ SwitchTask(void *pvParameters)
                     {
                     }
                 }
-                strncpy(lcd_message.line1, "TEST1\0", 6);
-                strncpy(lcd_message.line2, "TEST2\0", 6);
-                //lcd_message.line = 'V';
-                //lcd_message.range = 2;
-                //lcd_message.value = 3;
+                lcd_message.type = 'V';
+                lcd_message.range = 5;
+                lcd_message.value = 2;
+                lcd_message.decimal = 56;
 
                 if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
                    pdPASS){

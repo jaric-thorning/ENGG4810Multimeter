@@ -257,10 +257,10 @@ extern void initLCD(void)
 	setCmd();
 	SysCtlDelay(15000);
 	//defChar();
-	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 3); //0b0010
+	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 2); //0b0010
 	pulseLCD();
 
-	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 3); //0b0010
+	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 2); //0b0010
 	pulseLCD();
 
 

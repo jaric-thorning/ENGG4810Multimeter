@@ -20,7 +20,7 @@
 #include "stdlib.h"
 //LCD INCLUDES
 
-#include "LIB/display_functions.h"
+#include "display_functions.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
@@ -58,10 +58,10 @@ LCDTask(void *pvParameters)
       {
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
 
-        UARTprintf("Line1: %s\n\r", lcd_message2.line1);
-        UARTprintf("Line2: %s\n\r", lcd_message2.line2);
+        UARTprintf("%c: (+- %d) %d.%d\n\r", lcd_message2.type, lcd_message2.range, lcd_message2.value, lcd_message2.decimal);
+
+        display(lcd_message2.type, lcd_message2.range, lcd_message2.value, lcd_message2.decimal);
         xSemaphoreGive(g_pUARTSemaphore);
-        display("voltage",0, 0, 0);
       }
 
 
