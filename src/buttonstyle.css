@@ -1,40 +1,61 @@
-.button {
+.button 
+{
 	button-fill: #666699;
-	-fx-text-fill: white;
- 	
+	
+	-fx-text-fill: white;	
     -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
                           linear-gradient(derive(button-fill,80%), derive(button-fill, 0%)),
                           linear-gradient(derive(button-fill,30%), derive(button-fill,-10%));
     -fx-background-insets: 0,1,2;
-    
     -fx-cursor:hand;
 }
 
-.button:hover {
-	button-fill: #000033; 	
+.button:hover 
+{
+	button-fill: #000033;
+	 	
     -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
                           linear-gradient(derive(button-fill,90%), derive(button-fill, 30%)),
                           linear-gradient(derive(button-fill,50%), derive(button-fill,-10%));
     -fx-background-insets: 0,1,2;
 }
 
-.button:armed {
- 	button-fill: #000033;
+.button:armed 
+{
+ 	button-fill: #556699;
+ 	
     -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
                           linear-gradient(derive(button-fill,80%), derive(button-fill, 0%)),
                           linear-gradient(derive(button-fill,30%), derive(button-fill,-10%));
     -fx-background-insets: 0,1,2;
 }
 
-.radio-button > .text {
-	-fx-fill: white;
+.button:focused 
+{
+ 	button-fill: #556699;
+ 	
+    -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
+                          linear-gradient(derive(button-fill,80%), derive(button-fill, 0%)),
+                          linear-gradient(derive(button-fill,30%), derive(button-fill,-10%));
+    -fx-background-insets: 0,1,2;
 }
 
-.radio-button {
-	-fx-cursor:hand;
+.button:selected 
+{
+ 	button-fill: #000033;
+ 	
+    -fx-background-color: linear-gradient(derive(button-fill,-30%), derive(button-fill,-40%)),
+                          linear-gradient(derive(button-fill,80%), derive(button-fill, 0%)),
+                          linear-gradient(derive(button-fill,30%), derive(button-fill,-10%));
+    -fx-background-insets: 0,1,2;
 }
 
-.radio-button:focused > .radio {
+.radio-button > .text { -fx-fill: white; }
+
+.radio-button { -fx-cursor:hand; }
+
+.radio-button:focused > .radio 
+{
    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
    -fx-background-insets: 0 0 -1 0,  0,  1,  2;
    -fx-background-radius: 1.0em;

@@ -1,25 +1,11 @@
-.tab
-{
-	-fx-bar-fill: #000033;
-    -fx-background-color: linear-gradient(derive(-fx-bar-fill,-30%), derive(-fx-bar-fill,-40%)),
-                          linear-gradient(derive(-fx-bar-fill,80%), derive(-fx-bar-fill, 0%)),
-                          linear-gradient(derive(-fx-bar-fill,30%), derive(-fx-bar-fill,-10%));
-    -fx-background-insets: 0,1,2;	
-    
-	-fx-cursor:hand;
-}
-
-#leftAnchor /* background of left panel */
+#anchorPane
 {
 	-fx-background-color: linear-gradient(#000033, #666699); 
 	-fx-font-size: 14;
 }
 
-.tab-label {
-	-fx-text-fill: white;
-}
-
-#dataSource {
+#anchorPaneHeadings 
+{
 	-fx-color: #666699;
    	-fx-background-color: -fx-outer-border, -fx-inner-border, derive(-fx-color, -20%);
     -fx-effect: innershadow(two-pass-box, rgb(0, 0, 0, 0.4), 4, 0.0, 0, 0); 
@@ -33,86 +19,18 @@
  		derive(-fx-color, 10%);    
 }
 
-.tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
-	-fx-font-size: 14px;
-}
+.label { -fx-text-fill: white; }
 
-.tab-pane:top > .tab-header-area >.tab-header-background {
-	-fx-color: #666699;
-   	-fx-background-color: -fx-outer-border, -fx-inner-border, derive(-fx-color, -20%);
-    -fx-effect: innershadow(two-pass-box, rgb(0, 0, 0, 0.4), 4, 0.0, 0, 0); 
-}
-
-.tab-pane > .tab-header-area > .headers-region > .tab:selected {
-	-fx-border-radius: 2 2 0 0;
-    -fx-border-width: 1 1 1 1;
-    -fx-border-color: white white transparent white;
-}
-   
-.tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
-	-fx-border-color: transparent;
-}
-
-
-#digitalPane 
+.scroll-pane 
 {
-	-fx-background-color: linear-gradient(#000033, #666699); 
-}
-
-#analogAnchor
-{
-	-fx-background-color: linear-gradient(#000033, #666699); 
-}
-
-#mapAnchor
-{
-	-fx-background-color: linear-gradient(#000033, #666699); 
-}
-
-.dropdown-content {
-    background-color: #666699;
-}
-
-.label {
-	-fx-text-fill: white;
-}
-
-.text-field:focused {
     -fx-background-color: derive(#666699, 80%), derive(#000033, 80%), -fx-control-inner-background;
     -fx-background-insets: -0.4, 1, 2;
     -fx-background-radius: 3.4, 2, 2;
-    -fx-prompt-text-fill: transparent;
 }
 
-.combo-box {
-	-fx-background-color: #666699;
-	
-	-fx-cursor:hand;
-}
-
-.combo-box .cell:selected {
-    -fx-text-fill: white;
-}
-
-.combo-box .context-menu {
-    -fx-background-color: #666699;
-}
-
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected, 
-.combo-box-popup  > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
-    -fx-background: #666699;
-    -fx-background-color:  #666699;
-    -fx-border-width: 1 1 1 1;
-    -fx-border-insets: 1, 1, 1;
-    -fx-border-color: derive(#666699, 80%);
-	-fx-text-fill: white;
-	
-	-fx-cursor:hand;
-}
-
-.combo-box-popup  > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
-    -fx-background-color: #666699;
-    -fx-text-fill: white;
-    
-    -fx-cursor:hand;
+.text-area
+{
+    -fx-background-color: derive(#666699, 80%), derive(#000033, 80%), -fx-control-inner-background;
+    -fx-background-insets: -0.4, 1, 2;
+    -fx-background-radius: 3.4, 2, 2;
 }
