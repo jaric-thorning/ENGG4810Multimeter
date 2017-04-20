@@ -38,8 +38,6 @@ SwitchTask(void *pvParameters)
     ui8CurButtonState = ui8PrevButtonState = 0;
     ui16LastTime = xTaskGetTickCount();
 
-    struct lcd_queue_message lcd_message;
-
     while(1)
     {
         ui8CurButtonState = ButtonsPoll(0, 0);
@@ -82,15 +80,6 @@ SwitchTask(void *pvParameters)
                     {
                     }
                 }
-                lcd_message.type = 'V';
-                lcd_message.range = 5;
-                lcd_message.value = 2;
-                lcd_message.decimal = 56;
-
-                if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
-                   pdPASS){
-                     UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
-                   }
             }
         }
         vTaskDelayUntil(&ui16LastTime, ui32SwitchDelay / portTICK_RATE_MS);

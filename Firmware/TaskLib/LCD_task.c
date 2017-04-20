@@ -33,7 +33,7 @@
 #define LCD_ITEM_SIZE           sizeof(struct lcd_queue_message)
 #define LCD_QUEUE_SIZE          5
 
-#define LCD_REFRESH_TIME 500
+#define LCD_REFRESH_TIME 10
 
 extern xSemaphoreHandle g_pUARTSemaphore;
 

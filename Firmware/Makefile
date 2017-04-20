@@ -91,19 +91,25 @@ ${COMPILER}:
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/buttons.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/$(PROJECT).o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/heap_2.o
-${COMPILER}/$(PROJECT).axf: ${COMPILER}/led_task.o
+
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/list.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/port.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/queue.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/rgb.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/startup_${COMPILER}.o
-${COMPILER}/$(PROJECT).axf: ${COMPILER}/switch_task.o
+
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/tasks.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uartstdio.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/ustdlib.o
 
+#------TASKS------#
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/led_task.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/switch_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/comm_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/LCD_task.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/ADC_task.o
+#-----------------#
+
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display_functions.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uart.o

@@ -32,15 +32,19 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
 #include "utils/uartstdio.h"
-#include "led_task.h"
-#include "switch_task.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-#include "comm_task.h"
 
+// TASKS
+#include "comm_task.h"
 #include "LCD_task.h"
+#include "led_task.h"
+#include "switch_task.h"
+#include "ADC_task.h"
+
 #include "uart.h"
 
 // --------------- TASK CONTROL ------------------
@@ -49,6 +53,7 @@
 #define LEDTASK 1
 #define LCDTASK 1
 #define SWITCHTASK 1
+#define ADCTASK 1
 //*****************************************************************************
 //
 // The mutex that protects concurrent access of UART from multiple tasks.
@@ -203,6 +208,20 @@ main(void)
           while(1)
           {
             UARTprintf("\n\nCOMM INIT ERROR!\n");
+          }
+      }
+    }
+
+    //
+    // Create the ADC task.
+    //
+    if(ADCTASK){
+      if(ADCTaskInit() != 0)
+      {
+
+          while(1)
+          {
+            UARTprintf("\n\nADC INIT ERROR!\n");
           }
       }
     }
