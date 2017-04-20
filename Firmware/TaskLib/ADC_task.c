@@ -28,7 +28,7 @@
 
 #include "display.h"
 
-#include "LCD_task.h"
+#include "mswitch_task.h"
 
 #define ADCTASKSTACKSIZE        128
 
@@ -51,27 +51,10 @@ ADCTask(void *pvParameters)
 
     ui32WakeTime = xTaskGetTickCount();
 
-    struct lcd_queue_message lcd_message;
-
-    int integer = 0;
-	  int decimal = 0;
-	  float value = 0;
-    int range = 5;
+    struct mswitch_queue_message mswitch_message;
 
     while(1)
     {
-      //
-      // Read the next message, if available on queue.
-      //
-      /*if(xQueueReceive(g_pADCQueue, &adc_message2, 0) == pdPASS)
-      {
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-
-        UARTprintf("%c: (+- %d) %d.%d\n\r", adc_message2.type, adc_message2.range, adc_message2.value, adc_message2.decimal);
-
-        display(adc_message2.type, adc_message2.range, adc_message2.value, adc_message2.decimal);
-        xSemaphoreGive(g_pUARTSemaphore);
-      }*/
 
       ADCProcessorTrigger(ADC0_BASE, 0);
   		while(!ADCIntStatus(ADC0_BASE, 0, false))
@@ -79,22 +62,11 @@ ADCTask(void *pvParameters)
   		}
   		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);
 
-  		value = ui32Value/4095.0 * 2 * range - range;
+      mswitch_message.ui32Value = ui32Value;
 
-  		integer = (int)value;
-  		decimal = ((int)(value*1000))%1000;
-  		if(decimal < 0){
-  			decimal *= -1;
-  		}
-
-      lcd_message.type = 'V';
-      lcd_message.range = range;
-      lcd_message.value = integer;
-      lcd_message.decimal = decimal;
-
-      if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
+      if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
          pdPASS){
-           UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
+           UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
          }
 
       //
