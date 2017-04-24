@@ -93,13 +93,13 @@ void sendByte(char byteToSend, int isData)
 
 void defChar(){
   uint8_t smiley[8] = {
-    0b00000,
-    0b00100,
-    0b01110,
-    0b00100,
-    0b00000,
-    0b01110,
-    0b00000,
+    0b00000,	//0b00000
+    0b00100,	//0b00100
+    0b01110,	//0b01110
+    0b00100,	//0b00100
+    0b00000,	//0b00000
+    0b01110,	//0b01110
+    0b00000,	//0b00000
     };
 
 
@@ -226,7 +226,7 @@ void displayOnLCD(void) {
 // Clears the screen
 //
 
-void initLCD(void)
+extern void initLCD(void)
 {
 	//
 	// set the MSP pin configurations
@@ -257,10 +257,10 @@ void initLCD(void)
 	setCmd();
 	SysCtlDelay(15000);
 	//defChar();
-	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 0b0010);
+	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 2); //0b0010
 	pulseLCD();
 
-	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 0b0010);
+	GPIOPinWrite(DATA_PORT_BASE, ALLDATAPINS, 2); //0b0010
 	pulseLCD();
 
 

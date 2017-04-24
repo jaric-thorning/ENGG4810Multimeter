@@ -6,24 +6,24 @@
 
 
 
-#ifndef __LCD_TASK_H__
-#define __LCD_TASK_H__
+#ifndef __ADC_TASK_H__
+#define __ADC_TASK_H__
 
-extern struct lcd_queue_message {
+/*extern struct lcd_queue_message {
   char type;
   int range;
   int value;
   int decimal;
-};
+};*/
 
-xQueueHandle g_pLCDQueue;
+//xQueueHandle g_pLCDQueue;
 
 //*****************************************************************************
 //
 // Prototypes for the LED task.
 //
 //*****************************************************************************
-extern uint32_t LCDTaskInit(void);
+extern uint32_t ADCTaskInit(void);
 
 
 
