@@ -36,53 +36,26 @@
 
 #define MSWITCH_REFRESH_TIME 100
 
-#define S1_A_PIN GPIO_PIN_4
-#define S1_A_BASE GPIO_PORTC_BASE
-#define S1_B_PIN GPIO_PIN_5
-#define S1_B_BASE GPIO_PORTC_BASE
-#define S1_C_PIN GPIO_PIN_6
-#define S1_C_BASE GPIO_PORTC_BASE
+#define S1_A_PIN 0
+#define S1_B_PIN 1
+#define S1_C_PIN 2
+#define S2_A_PIN 3
+#define S2_B_PIN 4
+#define S2_I_PIN 5
+#define S3_A_PIN 6
+#define S3_B_PIN 7
 
-#define S2_A_PIN GPIO_PIN_7
-#define S2_A_BASE GPIO_PORTC_BASE
-#define S2_B_PIN GPIO_PIN_2
-#define S2_B_BASE GPIO_PORTA_BASE
+#define SHIFT_IN_PIN_BASE GPIO_PORTC_BASE
+#define SHIFT_IN_PIN GPIO_PIN_4
 
-#define S3_A_PIN GPIO_PIN_3
-#define S3_A_BASE GPIO_PORTA_BASE
-#define S3_B_PIN GPIO_PIN_4
-#define S3_B_BASE GPIO_PORTA_BASE
+#define SHIFT_CLK_PIN_BASE GPIO_PORTC_BASE
+#define SHIFT_CLK_PIN GPIO_PIN_5
 
+#define SHIFT_REG_PERIPH_GPIO SYSCTL_PERIPH_GPIOC
+#define SHIFT_REG_PINS SHIFT_IN_PIN | SHIFT_CLK_PIN
+#define SHIFT_REG_BASE GPIO_PORTC_BASE
 
-#define S2_INH_PIN GPIO_PIN_5
-#define S2_INH_BASE GPIO_PORTA_BASE
-
-
-//#define S1_INH_PIN NOT_USED
-//#define S1_INH_BASE NOT_USED
-
-//#define S3_INH_PIN NOT_USED
-//#define S3_INH_BASE NOT_USED
-
-#define ALL_PORT_C_CONTROL_PINS GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7
-#define ALL_PORT_A_CONTROL_PINS GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5//GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_6 | GPIO_PIN_7
-
-//PIN 7 is fks
-
-/*#define CONTROL_A GPIO_PIN_4
-#define CONTROL_B GPIO_PIN_6
-#define CONTROL_C GPIO_PIN_7
-#define CONTROL_D GPIO_PIN_5
-#define ALL_CONTROL_PINS CONTROL_A | CONTROL_B | CONTROL_C | CONTROL_D
-
-#define CONTROL_13_V CONTROL_A
-#define CONTROL_5_V CONTROL_B
-#define CONTROL_1_V CONTROL_C
-#define CONTROL_AMP CONTROL_D
-
-#define CONTROL_10_mA CONTROL_1_V | CONTROL_AMP
-#define CONTROL_200_mA CONTROL_1_V*/
-
+uint8_t shift_reg = 0x00;
 
 int mode = 1; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13;
@@ -91,7 +64,9 @@ int range_current = 200;
 extern xSemaphoreHandle g_pUARTSemaphore;
 
 void check_range(float value);
-
+void set_shift_pin(int pin, int value);
+void set_mode(char mode);
+void change_voltage(int voltage);
 
 static void
 MSWITCHTask(void *pvParameters)
@@ -116,13 +91,6 @@ MSWITCHTask(void *pvParameters)
       //
       if(xQueueReceive(g_pMSWITCHQueue, &mswitch_message, 0) == pdPASS)
       {
-        //xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-
-        //UARTprintf("%c: (+- %d) %d.%d\n\r", mswitch_message.type, mswitch_message.range, mswitch_message.value, mswitch_message.decimal);
-
-        //display(mswitch_message.type, mswitch_message.range, mswitch_message.value, mswitch_message.decimal);
-        //xSemaphoreGive(g_pUARTSemaphore);
-
         value = mswitch_message.ui32Value/4095.0 * 2 * range - range;
 
         integer = (int)value;
@@ -133,8 +101,6 @@ MSWITCHTask(void *pvParameters)
 
         if(mode == 1){
     			check_range(value);
-    			//UARTprintf("ADC: %d.%d\n", (int)(ui32Value/4095.0 * 3.3), ((int)(ui32Value/4095.0 * 3.3 *1000))%1000);
-    			//UARTprintf("Voltage : %d.%d Range: %d\n", integer, decimal, range);
           lcd_message.type = 'V';
           lcd_message.range = range;
           lcd_message.value = integer;
@@ -152,7 +118,6 @@ MSWITCHTask(void *pvParameters)
            pdPASS){
              UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
            }
-
       }
 
       //
@@ -165,85 +130,26 @@ MSWITCHTask(void *pvParameters)
 uint32_t
 MSWITCHTaskInit(void)
 {
-    //UARTprintf("MSwitch Initialised...\n\r");
+
     g_pMSWITCHQueue = xQueueCreate(MSWITCH_QUEUE_SIZE, MSWITCH_ITEM_SIZE);
 
-    //
-	  // Enable the GPIO port that is used for the on-board LED.
-	  //
-	  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
 
+    SysCtlPeripheralEnable(SHIFT_REG_PERIPH_GPIO);
 
-    //
-	  // Check if the peripheral access is enabled.
-	  //
-	  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOC))
+	  while(!SysCtlPeripheralReady(SHIFT_REG_PERIPH_GPIO))
 	  {
 	  }
-
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-    //
-	  // Check if the peripheral access is enabled.
-	  //
-	  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA))
-	  {
-	  }
-    GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, ALL_PORT_A_CONTROL_PINS);
-    GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, ALL_PORT_C_CONTROL_PINS);
+    GPIOPinTypeGPIOOutput(SHIFT_REG_BASE, SHIFT_REG_PINS);
 
 
-    //write
-    if(mode == 0){
-      //current mode
-
-      //write S1 to 000
-      GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
-      //GPIOPinWrite(S1_B_BASE, S1_B_PIN, 0);
-      GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
-
-      //write S2 to 200mA (11) and IHN to 0 (on)
-      GPIOPinWrite(S2_B_BASE, S2_B_PIN, S2_B_PIN);
-      GPIOPinWrite(S2_A_BASE, S2_A_PIN, S2_A_PIN);
-      GPIOPinWrite(S2_INH_BASE, S2_INH_PIN, 0);
-
-      //write S3 to current mode (00)
-  		GPIOPinWrite(S3_B_BASE, S3_B_PIN, 0);
-      GPIOPinWrite(S3_A_BASE, S3_A_PIN, 0);
-  	}
-    else if(mode == 1){
-      //votlage mode
-
-      //write S1 to 12V mode (010)
-      GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
-      GPIOPinWrite(S1_B_BASE, S1_B_PIN, S1_B_PIN);
-      GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
-
-      //write S2 to 200mA (11) and IHN to 1 (off)
-      GPIOPinWrite(S2_B_BASE, S2_B_PIN, S2_B_PIN);
-      GPIOPinWrite(S2_A_BASE, S2_A_PIN, S2_A_PIN);
-      GPIOPinWrite(S2_INH_BASE, S2_INH_PIN, S2_INH_PIN);
-
-      //write S3 to voltage mode (01)
-  		GPIOPinWrite(S3_B_BASE, S3_B_PIN, 0);
-      GPIOPinWrite(S3_A_BASE, S3_A_PIN, S3_A_PIN);
-    }
-  	else if (mode == 2){
-      //resistance mode
-      //write S1 to (000)
-      GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
-      GPIOPinWrite(S1_B_BASE, S1_B_PIN, 0);
-      GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
-
-      //write S2 to 1MOhm (11) and IHN to 0 (on)
-      GPIOPinWrite(S2_B_BASE, S2_B_PIN, S2_B_PIN);
-      GPIOPinWrite(S2_A_BASE, S2_A_PIN, S2_A_PIN);
-      GPIOPinWrite(S2_INH_BASE, S2_INH_PIN, 0);
-
-      //write S3 to resistance mode (11)
-  		GPIOPinWrite(S3_B_BASE, S3_B_PIN, S3_B_PIN);
-      GPIOPinWrite(S3_A_BASE, S3_A_PIN, S3_A_PIN);
+    //Set inital mode
+    if(mode == 0){ //current mode
+      set_mode('C');
+  	} else if(mode == 1){ //votlage mode
+      set_mode('V');
+    } else if (mode == 2){ //resistance mode
+      set_mode('R');
 	   }
-
 
     if(xTaskCreate(MSWITCHTask, (signed portCHAR *)"MSWITCH", MSWITCHTASKSTACKSIZE, NULL,
                    tskIDLE_PRIORITY + PRIORITY_MSWITCH_TASK, NULL) != pdTRUE)
@@ -259,21 +165,90 @@ MSWITCHTaskInit(void)
     return(0);
 }
 
+void set_shift_pin(int pin, int value){
+  GPIOPinWrite(SHIFT_CLK_PIN_BASE, SHIFT_CLK_PIN, 0);
+  shift_reg ^= (-value ^ shift_reg) & (1 << pin);
+  UARTprintf("Shift Register: ");
+  for(int i = 0; i < 8; i ++){
+    UARTprintf("%d", (shift_reg >> i) & 1);
+    if((shift_reg >> (7 - i)) & 1){
+      GPIOPinWrite(SHIFT_IN_PIN_BASE, SHIFT_IN_PIN, SHIFT_IN_PIN);
+    } else{
+      GPIOPinWrite(SHIFT_IN_PIN_BASE, SHIFT_IN_PIN, 0);
+    }
+
+    GPIOPinWrite(SHIFT_CLK_PIN_BASE, SHIFT_CLK_PIN, SHIFT_CLK_PIN);
+    SysCtlDelay(5000);
+    GPIOPinWrite(SHIFT_CLK_PIN_BASE, SHIFT_CLK_PIN, 0);
+  }
+  UARTprintf("\n\r");
+}
+
+void set_mode(char mode){
+  if(mode == 'V'){
+    //write S1 to 12V mode (010)
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 1);
+    set_shift_pin(S1_A_PIN, 0);
+
+    //write S2 to 200mA (11) and IHN to 1 (off)
+    set_shift_pin(S2_B_PIN, 1);
+    set_shift_pin(S2_A_PIN, 1);
+    set_shift_pin(S2_I_PIN, 1);
+
+    //write S3 to voltage mode (01)
+    set_shift_pin(S3_B_PIN, 0);
+    set_shift_pin(S3_A_PIN, 1);
+
+    return;
+
+  } else if (mode == 'C'){
+    //write S1 to 000
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 0);
+
+    //write S2 to 200mA (11) and IHN to 0 (on)
+    set_shift_pin(S2_B_PIN, 1);
+    set_shift_pin(S2_A_PIN, 1);
+    set_shift_pin(S2_I_PIN, 0);
+
+    //write S3 to current mode (00)
+    set_shift_pin(S3_B_PIN, 0);
+    set_shift_pin(S3_A_PIN, 0);
+
+  } else if (mode == 'R'){
+    //write S1 to (000)
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 0);
+
+    //write S2 to 1MOhm (11) and IHN to 0 (on)
+    set_shift_pin(S2_B_PIN, 1);
+    set_shift_pin(S2_A_PIN, 1);
+    set_shift_pin(S2_I_PIN, 0);
+
+    //write S3 to resistance mode (11)
+    set_shift_pin(S3_B_PIN, 1);
+    set_shift_pin(S3_A_PIN, 1);
+  }
+}
+
 void change_voltage(int voltage){
   if(voltage == 12){
-    GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
-    GPIOPinWrite(S1_B_BASE, S1_B_PIN, S1_B_PIN);
-    GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 1);
+    set_shift_pin(S1_A_PIN, 0);
   }
   else if(voltage == 5){
-    GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
-    GPIOPinWrite(S1_B_BASE, S1_B_PIN, 0);
-    GPIOPinWrite(S1_A_BASE, S1_A_PIN, S1_A_PIN);
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 1);
   }
   else if(voltage == 1){
-    GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
-    GPIOPinWrite(S1_B_BASE, S1_B_PIN, 0);
-    GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 0);
   }
   else{
     UARTprintf("WARNING - UNKNOWN VOLTAGE LEVEL SETTING\n\r");
