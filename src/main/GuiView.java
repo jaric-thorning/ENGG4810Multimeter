@@ -25,6 +25,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GuiView extends Application {
+	EventHandlers event = new EventHandlers();
+
+	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
 
@@ -100,6 +103,8 @@ public class GuiView extends Application {
 		setupLineChart(controller.xAxis, controller.yAxis, controller);
 		scene.getStylesheets().add(getClass().getResource("/chartstyle.css").toExternalForm());
 
+		//setupMultimeterBtns(controller);
+
 		// Display coordinates on the screen
 		displayPlotCoordinates(controller);
 
@@ -109,6 +114,24 @@ public class GuiView extends Application {
 		// Display the GUI
 		primaryStage.show();
 	}
+
+//	// TODO: maybe add booleans to the
+//	/**
+//	 * Sets up the alternating DC/AC when the mouse is double-clicked.
+//	 * 
+//	 * @param controller
+//	 *            access components of the GUI Controller.
+//	 */
+//	private void setupMultimeterBtns(GuiController controller) {
+//		controller.voltageBtn
+//				.setOnMouseClicked(event.doubleClick(controller.voltageBtn, "V [AC]", "V [DC]"));
+//
+//		controller.resistanceBtn.setOnMouseClicked(event.doubleClick(controller.resistanceBtn,
+//				OHM_SYMBOL + " [AC]", OHM_SYMBOL + " [DC]"));
+//
+//		controller.currentBtn
+//				.setOnMouseClicked(event.doubleClick(controller.currentBtn, "mA [AC]", "mA [DC]"));
+//	}
 
 	/**
 	 * Displays the mouse coordinates relative to the chart background.

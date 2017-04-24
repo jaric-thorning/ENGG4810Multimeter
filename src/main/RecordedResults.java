@@ -2,7 +2,6 @@ package main;
 
 import java.util.ArrayList;
 
-/** FIXME: WORK ON THIS SO THAT WHEN BUTTONS ARE PRESSED, DIFFERENT THINGS ARE LOADED In**/
 /**
  * A class which handles the display of recorded results.
  */
@@ -52,19 +51,22 @@ class RecordedResults {
 		 */
 		@Override
 		public synchronized void run() {
-			ArrayList<String> multimeterReadingsDataY = null;
-
+			ArrayList<String> multimeterReadingsDataY = new ArrayList<>();
+			String multimeterYUnit = "";
+			
 			// Reads data from the file
 			multimeterReadingsDataY = model.readColumnData(filename, 1);
-
+			multimeterYUnit = model.readColumnData(filename, 2).get(0);
+			
+			System.out.println(multimeterYUnit);
 			// Displays the data results from the saved file.
 			int dataIndex = -1;
 			while (!this.quit && ++dataIndex < multimeterReadingsDataY.size()) {
 				if (!this.paused) {
 					final double yValue = Double
 							.parseDouble(multimeterReadingsDataY.get(dataIndex));
-					
-					GuiController.instance.recordAndDisplayDummyData(yValue);
+
+					GuiController.instance.recordAndDisplayDummyData(yValue, multimeterYUnit);
 				}
 
 				// Delay for visual update.
