@@ -58,15 +58,18 @@
 uint8_t shift_reg = 0x00;
 
 int mode = 1; //0 -> Current, 1 -> Voltage, 2 -> Resistance
-int range = 13;
-int range_current = 200;
+int range = 13; //V
+int range_current = 200; //mA
+int range_resistance = 1000; //kOhm
 
 extern xSemaphoreHandle g_pUARTSemaphore;
 
-void check_range(float value);
+void check_voltage_range(float value);
 void set_shift_pin(int pin, int value);
-void set_mode(char mode);
+void set_mode(char new_mode);
 void change_voltage(int voltage);
+void check_current_range(float value);
+void check_resistance_range(float value);
 
 static void
 MSWITCHTask(void *pvParameters)
@@ -91,40 +94,47 @@ MSWITCHTask(void *pvParameters)
       //
       if(xQueueReceive(g_pMSWITCHQueue, &mswitch_message, 0) == pdPASS)
       {
-        value = mswitch_message.ui32Value/4095.0 * 2 * range - range;
+        if(mode == 0){ //current
+          value = mswitch_message.ui32Value/4095.0 * 2 * range_current - range_current;
+          check_current_range(value);
+          lcd_message.type = 'C';
+          lcd_message.range = range_current;
 
-        integer = (int)value;
-    		decimal = ((int)(value*1000))%1000;
-    		if(decimal < 0){
-    			decimal *= -1;
-    		}
+        } else if(mode == 1){ //voltage
 
-        if(mode == 1){
-    			check_range(value);
+          value = mswitch_message.ui32Value/4095.0 * 2 * range - range;
+          check_voltage_range(value);
           lcd_message.type = 'V';
           lcd_message.range = range;
-          lcd_message.value = integer;
-          lcd_message.decimal = decimal;
+
+    		} else if(mode == 2){ //resistance
+          value = mswitch_message.ui32Value/4095.0 * 2 * range_resistance - range_resistance;
+          check_resistance_range(value);
+          lcd_message.type = 'R';
+          lcd_message.range = range_resistance;
     		}
-    		else{
-    			/*check_current(value_current);
-    			UARTprintf("ADC: %d.%d\n", (int)(ui32Value/4095.0 * 3.3), ((int)(ui32Value/4095.0 * 3.3 *1000))%1000);
-    			UARTprintf("Current : %d.%d Range: %d\n", integer_current, decimal_current, range_current);
-    			display("current",range_current, integer_current, decimal_current);*/
-    		}
+
+        integer = (int)value;
+        decimal = ((int)(value*1000))%1000;
+        if(decimal < 0){
+          decimal *= -1;
+        }
+
+        lcd_message.value = integer;
+        lcd_message.decimal = decimal;
 
 
         if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
            pdPASS){
              UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
            }
-      }
 
       //
       // Wait for the required amount of time.
       //
       vTaskDelayUntil(&ui32WakeTime, ui32MSWITCHRefreshTime / portTICK_RATE_MS);
     }
+  }
 }
 
 uint32_t
@@ -168,9 +178,7 @@ MSWITCHTaskInit(void)
 void set_shift_pin(int pin, int value){
   GPIOPinWrite(SHIFT_CLK_PIN_BASE, SHIFT_CLK_PIN, 0);
   shift_reg ^= (-value ^ shift_reg) & (1 << pin);
-  UARTprintf("Shift Register: ");
   for(int i = 0; i < 8; i ++){
-    UARTprintf("%d", (shift_reg >> i) & 1);
     if((shift_reg >> (7 - i)) & 1){
       GPIOPinWrite(SHIFT_IN_PIN_BASE, SHIFT_IN_PIN, SHIFT_IN_PIN);
     } else{
@@ -181,11 +189,11 @@ void set_shift_pin(int pin, int value){
     SysCtlDelay(5000);
     GPIOPinWrite(SHIFT_CLK_PIN_BASE, SHIFT_CLK_PIN, 0);
   }
-  UARTprintf("\n\r");
 }
 
-void set_mode(char mode){
-  if(mode == 'V'){
+void set_mode(char new_mode){
+  if(new_mode == 'V'){
+    mode = 1;
     //write S1 to 12V mode (010)
     set_shift_pin(S1_C_PIN, 0);
     set_shift_pin(S1_B_PIN, 1);
@@ -202,7 +210,8 @@ void set_mode(char mode){
 
     return;
 
-  } else if (mode == 'C'){
+  } else if (new_mode == 'C'){
+    mode = 0;
     //write S1 to 000
     set_shift_pin(S1_C_PIN, 0);
     set_shift_pin(S1_B_PIN, 0);
@@ -217,7 +226,8 @@ void set_mode(char mode){
     set_shift_pin(S3_B_PIN, 0);
     set_shift_pin(S3_A_PIN, 0);
 
-  } else if (mode == 'R'){
+  } else if (new_mode == 'R'){
+    mode = 2;
     //write S1 to (000)
     set_shift_pin(S1_C_PIN, 0);
     set_shift_pin(S1_B_PIN, 0);
@@ -254,95 +264,159 @@ void change_voltage(int voltage){
     UARTprintf("WARNING - UNKNOWN VOLTAGE LEVEL SETTING\n\r");
   }
 }
-void check_range(float value){
+
+void change_current(int current){
+  if(current == 10){
+    set_shift_pin(S2_B_PIN, 1);
+    set_shift_pin(S2_A_PIN, 0);
+  }
+  else if(current == 200){
+    set_shift_pin(S2_B_PIN, 1);
+    set_shift_pin(S2_A_PIN, 1);
+  }
+  else{
+    UARTprintf("WARNING - UNKNOWN CURRENT LEVEL SETTING\n\r");
+  }
+}
+
+void change_resistance(int resistance){
+  if(resistance == 1){
+    set_shift_pin(S2_B_PIN, 0);
+    set_shift_pin(S2_A_PIN, 0);
+  } else if(resistance == 10){
+    set_shift_pin(S2_B_PIN, 0);
+    set_shift_pin(S2_A_PIN, 1);
+  } else if(resistance == 100){
+    set_shift_pin(S2_B_PIN, 1);
+    set_shift_pin(S2_A_PIN, 0);
+  } else if(resistance == 1000){
+    set_shift_pin(S2_B_PIN, 1);
+    set_shift_pin(S2_A_PIN, 1);
+  } else{
+    UARTprintf("WARNING - UNKNOWN RESISTANCE LEVEL SETTING\n\r");
+  }
+}
+
+void check_voltage_range(float value){
 	if( value < 0){
 		value *= -1;
 	}
-
 	if( range == 13){
 		if( value > 12){
 			UARTprintf("Warning: Value out of range!\n");
 			//Reset all to 12V range
       change_voltage(12);
-		}
-		else if( value < 5){
+		} else if( value < 5){
 			UARTprintf("Switching to 5V resolution\n");
 			range = 5;
 			//Switch Down
       change_voltage(5);
 		}
-	}
-	else if ( range == 5){
+	} else if ( range == 5){
 		if( value >= 5){
 			UARTprintf("Switching to 12V resolution\n");
 			range = 13;
 			change_voltage(12);
 
-		}
-		else if( value < 1){
+		} else if( value < 1){
 			UARTprintf("Switching to 1V resolution\n");
 			range = 1;
 			change_voltage(1);
-
 		}
-
-	}
-	else if (range == 1){
-		if( value >= 0.9){
-			UARTprintf("Switching to 5V resolution\n");
-			range = 5;
-			change_voltage(5);
-
-		}
-		else if( value < 1){
+	} else if (range == 1){
+  		if( value >= 0.9){
+  			UARTprintf("Switching to 5V resolution\n");
+  			range = 5;
+  			change_voltage(5);
+		} else if( value < 1){
 			//No worries
 		}
-	}
-	else{
+	} else{
 		//Shouldn't get here ever
 		UARTprintf("Warning, range outside of normal values!\n");
 	}
 	return;
 }
 
-/*void check_current(float value){
+void check_current_range(float value){
 	if( value < 0){
 		value *= -1;
 	}
-
 	if( range_current == 200){
 		if( value > 200){
 			UARTprintf("Warning: Value out of range!\n");
 			//Reset all
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_10_mA, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_200_mA, 0x0);
-			//Enable 200mA
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_200_mA, CONTROL_200_mA);
-		}
-		else if( value < 10){
+      change_current(200);
+		} else if( value < 10){
 			UARTprintf("Switching to 10mA resolution\n");
-			range_current = 10;
-			//Switch Down
-
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_200_mA, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_10_mA, CONTROL_10_mA);
+      //Switch Down
+      range_current = 10;
+      change_current(10);
 		}
-	}
-	else if ( range_current == 10){
+	} else if ( range_current == 10){
 		if( value >= 9){
 			UARTprintf("Switching to 200mA resolution\n");
 			range_current = 200;
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_10_mA, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_200_mA, CONTROL_200_mA);
-
-		}
-		else if( value < 10){
+			change_current(200);
+		} else if( value < 10){
 			//No worries
 		}
-	}
-	else{
+	} else{
 		//Shouldn't get here ever
 		UARTprintf("Warning, range outside of normal values!\n");
 	}
 	return;
-}*/
+}
+
+void check_resistance_range(float value){
+	if( value < 0){
+		value *= -1;
+	}
+	if( range_resistance == 1000){
+		if( value > 1000){
+			UARTprintf("Warning: Value out of range!\n");
+			//Reset all
+      change_resistance(1000);
+		} else if( value < 100){
+			UARTprintf("Switching to 100k resolution\n");
+      //Switch Down
+      range_resistance = 100;
+      change_resistance(100);
+		}
+	} else if ( range_resistance == 100){
+    if( value > 100){
+      UARTprintf("Switching to 1000k resolution\n");
+			range_resistance = 1000;
+      change_resistance(1000);
+		} else if( value < 10){
+			UARTprintf("Switching to 10k resolution\n");
+      //Switch Down
+      range_resistance = 10;
+      change_resistance(10);
+		}
+	} else if ( range_resistance == 10){
+    if( value > 10){
+      UARTprintf("Switching to 100k resolution\n");
+			range_resistance = 100;
+      change_resistance(100);
+		} else if( value < 1){
+			UARTprintf("Switching to 1k resolution\n");
+      //Switch Down
+      range_resistance = 1;
+      change_resistance(1);
+		}
+	} else if ( range_resistance == 1){
+    if( value > 1){
+      UARTprintf("Switching to 10k resolution\n");
+			range_resistance = 10;
+      change_resistance(10);
+		} else if( value < 1){
+			//No worries
+		}
+	}
+  else{
+		//Shouldn't get here ever
+		UARTprintf("Warning, range outside of normal values!\n");
+	}
+	return;
+}

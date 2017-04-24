@@ -109,6 +109,7 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/comm_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/LCD_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/ADC_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/mswitch_task.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/sd_task.o
 
 #-----------------#
 

@@ -50,12 +50,13 @@
 
 // --------------- TASK CONTROL ------------------
 
-#define COMMTASK 1
-#define LEDTASK 1
-#define LCDTASK 1
-#define SWITCHTASK 1
-#define ADCTASK 1
-#define MSWITCHTASK 1
+#define COMMTASK        1
+#define LEDTASK         1
+#define LCDTASK         1
+#define SWITCHTASK      1
+#define ADCTASK         1
+#define MSWITCHTASK     1
+#define SDTASK          0 //not implemented
 
 // -----------------------------------------------
 
@@ -187,7 +188,7 @@ main(void)
     }
 
     //
-    // Create the ADC task.
+    // Create the MSWITCH task.
     //
     if(MSWITCHTASK){
       if(MSWITCHTaskInit() != 0)
@@ -196,6 +197,19 @@ main(void)
           while(1)
           {
             UARTprintf("\n\nMSWITCH INIT ERROR!\n");
+          }
+      }
+    }
+
+    //
+    // Create the SD task.
+    //
+    if(SDTASK){
+      if(SDTaskInit() != 0)
+      {
+          while(1)
+          {
+            UARTprintf("\n\nSD INIT ERROR!\n");
           }
       }
     }
