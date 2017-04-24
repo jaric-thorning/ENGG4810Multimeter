@@ -113,7 +113,7 @@ public class SerialFramework {
 	 *            the port that needs to be binded to.
 	 * @return whether or not the serial port was binded to successfully (true if it did, false if if didn't).
 	 */
-	private static boolean bindListen(SerialPort serialPort) {
+	static boolean bindListen(SerialPort serialPort) {
 		closeOpenPort();
 		if (!serialPort.openPort()) {
 			return false;
@@ -124,7 +124,7 @@ public class SerialFramework {
 		}
 
 		OpenSerialPort = serialPort;
-		RecordedResults.shutdownRecordedResultsThread();
+		//RecordedResults.shutdownRecordedResultsThread();
 		//GuiModel.getInstance().clearData();
 
 		return true;
@@ -140,6 +140,7 @@ public class SerialFramework {
 
 		/** The buffer for building whole packets received over the serial port. */
 		private String serialBuffer = "";
+		
 		/** whether the port connection has bugged out. */
 		private boolean errored = false;
 
@@ -153,7 +154,7 @@ public class SerialFramework {
 			if (sEvent.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {
 				if (sEvent.getSerialPort().bytesAvailable() < 0) {
 					this.errored = true;
-					// System.err.println("Error 3. reading from port");
+					System.err.println("Error 3. reading from port");
 					closeOpenPort();
 					//GuiController.getInstance().refreshPorts();
 					return;
@@ -173,14 +174,15 @@ public class SerialFramework {
 		 */
 		private void handleString(String text) {
 			serialBuffer += text;
-			System.out.println("Serial: \"" + text.replace("\r", "\\r").replace("\n", "\\n") + "\"");
+			System.out.println(" SERIAL" + serialBuffer);
+//			System.out.println("Serial: \"" + text.replace("\r", "\\r").replace("\n", "\\n") + "\"");
 
-			// Clear the buffer if random text comes through for a while (not actually valid weather packets).
-			if (serialBuffer.length() > 100 && serialBuffer.indexOf(PACKET_OPEN) == -1
-					&& serialBuffer.indexOf(PACKET_CLOSE) == -1) {
-				serialBuffer = "";
-				return;
-			}
+//			// Clear the buffer if random text comes through for a while (not actually valid weather packets).
+//			if (serialBuffer.length() > 100 && serialBuffer.indexOf(PACKET_OPEN) == -1
+//					&& serialBuffer.indexOf(PACKET_CLOSE) == -1) {
+//				serialBuffer = "";
+//				return;
+//			}
 			while (getData())
 				;
 		}

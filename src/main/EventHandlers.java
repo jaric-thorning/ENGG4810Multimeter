@@ -6,6 +6,7 @@ import java.time.Duration;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -29,12 +30,13 @@ public class EventHandlers {
 	 * @return the event handler.
 	 */
 	protected EventHandler<MouseEvent> getDataXYValues(XYChart.Data<Number, Number> dataPoint,
-			int index, Label xDataCoord, Label yDataCoord) {
+			int index, Label xDataCoord, Label yDataCoord, double firstPointXValue) {
 		EventHandler<MouseEvent> getValues = new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
-				String xValue = TIME_DECIMAL.format(dataPoint.getXValue()); // index/sample_per_second
+				String xValue = TIME_DECIMAL
+						.format(dataPoint.getXValue().doubleValue() - firstPointXValue); // index/sample_per_second
 				// IF LOADED FROM SD CARD -> USE ISO 8601 DURATION FORMAT
 				String isoDurationFormat = "PT" + xValue + "S";
 
@@ -83,6 +85,25 @@ public class EventHandlers {
 
 		return changeCursorType;
 	}
+//
+//	protected EventHandler<MouseEvent> doubleClick(Button multimeterBtn, String ac, String dc) {
+//		EventHandler<MouseEvent> doubleClickMouse = new EventHandler<MouseEvent>() {
+//			@Override
+//			public void handle(MouseEvent event) {
+//				if (event.getClickCount() == 2) {
+//					System.out.println("DOUBLE CLICK");
+//					// Change between ac and dc
+//					if (multimeterBtn.getText().equals(ac)) {
+//						multimeterBtn.setText(dc);
+//					} else {
+//						multimeterBtn.setText(ac);
+//					}
+//				}
+//			}
+//		};
+//
+//		return doubleClickMouse;
+//	}
 
 	/**
 	 * Deals with deleting boundary data points when the user right clicks.

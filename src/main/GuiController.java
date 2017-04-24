@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -66,6 +68,8 @@ public class GuiController implements Initializable {
 	public volatile boolean resistance = false;
 	public volatile boolean voltage = false;
 	public volatile boolean current = false;
+	@FXML
+	private ToggleButton acDcSwitchBtn;
 
 	/* Components relating to the 'connected' mode */
 	@FXML
@@ -152,13 +156,13 @@ public class GuiController implements Initializable {
 
 	/* Components mirroring the LED multimeter from hardware */
 	@FXML
-	private Button voltageBtn;
+	protected Button voltageBtn;
 	@FXML
-	private Button currentBtn;
+	protected Button currentBtn;
 	@FXML
-	private Button resistanceBtn;
+	protected Button resistanceBtn;
 	@FXML
-	private TextArea multimeterDisplay;
+	protected TextArea multimeterDisplay;
 	@FXML
 	private Label modeLabel;
 	@FXML
@@ -180,6 +184,9 @@ public class GuiController implements Initializable {
 	private static final double Y_LOWER_BOUND = -10D;
 
 	public static final double SAMPLES_PER_SECOND = 2D;
+
+	private static final String OHM_SYMBOL = Character.toString((char) 8486);
+	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
 
 	public static GuiController instance;
 
@@ -222,6 +229,22 @@ public class GuiController implements Initializable {
 		xAxis.setLowerBound(newAxisLowerValue);
 	}
 
+	//FIXME: make sure the the toggle works.
+	@FXML
+	private void switchAcDc() {
+		if (!acDcSwitchBtn.isSelected()) {
+			// Change to DC
+			acDcSwitchBtn.setText("AC -> DC");
+			voltageBtn.setText("V [DC]");
+			currentBtn.setText("mA [DC]");
+		} else {
+			// Change to AC
+			acDcSwitchBtn.setText("AC <- DC");
+			voltageBtn.setText("V [AC]");
+			currentBtn.setText("mA [AC]");
+		}
+	}
+
 	/**
 	 * Gets dummy data of voltage values and displays it. FIXME: convert to serial.
 	 */
@@ -250,6 +273,20 @@ public class GuiController implements Initializable {
 		thread.start();
 	}
 
+	private String getVoltageRange(double dataValue) {
+		if (dataValue >= -1 && dataValue <= 1) { // +- 1 range
+			return "1";
+		} else if (dataValue >= -5 && dataValue <= 5) { // +- 5 range
+			return "5";
+		} else if (dataValue >= -12 && dataValue <= 12) { // +- 12 range
+			return "12";
+		} else if (dataValue < -12 && dataValue > 12) { // FIXME: MAKE IT SO EVERYTHING IS LIKE THAT
+			return "OL";
+		} else {
+			return "";
+		}
+	}
+
 	/**
 	 * Gets dummy data of current values and displays it. FIXME: convert to serial.
 	 */
@@ -269,12 +306,25 @@ public class GuiController implements Initializable {
 		yAxis.setLabel("Measurements [mA]");
 
 		String file = FILE_DIR + "current.csv";
+
 		// Run thread here with 2nd column of data
 		RecordedResults.shutdownRecordedResultsThread();
 		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
 		Thread thread = new Thread(container);
 		RecordedResults.dataPlaybackContainer = container;
 		thread.start();
+	}
+
+	private String getCurrentRange(double dataValue) {
+		if (dataValue >= -10 && dataValue <= 10) { // +- 10 mA range
+			return "10";
+		} else if (dataValue >= -200 && dataValue <= 200) { // +- 200 mA range
+			return "200";
+		} else if (dataValue < -200 && dataValue > 200) { // FIXME: MAKE WHOLE MULTIMETER SET-TEXT
+			return "OL";
+		} else {
+			return "";
+		}
 	}
 
 	/**
@@ -293,7 +343,7 @@ public class GuiController implements Initializable {
 		readingSeries.getData().clear();
 		yUnit.clear();
 
-		String file = FILE_DIR + "resistance.csv";
+		String file = FILE_DIR + "resistance2.csv";
 		RecordedResults.shutdownRecordedResultsThread();
 
 		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
@@ -302,24 +352,71 @@ public class GuiController implements Initializable {
 		thread.start();
 	}
 
+	// TODO: keep this just for updating the multi-meter range stuff.
+	/**
+	 * Changes the y-axis label if the units change + the units' range.
+	 * 
+	 * @param dataValue
+	 *            the y-axis value.
+	 */
+	private String getResistanceRange(double dataValue) {
+		if (dataValue >= 0 && dataValue <= 1000) { // 0 - 1 kOhm range (1 Ohm = 0.001 kOhm)
+			return "0 - 1k" + OHM_SYMBOL;
+		} else if (dataValue > 1000 && dataValue <= 1000000) { // 0 - 1 MOhm range (1 kOhm = 0.001
+																// MOhm)
+			return "0 - 1M" + OHM_SYMBOL;
+		} else if (dataValue > 1000000) { // FIXME: MAKE WHOLE MULTIMETER SET-TEXT
+			return "OL";
+		} else {
+			return "";
+		}
+	}
+
+	private String convertRange(Double dataValue) {
+		if (dataValue < 1000) {
+			String kOhm = "k" + OHM_SYMBOL;
+			// yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
+			return kOhm + ": " + (dataValue /= 1000).toString() + kOhm;
+			// } else if (dataValue >= 1000 && dataValue <= 1000000) {
+			// yAxis.setLabel("Measurements [" + "k" + OHM_SYMBOL + "]");
+			// return (dataValue /= 1000);
+		} else if (dataValue >= 1000 && dataValue <= 1000000) {
+			String MOhm = "M" + OHM_SYMBOL;
+			// yAxis.setLabel("Measurements [" + "M" + OHM_SYMBOL + "]");
+			return MOhm + ": " + (dataValue /= 1000000).toString() + MOhm;
+		} else {
+			return "";
+		}
+	}
+
+	private String getResistanceRangeValues(Double dataValue) {
+		if (dataValue < 1000) {
+			return "k" + OHM_SYMBOL;
+		} else if (dataValue >= 1000 && dataValue <= 1000000) {
+			return "M" + OHM_SYMBOL;
+		} else {
+			return "";
+		}
+	}
+
 	/**
 	 * Updates the displayed dummy data FIXME: convert to serial.
 	 * 
 	 * @param multimeterReading
 	 */
-	public void recordAndDisplayDummyData(double multimeterReading) {
+	public void recordAndDisplayDummyData(double multimeterReading, String unit) {
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					recordAndDisplayDummyData(multimeterReading);
+					recordAndDisplayDummyData(multimeterReading, unit);
 				}
 			});
 			return;
 		}
 
 		// Update all software displays
-		updateDisplay(multimeterReading);
+		updateDisplay(multimeterReading, unit);
 	}
 
 	/**
@@ -327,21 +424,30 @@ public class GuiController implements Initializable {
 	 * 
 	 * @param multimeterReading
 	 */
-	private void updateDisplay(Double multimeterReading) {
+	private void updateDisplay(Double multimeterReading, String unit) {
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					updateDisplay(multimeterReading);
+					updateDisplay(multimeterReading, unit);
 				}
 			});
 			return;
 		}
 
-		// change units when ranges are overcome
-		// autoRangeYUnit(multimeterReading);
-
-		multimeterDisplay.setText(Character.toString((char) 177) + multimeterReading.toString());
+		// Change multimeter text display according to ranges and values.
+		if (voltage) {
+			multimeterDisplay.setText(
+					getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getVoltageRange(multimeterReading)
+							+ " )" + "\n" + unit + ": " + multimeterReading.toString() + unit);
+		} else if (current) {
+			multimeterDisplay.setText(
+					getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getCurrentRange(multimeterReading)
+							+ " )" + "\n" + unit + ": " + multimeterReading.toString() + unit);
+		} else if (resistance) {
+			multimeterDisplay.setText(getUnit(unit) + " ( " + getResistanceRange(multimeterReading)
+					+ " )" + "\n" + convertRange(multimeterReading));
+		}
 
 		readingSeries.getData().add(new XYChart.Data<Number, Number>(
 				dataPlotPosition / SAMPLES_PER_SECOND, multimeterReading));
@@ -350,7 +456,8 @@ public class GuiController implements Initializable {
 		readingSeries.getData().get(dataPlotPosition).getNode().addEventHandler(
 				MouseEvent.MOUSE_ENTERED,
 				event.getDataXYValues(readingSeries.getData().get(dataPlotPosition),
-						dataPlotPosition, xDataCoord, yDataCoord));
+						dataPlotPosition, xDataCoord, yDataCoord,
+						readingSeries.getData().get(0).getXValue().doubleValue()));
 
 		dataPlotPosition++;
 
@@ -362,6 +469,18 @@ public class GuiController implements Initializable {
 			xAxis.setUpperBound(dataBoundsRange);
 		}
 
+	}
+
+	private String getUnit(String unit) {
+		if (unit.equals("V")) {
+			return "Voltage";
+		} else if (unit.equals("mA")) { // need to convert to milliamps
+			return "milliAmp";
+		} else if (unit.equals("Ohm")) {
+			return "Ohm";
+		} else {
+			return "";
+		}
 	}
 
 	/**
@@ -558,7 +677,6 @@ public class GuiController implements Initializable {
 		xAxis.setLowerBound(X_LOWER_BOUND);
 		xAxis.setUpperBound(X_UPPER_BOUND);
 
-		// FIXME: Something funky here
 		yAxis.setLowerBound(Y_LOWER_BOUND);
 		yAxis.setUpperBound(Y_UPPER_BOUND);
 
@@ -745,7 +863,7 @@ public class GuiController implements Initializable {
 		// Only if file exists extract information from it
 		if (selectedFile != null) {
 			System.out.println("NAME: " + selectedFile.getPath());
-			
+
 			// Clear data from list if reloaded multiple times
 			readingSeries.getData().clear();
 			yUnit.clear();
@@ -755,8 +873,8 @@ public class GuiController implements Initializable {
 			ArrayList<Double> inputDataXValues = new ArrayList<>();
 			ArrayList<Double> inputDataYValues = new ArrayList<>();
 			ArrayList<String> inputDataYUnits = new ArrayList<>();
-			
-			//Read from file
+
+			// Read from file
 			readDataFromFile(selectedFile, inputDataXValues, inputDataYValues, inputDataYUnits);
 
 			// Modify y-units
@@ -765,7 +883,7 @@ public class GuiController implements Initializable {
 				convertMeasurementYUnit(yUnit.get(0));
 			}
 
-			// FIXME:
+			// FIXME: make sure autoranging is set true/false in right places
 			yAxis.setAutoRanging(true);
 			addDataToSeries(inputDataXValues, inputDataYValues);
 		} else {
@@ -814,7 +932,7 @@ public class GuiController implements Initializable {
 
 		// Convert Ohm to Ohm symbol.
 		if (value.equals("Ohm")) {
-			displayedYUnit = Character.toString((char) 8486);
+			displayedYUnit = OHM_SYMBOL;
 		}
 
 		yAxis.setLabel("Measurements [" + displayedYUnit + "]");
@@ -832,6 +950,8 @@ public class GuiController implements Initializable {
 	private void addDataToSeries(ArrayList<Double> inputDataXValues,
 			ArrayList<Double> inputDataYValues) {
 
+		double firstPointXValue = inputDataXValues.get(0);
+
 		// Add data to series
 		for (int i = 0; i < inputDataXValues.size(); i++) {
 			double inputXDataValue = inputDataXValues.get(i);
@@ -842,8 +962,9 @@ public class GuiController implements Initializable {
 
 			// Assign indexing to each node.
 			Data<Number, Number> dataPoint = readingSeries.getData().get(i);
+
 			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
-					event.getDataXYValues(dataPoint, i, xDataCoord, yDataCoord));
+					event.getDataXYValues(dataPoint, i, xDataCoord, yDataCoord, firstPointXValue));
 			dataPoint.getNode().addEventFilter(MouseEvent.MOUSE_EXITED,
 					event.resetDataXYValues(xDataCoord, yDataCoord));
 
@@ -853,29 +974,6 @@ public class GuiController implements Initializable {
 				xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
 				xAxis.setUpperBound(dataBoundsRange);
 			}
-		}
-	}
-
-	// TODO: keep this just for updating the multi-meter range stuff.
-	/**
-	 * Changes the y-axis label if the units change + the units' range.
-	 * 
-	 * @param dataValue
-	 *            the y-axis value.
-	 */
-	private double autoRangeOhmnData(Double dataValue) {
-		String ohmSymbol = Character.toString((char) 8486);
-
-		if (dataValue < 1000) {
-			yAxis.setLabel("Measurements [" + ohmSymbol + "]");
-			return dataValue;
-		} else if (dataValue >= 1000 && dataValue < 1000000) {
-
-			yAxis.setLabel("Measurements [" + "k" + ohmSymbol + "]");
-			return (dataValue /= 1000);
-		} else {
-			yAxis.setLabel("Measurements [" + "M" + ohmSymbol + "]");
-			return (dataValue /= 1000000);
 		}
 	}
 
@@ -1033,6 +1131,7 @@ public class GuiController implements Initializable {
 		// SORT IN INCREASING ORDER..
 		series.getData().sort(compare.sortChart());
 
+		double firstPointXValue = series.getData().get(0).getXValue().doubleValue();
 		// Modified the for loop for IDing the line chart data points from:
 		// https://gist.github.com/TheItachiUchiha/c0ae68ef8e6273a7ac10
 		for (int i = 0; i < series.getData().size(); i++) {
@@ -1041,7 +1140,7 @@ public class GuiController implements Initializable {
 			// Display x and y values of data points of each boundary point, and remove them when
 			// leaving the node
 			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
-					event.getDataXYValues(dataPoint, i, xDataCoord, yDataCoord));
+					event.getDataXYValues(dataPoint, i, xDataCoord, yDataCoord, firstPointXValue));
 			dataPoint.getNode().addEventFilter(MouseEvent.MOUSE_EXITED,
 					event.resetDataXYValues(xDataCoord, yDataCoord));
 
@@ -1373,7 +1472,7 @@ public class GuiController implements Initializable {
 
 		// Add first and last points
 		Data<Number, Number> initialBoundaryPoint = new Data<>();
-		initialBoundaryPoint.setXValue(xAxis.getLowerBound());
+		initialBoundaryPoint.setXValue(0);
 		initialBoundaryPoint.setYValue(series.getData().get(0).getYValue());
 
 		Data<Number, Number> finalBoundaryPoint = new Data<>();
@@ -1533,7 +1632,6 @@ public class GuiController implements Initializable {
 			}
 		}
 
-		// FIXME: make a better condition to enabling/disabling stuff
 		// Enable running of mask-testing
 		if (setHighBtn.isDisabled() && setLowBtn.isDisabled()) {
 			runMaskBtn.setDisable(false);
@@ -1720,8 +1818,7 @@ public class GuiController implements Initializable {
 		return errorCounter;
 	}
 
-	// FIXME: error only if yunit has a value.
-	// FIXME: so that no weird multiple stuff happens
+	// TODO: make sure that the right things are being cleared/etc when loading in mask data
 	/**
 	 * Loads the mask data file. If the yUnit doesn't match it errors and doesn't load.
 	 */
@@ -1739,16 +1836,15 @@ public class GuiController implements Initializable {
 		File selectedFile = loadFileOptions.showOpenDialog(GuiView.getInstance().getStage());
 
 		// Only if file exists extract information from it
-		// FIXME: Make sure to load the yUnit values.
 		if (selectedFile != null) {
 			System.out.println("NAME: " + selectedFile.getPath());
-			
+
 			setHighBtn.setDisable(true);
 			setMaskBtn.setDisable(true);
-			
+
 			String yUnitValue = "";
 
-			// Display measurement unit or error
+			// Check if there is a clash of units.
 			if (yUnit.size() > 0) {
 				for (String[] column : model.readMaskData(selectedFile.getPath())) {
 					yUnitValue = column[3];
@@ -1783,7 +1879,8 @@ public class GuiController implements Initializable {
 	/**
 	 * A private helper function to 'importMaskData' which adds the data to the mask series.
 	 * 
-	 * @param selectedFile the file to get imported amask data from
+	 * @param selectedFile
+	 *            the file to get imported amask data from
 	 */
 	private void addMaskDataPoints(File selectedFile) {
 		XYChart.Series<Number, Number> tempHighMaskBoundarySeries = new XYChart.Series<>();
@@ -1842,18 +1939,20 @@ public class GuiController implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+
 		// TODO: DO A PING TEST TO SEE IF THERE'S A CONNECTION.
 		testConnection(connRBtn);
 
 		// Setup initial multimeter display
 		String multValue = "5";
-		multimeterDisplay.setText("Voltage (" + Character.toString((char) 177) + " range)" + "\n"
-				+ "V: " + multValue + "V");
+		multimeterDisplay.setText(
+				"Voltage ( " + PLUS_MINUS_SYMBOL + " range )" + "\n" + "V: " + multValue + "V");
 
 		highMaskBoundarySeries.setName("high");
 		lowMaskBoundarySeries.setName("low");
 		readingSeries.setName("data");
 
+		// SerialFramework.changePorts();
 		// refreshSelectablePortsList();
 	}
 
@@ -1875,10 +1974,26 @@ public class GuiController implements Initializable {
 
 		// isOpen -> whether port is closed/ready to communicate
 		for (SerialPort serialPort : ports) {
-			if (serialPort.isOpen()) {
-				System.out.println("PORT IS OPEN");
-			} else {
-				System.out.println("PORT IS CLOSED: " + serialPort.getSystemPortName());
+			// if (serialPort.isOpen()) {
+			// System.out.println("PORT IS OPEN");
+			// } else {
+			// System.out.println("PORT IS CLOSED: " + serialPort.getSystemPortName());
+			// }
+			if (serialPort.getSystemPortName().contains("tty.usbmodem0E21B171")) { // ->
+																					// /dev/tty.usbmodem0E21B171
+				serialPort.openPort();
+				serialPort.setBaudRate(115200); // baudrate
+
+				System.out.println(
+						"Binding to Serial Port " + serialPort.getSystemPortName() + "...");
+				if (SerialFramework.bindListen(serialPort)) {
+					System.out.println("Success.");
+				} else {
+					System.out.println("Failed to bind to Serial.");
+					refreshSelectablePortsList();
+				}
+
+				break;
 			}
 
 			System.out.println("PORTS: " + serialPort.getSystemPortName());

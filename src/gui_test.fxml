@@ -166,7 +166,7 @@
                <children>
                   <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureVoltage" text="V [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP" />
                   <Button fx:id="currentBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureCurrent" text="mA [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
-                  <Button fx:id="resistanceBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureResistance" text="Ω [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="BOTTOM" />
+                  <Button fx:id="resistanceBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureResistance" text="Ω" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="BOTTOM" />
                   <Button fx:id="continuityBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" text="Continuity" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                      <GridPane.margin>
                         <Insets top="60.0" />
@@ -189,6 +189,7 @@
                      <GridPane.margin>
                         <Insets bottom="10.0" left="5.0" right="5.0" top="25.0" />
                      </GridPane.margin></TextArea>
+                  <ToggleButton fx:id="acDcSwitchBtn" mnemonicParsing="false" onAction="#switchAcDc" text="AC -&gt; DC" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER" />
                </children>
             </GridPane>
          </children>
@@ -216,8 +217,8 @@
                   <Button fx:id="leftBtn" focusTraversable="false" mnemonicParsing="false" onAction="#moveXAxisLeft" text="&lt;" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
                   <Group GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.valignment="TOP">
                      <children>
-                        <Label focusTraversable="false" layoutX="10.0" layoutY="15.0" minHeight="15.0" minWidth="70.0" prefHeight="15.0" text="X:" textFill="WHITE" fx:id="xDataCoord" />
-                        <Label fx:id="yDataCoord" focusTraversable="false" layoutX="10.0" layoutY="35.0" minHeight="15.0" minWidth="70.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" />
+                        <Label focusTraversable="false" layoutX="10.0" layoutY="15.0" minHeight="15.0" minWidth="150.0" prefHeight="15.0" text="X:" textFill="WHITE" fx:id="xDataCoord" />
+                        <Label fx:id="yDataCoord" focusTraversable="false" layoutX="10.0" layoutY="35.0" minHeight="15.0" minWidth="150.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" />
                         <Label fx:id="plotCoordLabel" focusTraversable="false" layoutX="9.0" text="Plot Coordinates:" />
                      </children>
                      <GridPane.margin>
