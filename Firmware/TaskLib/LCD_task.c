@@ -79,6 +79,8 @@ LCDTaskInit(void)
 
     initLCD();
 
+    printLCD("Starting LCD...");
+
     if(xTaskCreate(LCDTask, (signed portCHAR *)"LCD", LCDTASKSTACKSIZE, NULL,
                    tskIDLE_PRIORITY + PRIORITY_LCD_TASK, NULL) != pdTRUE)
     {

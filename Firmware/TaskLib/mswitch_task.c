@@ -34,10 +34,42 @@
 #define MSWITCH_ITEM_SIZE           sizeof(struct mswitch_queue_message)
 #define MSWITCH_QUEUE_SIZE          5
 
-#define MSWITCH_REFRESH_TIME 10
+#define MSWITCH_REFRESH_TIME 100
+
+#define S1_A_PIN GPIO_PIN_4
+#define S1_A_BASE GPIO_PORTC_BASE
+#define S1_B_PIN GPIO_PIN_5
+#define S1_B_BASE GPIO_PORTC_BASE
+#define S1_C_PIN GPIO_PIN_6
+#define S1_C_BASE GPIO_PORTC_BASE
+
+#define S2_A_PIN GPIO_PIN_7
+#define S2_A_BASE GPIO_PORTC_BASE
+#define S2_B_PIN GPIO_PIN_2
+#define S2_B_BASE GPIO_PORTA_BASE
+
+#define S3_A_PIN GPIO_PIN_3
+#define S3_A_BASE GPIO_PORTA_BASE
+#define S3_B_PIN GPIO_PIN_4
+#define S3_B_BASE GPIO_PORTA_BASE
 
 
-#define CONTROL_A GPIO_PIN_4
+#define S2_INH_PIN GPIO_PIN_5
+#define S2_INH_BASE GPIO_PORTA_BASE
+
+
+//#define S1_INH_PIN NOT_USED
+//#define S1_INH_BASE NOT_USED
+
+//#define S3_INH_PIN NOT_USED
+//#define S3_INH_BASE NOT_USED
+
+#define ALL_PORT_C_CONTROL_PINS GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7
+#define ALL_PORT_A_CONTROL_PINS GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5//GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_6 | GPIO_PIN_7
+
+//PIN 7 is fks
+
+/*#define CONTROL_A GPIO_PIN_4
 #define CONTROL_B GPIO_PIN_6
 #define CONTROL_C GPIO_PIN_7
 #define CONTROL_D GPIO_PIN_5
@@ -49,17 +81,16 @@
 #define CONTROL_AMP CONTROL_D
 
 #define CONTROL_10_mA CONTROL_1_V | CONTROL_AMP
-#define CONTROL_200_mA CONTROL_1_V
+#define CONTROL_200_mA CONTROL_1_V*/
 
 
-int mode = 0; //0 -> Voltage, 1 -> Current
+int mode = 1; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13;
 int range_current = 200;
 
 extern xSemaphoreHandle g_pUARTSemaphore;
 
 void check_range(float value);
-void check_current(float value);
 
 
 static void
@@ -100,7 +131,7 @@ MSWITCHTask(void *pvParameters)
     			decimal *= -1;
     		}
 
-        if(mode == 0){
+        if(mode == 1){
     			check_range(value);
     			//UARTprintf("ADC: %d.%d\n", (int)(ui32Value/4095.0 * 3.3), ((int)(ui32Value/4095.0 * 3.3 *1000))%1000);
     			//UARTprintf("Voltage : %d.%d Range: %d\n", integer, decimal, range);
@@ -117,14 +148,12 @@ MSWITCHTask(void *pvParameters)
     		}
 
 
-
         if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
            pdPASS){
              UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
            }
 
       }
-
 
       //
       // Wait for the required amount of time.
@@ -136,12 +165,14 @@ MSWITCHTask(void *pvParameters)
 uint32_t
 MSWITCHTaskInit(void)
 {
+    //UARTprintf("MSwitch Initialised...\n\r");
     g_pMSWITCHQueue = xQueueCreate(MSWITCH_QUEUE_SIZE, MSWITCH_ITEM_SIZE);
 
     //
 	  // Enable the GPIO port that is used for the on-board LED.
 	  //
 	  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+
 
     //
 	  // Check if the peripheral access is enabled.
@@ -150,16 +181,67 @@ MSWITCHTaskInit(void)
 	  {
 	  }
 
-    GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, ALL_CONTROL_PINS);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    //
+	  // Check if the peripheral access is enabled.
+	  //
+	  while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA))
+	  {
+	  }
+    GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, ALL_PORT_A_CONTROL_PINS);
+    GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, ALL_PORT_C_CONTROL_PINS);
 
+
+    //write
     if(mode == 0){
-  		GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_A, CONTROL_A);
-  		GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_D, 0x0);
+      //current mode
+
+      //write S1 to 000
+      GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
+      //GPIOPinWrite(S1_B_BASE, S1_B_PIN, 0);
+      GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
+
+      //write S2 to 200mA (11) and IHN to 0 (on)
+      GPIOPinWrite(S2_B_BASE, S2_B_PIN, S2_B_PIN);
+      GPIOPinWrite(S2_A_BASE, S2_A_PIN, S2_A_PIN);
+      GPIOPinWrite(S2_INH_BASE, S2_INH_PIN, 0);
+
+      //write S3 to current mode (00)
+  		GPIOPinWrite(S3_B_BASE, S3_B_PIN, 0);
+      GPIOPinWrite(S3_A_BASE, S3_A_PIN, 0);
   	}
-  	else{
-  		GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_200_mA, CONTROL_200_mA);
-  		GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_A, 0x0);
-  		GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_B, 0x0);
+    else if(mode == 1){
+      //votlage mode
+
+      //write S1 to 12V mode (010)
+      GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
+      GPIOPinWrite(S1_B_BASE, S1_B_PIN, S1_B_PIN);
+      GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
+
+      //write S2 to 200mA (11) and IHN to 1 (off)
+      GPIOPinWrite(S2_B_BASE, S2_B_PIN, S2_B_PIN);
+      GPIOPinWrite(S2_A_BASE, S2_A_PIN, S2_A_PIN);
+      GPIOPinWrite(S2_INH_BASE, S2_INH_PIN, S2_INH_PIN);
+
+      //write S3 to voltage mode (01)
+  		GPIOPinWrite(S3_B_BASE, S3_B_PIN, 0);
+      GPIOPinWrite(S3_A_BASE, S3_A_PIN, S3_A_PIN);
+    }
+  	else if (mode == 2){
+      //resistance mode
+      //write S1 to (000)
+      GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
+      GPIOPinWrite(S1_B_BASE, S1_B_PIN, 0);
+      GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
+
+      //write S2 to 1MOhm (11) and IHN to 0 (on)
+      GPIOPinWrite(S2_B_BASE, S2_B_PIN, S2_B_PIN);
+      GPIOPinWrite(S2_A_BASE, S2_A_PIN, S2_A_PIN);
+      GPIOPinWrite(S2_INH_BASE, S2_INH_PIN, 0);
+
+      //write S3 to resistance mode (11)
+  		GPIOPinWrite(S3_B_BASE, S3_B_PIN, S3_B_PIN);
+      GPIOPinWrite(S3_A_BASE, S3_A_PIN, S3_A_PIN);
 	   }
 
 
@@ -177,6 +259,26 @@ MSWITCHTaskInit(void)
     return(0);
 }
 
+void change_voltage(int voltage){
+  if(voltage == 12){
+    GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
+    GPIOPinWrite(S1_B_BASE, S1_B_PIN, S1_B_PIN);
+    GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
+  }
+  else if(voltage == 5){
+    GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
+    GPIOPinWrite(S1_B_BASE, S1_B_PIN, 0);
+    GPIOPinWrite(S1_A_BASE, S1_A_PIN, S1_A_PIN);
+  }
+  else if(voltage == 1){
+    GPIOPinWrite(S1_C_BASE, S1_C_PIN, 0);
+    GPIOPinWrite(S1_B_BASE, S1_B_PIN, 0);
+    GPIOPinWrite(S1_A_BASE, S1_A_PIN, 0);
+  }
+  else{
+    UARTprintf("WARNING - UNKNOWN VOLTAGE LEVEL SETTING\n\r");
+  }
+}
 void check_range(float value){
 	if( value < 0){
 		value *= -1;
@@ -185,35 +287,27 @@ void check_range(float value){
 	if( range == 13){
 		if( value > 12){
 			UARTprintf("Warning: Value out of range!\n");
-			//Reset all
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_1_V, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_5_V, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_13_V, 0x0);
-			//Enable 13V
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_13_V, CONTROL_13_V);
+			//Reset all to 12V range
+      change_voltage(12);
 		}
 		else if( value < 5){
 			UARTprintf("Switching to 5V resolution\n");
 			range = 5;
 			//Switch Down
-
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_13_V, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_5_V, CONTROL_5_V);
+      change_voltage(5);
 		}
 	}
 	else if ( range == 5){
 		if( value >= 5){
 			UARTprintf("Switching to 12V resolution\n");
 			range = 13;
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_5_V, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_13_V, CONTROL_13_V);
+			change_voltage(12);
 
 		}
 		else if( value < 1){
 			UARTprintf("Switching to 1V resolution\n");
 			range = 1;
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_5_V, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_1_V, CONTROL_1_V);
+			change_voltage(1);
 
 		}
 
@@ -222,8 +316,7 @@ void check_range(float value){
 		if( value >= 0.9){
 			UARTprintf("Switching to 5V resolution\n");
 			range = 5;
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_1_V, 0x0);
-			GPIOPinWrite(GPIO_PORTC_BASE, CONTROL_5_V, CONTROL_5_V);
+			change_voltage(5);
 
 		}
 		else if( value < 1){
@@ -237,7 +330,7 @@ void check_range(float value){
 	return;
 }
 
-void check_current(float value){
+/*void check_current(float value){
 	if( value < 0){
 		value *= -1;
 	}
@@ -277,4 +370,4 @@ void check_current(float value){
 		UARTprintf("Warning, range outside of normal values!\n");
 	}
 	return;
-}
+}*/

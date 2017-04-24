@@ -14,7 +14,6 @@ void display(char type, int range, int value, int decimal){
     char decimal_buf[10];
     //UARTprintf("Attempting to convert: %d\n", value);
     //char buffer[10];
-
     int set_negative = 0;
 
     if(value < 0){
