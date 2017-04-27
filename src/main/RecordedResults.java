@@ -53,11 +53,11 @@ class RecordedResults {
 		public synchronized void run() {
 			ArrayList<String> multimeterReadingsDataY = new ArrayList<>();
 			String multimeterYUnit = "";
-			
+
 			// Reads data from the file
 			multimeterReadingsDataY = model.readColumnData(filename, 1);
 			multimeterYUnit = model.readColumnData(filename, 2).get(0);
-			
+
 			System.out.println(multimeterYUnit);
 			// Displays the data results from the saved file.
 			int dataIndex = -1;
@@ -71,7 +71,9 @@ class RecordedResults {
 
 				// Delay for visual update.
 				try {
-					Thread.sleep((1000 / (int) GuiController.SAMPLES_PER_SECOND));
+					Thread.sleep(((int) GuiController.PER_TIMEFRAME * 1000)
+							/ ((int) GuiController.SAMPLES)); // FIXME: 1 sec/samples
+					// 1000 milliseconds = 1 sec
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}

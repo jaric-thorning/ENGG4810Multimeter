@@ -34,3 +34,36 @@
     -fx-background-insets: -0.4, 1, 2;
     -fx-background-radius: 3.4, 2, 2;
 }
+
+.combo-box {
+	-fx-background-color: #666699;
+	
+	-fx-cursor:hand;
+}
+
+.combo-box .cell:selected {
+    -fx-text-fill: white;
+}
+
+.combo-box .context-menu {
+    -fx-background-color: #666699;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected, 
+.combo-box-popup  > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
+    -fx-background: #666699;
+    -fx-background-color:  #666699;
+    -fx-border-width: 1 1 1 1;
+    -fx-border-insets: 1, 1, 1;
+    -fx-border-color: derive(#666699, 80%);
+	-fx-text-fill: white;
+	
+	-fx-cursor:hand;
+}
+
+.combo-box-popup  > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
+    -fx-background-color: #666699;
+    -fx-text-fill: white;
+    
+    -fx-cursor:hand;
+}

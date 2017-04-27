@@ -137,6 +137,10 @@
                         <Insets bottom="1.0" left="25.0" right="25.0" top="50.0" />
                      </GridPane.margin>
                   </TextArea>
+                  <ComboBox fx:id="sampleRate" disable="true" onAction="#selectSampleRate" prefHeight="28.0" prefWidth="127.0" promptText="Sample Rate" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.valignment="BOTTOM">
+                     <GridPane.margin>
+                        <Insets left="25.0" />
+                     </GridPane.margin></ComboBox>
                </children>
             </GridPane>
          </children>
@@ -160,19 +164,19 @@
                 <RowConstraints />
                 <RowConstraints maxHeight="93.83504486083984" minHeight="5.4135589599609375" prefHeight="93.83504486083984" />
                 <RowConstraints maxHeight="181.8497314453125" minHeight="10.0" prefHeight="106.75198364257812" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="282.91017150878906" minHeight="10.0" prefHeight="105.0" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="269.0" minHeight="10.0" prefHeight="248.0" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="282.91017150878906" minHeight="10.0" prefHeight="34.211151123046875" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="325.643310546875" minHeight="10.0" prefHeight="321.7888488769531" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
                   <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureVoltage" text="V [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP" />
                   <Button fx:id="currentBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureCurrent" text="mA [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
                   <Button fx:id="resistanceBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureResistance" text="Ω" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="BOTTOM" />
-                  <Button fx:id="continuityBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" text="Continuity" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                  <Button fx:id="continuityBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" text="Continuity" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                      <GridPane.margin>
-                        <Insets top="60.0" />
+                        <Insets top="70.0" />
                      </GridPane.margin>
                   </Button>
-                  <Group GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                  <Group GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                      <children>
                         <Button fx:id="logicBtn" disable="true" focusTraversable="false" layoutY="30.0" minWidth="96.0" mnemonicParsing="false" text="Logic Level" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="BOTTOM">
                            <GridPane.margin>
@@ -189,7 +193,11 @@
                      <GridPane.margin>
                         <Insets bottom="10.0" left="5.0" right="5.0" top="25.0" />
                      </GridPane.margin></TextArea>
-                  <ToggleButton fx:id="acDcSwitchBtn" mnemonicParsing="false" onAction="#switchAcDc" text="AC -&gt; DC" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER" />
+                  <RadioButton fx:id="dcRBtn" disable="true" mnemonicParsing="false" onAction="#switchAcDc" text="DC" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                     <GridPane.margin>
+                        <Insets left="28.0" />
+                     </GridPane.margin>
+                  </RadioButton>
                </children>
             </GridPane>
          </children>

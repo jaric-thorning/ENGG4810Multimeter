@@ -80,6 +80,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 		this.setHeight(chartHeight);
 		
 		this.getXAxis().setAutoRanging(false);
+		this.setAnimated(false);
 	}
 
 	/**
@@ -175,7 +176,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 			} else {
 				polygon.setFill(Color.rgb(100, 149, 237, 0.3));
 			}
-
+			
 			polygonList.add(polygon);
 		}
 	}
