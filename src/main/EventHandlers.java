@@ -6,7 +6,6 @@ import java.time.Duration;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -85,25 +84,6 @@ public class EventHandlers {
 
 		return changeCursorType;
 	}
-//
-//	protected EventHandler<MouseEvent> doubleClick(Button multimeterBtn, String ac, String dc) {
-//		EventHandler<MouseEvent> doubleClickMouse = new EventHandler<MouseEvent>() {
-//			@Override
-//			public void handle(MouseEvent event) {
-//				if (event.getClickCount() == 2) {
-//					System.out.println("DOUBLE CLICK");
-//					// Change between ac and dc
-//					if (multimeterBtn.getText().equals(ac)) {
-//						multimeterBtn.setText(dc);
-//					} else {
-//						multimeterBtn.setText(ac);
-//					}
-//				}
-//			}
-//		};
-//
-//		return doubleClickMouse;
-//	}
 
 	/**
 	 * Deals with deleting boundary data points when the user right clicks.

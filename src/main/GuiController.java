@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -18,6 +17,8 @@ import com.sun.javafx.geom.Line2D;
 import com.sun.javafx.geom.Point2D;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -29,10 +30,10 @@ import javafx.scene.chart.XYChart.Data;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -68,8 +69,6 @@ public class GuiController implements Initializable {
 	public volatile boolean resistance = false;
 	public volatile boolean voltage = false;
 	public volatile boolean current = false;
-	@FXML
-	private ToggleButton acDcSwitchBtn;
 
 	/* Components relating to the 'connected' mode */
 	@FXML
@@ -80,7 +79,7 @@ public class GuiController implements Initializable {
 	@FXML
 	private Button saveBtn;
 	@FXML
-	Button discardBtn;
+	protected Button discardBtn;
 
 	/* Components relating to the 'disconnected' mode */
 	@FXML
@@ -170,6 +169,15 @@ public class GuiController implements Initializable {
 	@FXML
 	private Button continuityBtn;
 
+	// Components to switch between AC and DC
+	@FXML
+	private RadioButton dcRBtn;
+	private boolean isDC = false;
+
+	@FXML
+	private ComboBox<String> sampleRate;
+	private ObservableList<String> sampleRates = FXCollections.observableArrayList();
+
 	/* Constants */
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
@@ -183,7 +191,8 @@ public class GuiController implements Initializable {
 	private static final double Y_UPPER_BOUND = 50D;
 	private static final double Y_LOWER_BOUND = -10D;
 
-	public static final double SAMPLES_PER_SECOND = 2D;
+	public static double SAMPLES = 2D;
+	public static double PER_TIMEFRAME = 1D; // default second
 
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
@@ -229,20 +238,32 @@ public class GuiController implements Initializable {
 		xAxis.setLowerBound(newAxisLowerValue);
 	}
 
-	//FIXME: make sure the the toggle works.
+	// FIXME: make sure the the toggle works.
 	@FXML
 	private void switchAcDc() {
-		if (!acDcSwitchBtn.isSelected()) {
+		if (dcRBtn.isSelected()) {
 			// Change to DC
-			acDcSwitchBtn.setText("AC -> DC");
-			voltageBtn.setText("V [DC]");
-			currentBtn.setText("mA [DC]");
+			isDC = true;
+			dcMode();
 		} else {
 			// Change to AC
-			acDcSwitchBtn.setText("AC <- DC");
-			voltageBtn.setText("V [AC]");
-			currentBtn.setText("mA [AC]");
+			isDC = false;
+			acMode();
 		}
+	}
+
+	private void dcMode() {
+		voltageBtn.setText("V [DC]");
+		currentBtn.setText("mA [DC]");
+
+		// TODO: SEND IN DC MODE TOKEN
+	}
+
+	private void acMode() {
+		voltageBtn.setText("V [AC]");
+		currentBtn.setText("mA [AC]");
+
+		// TODO: SEND IN AC MODE TOKEN
 	}
 
 	/**
@@ -389,14 +410,56 @@ public class GuiController implements Initializable {
 		}
 	}
 
-	private String getResistanceRangeValues(Double dataValue) {
-		if (dataValue < 1000) {
-			return "k" + OHM_SYMBOL;
-		} else if (dataValue >= 1000 && dataValue <= 1000000) {
-			return "M" + OHM_SYMBOL;
-		} else {
-			return "";
+	/**
+	 * Provide the list of the required configurable sample rates.
+	 */
+	private void initialiseSampleRate() {
+		sampleRates.add("2 meas. per sec");
+		sampleRates.add("1 meas. per sec");
+		sampleRates.add("1 meas. every 2 secs");
+		sampleRates.add("1 meas. every 5 secs");
+		sampleRates.add("1 meas. every 10 secs");
+		sampleRates.add("1 meas. every min");
+		sampleRates.add("1 meas. every 2 mins");
+		sampleRates.add("1 meas. every 5 mins");
+		sampleRates.add("1 meas. every 10 mins");
+
+		sampleRate.setItems(sampleRates);
+		sampleRate.setStyle("-fx-font: 11px \"System\";");
+	}
+
+	@FXML
+	private void selectSampleRate() {
+		if (sampleRate.getSelectionModel().getSelectedItem().contains("2 meas.per")) {
+			SAMPLES = 2;
+			PER_TIMEFRAME = 1;
+		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("1 meas. per")) {
+			SAMPLES = 1;
+			PER_TIMEFRAME = 1;
+		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("2 secs")) {
+			SAMPLES = 1;
+			PER_TIMEFRAME = 2;
+		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("5 secs")) {
+			SAMPLES = 1;
+			PER_TIMEFRAME = 5;
+		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("10 secs")) {
+			SAMPLES = 1;
+			PER_TIMEFRAME = 10;
+		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("every min")) {
+			SAMPLES = 1;
+			PER_TIMEFRAME = 1 * 60; // 60 seconds are a minute
+		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("2 mins")) {
+			SAMPLES = 1;
+			PER_TIMEFRAME = 2 * 60;
+		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("5 mins")) {
+			SAMPLES = 1;
+			PER_TIMEFRAME = 5 * 60;
+		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("10 mins")) {
+			SAMPLES = 1;
+			PER_TIMEFRAME = 10 * 60;
 		}
+
+		System.out.println("S: " + SAMPLES + ", PT: " + PER_TIMEFRAME);
 	}
 
 	/**
@@ -450,7 +513,7 @@ public class GuiController implements Initializable {
 		}
 
 		readingSeries.getData().add(new XYChart.Data<Number, Number>(
-				dataPlotPosition / SAMPLES_PER_SECOND, multimeterReading));
+				dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterReading));
 
 		// Display dummy data plot
 		readingSeries.getData().get(dataPlotPosition).getNode().addEventHandler(
@@ -459,16 +522,14 @@ public class GuiController implements Initializable {
 						dataPlotPosition, xDataCoord, yDataCoord,
 						readingSeries.getData().get(0).getXValue().doubleValue()));
 
-		dataPlotPosition++;
-
 		// Update chart
-		int dataBoundsRange = (int) Math.ceil(dataPlotPosition / SAMPLES_PER_SECOND);
-
+		int dataBoundsRange = (int) Math.ceil(dataPlotPosition / (SAMPLES / PER_TIMEFRAME));
 		if (dataBoundsRange > X_UPPER_BOUND) {
 			xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
 			xAxis.setUpperBound(dataBoundsRange);
 		}
 
+		dataPlotPosition++;
 	}
 
 	private String getUnit(String unit) {
@@ -554,7 +615,7 @@ public class GuiController implements Initializable {
 
 				disconnRBtn.setDisable(false);
 
-				setupMoreConnectedComponents();
+				revertConnectedComponents();
 
 			} else {
 				System.out.println("CONNECTED MODE STAYING");
@@ -600,6 +661,7 @@ public class GuiController implements Initializable {
 		disconnRBtn.setDisable(true);
 
 		// Enable connected components
+		sampleRate.setDisable(false);
 		pauseBtn.setDisable(false);
 		saveBtn.setDisable(false);
 		discardBtn.setDisable(false);
@@ -610,6 +672,7 @@ public class GuiController implements Initializable {
 		voltageBtn.setDisable(false);
 		currentBtn.setDisable(false);
 		resistanceBtn.setDisable(false);
+		dcRBtn.setDisable(false);
 		multimeterDisplay.setDisable(false);
 		modeLabel.setDisable(false);
 		logicBtn.setDisable(false);
@@ -650,21 +713,40 @@ public class GuiController implements Initializable {
 	 * A private helper function to 'selectConnected' which modifies the status of related
 	 * components.
 	 */
-	private void setupMoreConnectedComponents() {
+	private void revertConnectedComponents() {
+
 		// Disable digital multimeter components
 		multimeterDisplay.setDisable(true);
+		multimeterDisplay.setText("");
 		voltageBtn.setDisable(true);
 		currentBtn.setDisable(true);
 		resistanceBtn.setDisable(true);
+		dcRBtn.setDisable(true);
 		multimeterDisplay.setDisable(true);
 		modeLabel.setDisable(true);
 		logicBtn.setDisable(true);
 		continuityBtn.setDisable(true);
 
-		// Enable connected components
+		// Disable connected components
+		sampleRate.setDisable(true);
+		// TODO: Check that this is needed to be reset.
+		// sampleRate.setValue(sampleRate.getPromptText());
+		// SAMPLES = 2D;
+		// PER_TIMEFRAME = 1D;
+
 		pauseBtn.setDisable(true);
+		isPaused = false;
+		pauseBtn.setText("Pause");
+
 		saveBtn.setDisable(true);
 		discardBtn.setDisable(true);
+
+		dcRBtn.setSelected(false);
+		isDC = false;
+
+		resistance = false;
+		voltage = false;
+		current = false;
 
 		// Clear all data related things.
 		// TODO: Close open connections.
@@ -818,6 +900,7 @@ public class GuiController implements Initializable {
 			voltageBtn.setDisable(true);
 			currentBtn.setDisable(true);
 			resistanceBtn.setDisable(true);
+			dcRBtn.setDisable(true);
 			multimeterDisplay.setDisable(true);
 			modeLabel.setDisable(true);
 			logicBtn.setDisable(true);
@@ -834,6 +917,7 @@ public class GuiController implements Initializable {
 			voltageBtn.setDisable(false);
 			currentBtn.setDisable(false);
 			resistanceBtn.setDisable(false);
+			dcRBtn.setDisable(false);
 			multimeterDisplay.setDisable(false);
 			modeLabel.setDisable(false);
 			logicBtn.setDisable(false);
@@ -884,6 +968,7 @@ public class GuiController implements Initializable {
 			}
 
 			// FIXME: make sure autoranging is set true/false in right places
+			// MAKE SURE THAT THERE ARE ACTUALLY DATA TO BE HAD
 			yAxis.setAutoRanging(true);
 			addDataToSeries(inputDataXValues, inputDataYValues);
 		} else {
@@ -969,7 +1054,7 @@ public class GuiController implements Initializable {
 					event.resetDataXYValues(xDataCoord, yDataCoord));
 
 			// Update chart bounds if line chart exceeds them.
-			int dataBoundsRange = (int) Math.ceil(i / SAMPLES_PER_SECOND);
+			int dataBoundsRange = (int) Math.ceil(i / SAMPLES);
 			if (dataBoundsRange > X_UPPER_BOUND) {
 				xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
 				xAxis.setUpperBound(dataBoundsRange);
@@ -1034,11 +1119,8 @@ public class GuiController implements Initializable {
 			// Reset the plot data
 			readingSeries.getData().clear();
 			dataPlotPosition = 0;
-
 			resetAxes();
 			yUnit.clear();
-
-			// TODO: MAKE SURE discard and clear all data HAPPENS
 
 			System.out.println("DATA DISCARDED");
 		} else {
@@ -1719,29 +1801,88 @@ public class GuiController implements Initializable {
 	 * Displays the intervals which failed + total time failed.
 	 */
 	private void displayFailedIntervals() {
-		double totalOverlapTime = 0;
-
 		// Remove duplicates
 		overlappedIntervals = overlappedIntervals.stream().distinct().collect(Collectors.toList());
 
 		// Sort in ascending order x-axis
 		overlappedIntervals.sort(compare.sortOverlap());
 
-		// Display intervals where overlapping occured.
-		for (int i = 0; i < overlappedIntervals.size(); i++) {
-			// Calculate total time in failed region.
-			totalOverlapTime += (overlappedIntervals.get(i).x2 - overlappedIntervals.get(i).x1);
+		// Set up text display of failed regions.
+		String interval1 = "( - )";
+		String interval2 = "( - )";
+		int failedRegionStart = 0;
 
-			String interval1 = "(" + overlappedIntervals.get(i).x1 + ", "
-					+ overlappedIntervals.get(i).y1 + ") - ";
-			String interval2 = "(" + overlappedIntervals.get(i).x2 + ", "
-					+ overlappedIntervals.get(i).y2 + ") ";
+		for (Line2D l : overlappedIntervals) {
+			String int1 = "(" + l.x1 + ", " + l.y1 + ") -";
+			String int2 = " (" + l.x2 + ", " + l.y2 + ") ";
 
-			maskTestResults.appendText(interval1 + interval2 + "\n");
+			System.out.println(int1 + int2);
 		}
 
+		// Display intervals where overlapping occurred (excluding final region).
+		for (int i = 0; i < overlappedIntervals.size() - 1; i++) {
+			if (overlappedIntervals.get(i).x2 < overlappedIntervals.get(i + 1).x1) {
+				// Get a sublist of the directly failed region
+				determineOverlapRegion(overlappedIntervals, failedRegionStart, (i + 1), interval1,
+						interval2);
+
+				// Change the start of the next overlapped interval
+				failedRegionStart = (i + 1);
+			}
+		}
+		// Display intervals where overlapping occurred (including final region).
+		determineOverlapRegion(overlappedIntervals, failedRegionStart, overlappedIntervals.size(),
+				interval1, interval2);
+
 		maskTestResults.appendText("------------------------------" + "\n");
-		maskTestResults.appendText("FAILED AMOUNT OF TIME: " + totalOverlapTime + "s\n");
+		maskTestResults.appendText("FAILED AMOUNT OF TIME: "
+				+ determineFailedOverlapTime(overlappedIntervals) + "s\n");
+		maskTestResults.appendText("------------------------------" + "\n");
+	}
+
+	/**
+	 * A private helper function to 'displayFailedIntervals' which displays all the regions that are
+	 * invalid.
+	 * 
+	 * @param overlappedIntervals
+	 *            a list of line segments which failed (went into mask region).
+	 * @param start
+	 *            the first element where the sublist should start
+	 * @param interval1
+	 *            displays the first time interval of the failed region
+	 * @param interval2
+	 *            displays the final time interval of the failed region
+	 */
+	private void determineOverlapRegion(List<Line2D> overlappedIntervals, int start, int end,
+			String interval1, String interval2) {
+		// Sublist of the complete list of line segments which failed
+		List<Line2D> subOverlappedIntervals = overlappedIntervals.subList(start, end);
+
+		interval1 = "(" + subOverlappedIntervals.get(0).x1 + ", " + subOverlappedIntervals.get(0).y1
+				+ ") -";
+		interval2 = " (" + subOverlappedIntervals.get(subOverlappedIntervals.size() - 1).x2 + ", "
+				+ subOverlappedIntervals.get(subOverlappedIntervals.size() - 1).y2 + ") ";
+
+		maskTestResults.appendText(interval1 + interval2 + "\n");
+	}
+
+	/**
+	 * A private helper function to 'displayFailedIntervals' which calculates the total amount of
+	 * time spent in the failed regions.
+	 * 
+	 * @param overlappedIntervals
+	 *            a list of line segments which failed (went into mask region).
+	 * @return the total amount of time (in seconds) spent in the failed regions
+	 */
+	private double determineFailedOverlapTime(List<Line2D> overlappedIntervals) {
+		double totalOverlapTime = 0;
+
+		// Calculate total time in failed region.
+		for (int i = 0; i < overlappedIntervals.size(); i++) {
+			totalOverlapTime += (overlappedIntervals.get(i).x2 - overlappedIntervals.get(i).x1);
+		}
+
+		return totalOverlapTime;
 	}
 
 	/**
@@ -1943,17 +2084,15 @@ public class GuiController implements Initializable {
 		// TODO: DO A PING TEST TO SEE IF THERE'S A CONNECTION.
 		testConnection(connRBtn);
 
-		// Setup initial multimeter display
-		String multValue = "5";
-		multimeterDisplay.setText(
-				"Voltage ( " + PLUS_MINUS_SYMBOL + " range )" + "\n" + "V: " + multValue + "V");
+		initialiseSampleRate();
 
+		// CHANGE low and high to something else, more meaningful
 		highMaskBoundarySeries.setName("high");
 		lowMaskBoundarySeries.setName("low");
-		readingSeries.setName("data");
+		readingSeries.setName("multimeter data");
 
 		// SerialFramework.changePorts();
-		// refreshSelectablePortsList();
+		refreshSelectablePortsList();
 	}
 
 	/**
