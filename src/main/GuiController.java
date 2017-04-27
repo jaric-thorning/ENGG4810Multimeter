@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -1397,10 +1398,14 @@ public class GuiController implements Initializable {
 		float tempY = coordY.floatValue();
 
 		if (lowMaskBoundarySeries.getData().size() > 0) {
+			// ISSUE WITH ASSIGN EXISTING XVALUE
+			System.out.println("SUCK ZERO: " + counter);
+			System.out.println("SUCK ONE: " + lowMaskBoundarySeries.getData().get(counter - 1).getXValue().floatValue());
+			System.out.println("SUCK TWO: " + tempX);
 			ArrayList<Float> existingValues = assignExistingXValue(lowMaskBoundarySeries, tempX,
 					counter,
 					lowMaskBoundarySeries.getData().get(counter - 1).getXValue().floatValue());
-
+			
 			float existingX = existingValues.get(0);
 			float existingY = existingValues.get(1);
 
@@ -1408,7 +1413,8 @@ public class GuiController implements Initializable {
 			lowBoundaryLineSegment.setLine(new Point2D(existingX, existingY),
 					new Point2D(tempX, tempY));
 
-			return checkLineIntersection(lowBoundaryLineSegment);
+			System.out.println(highMaskBoundarySeries.getData().toString());
+			return checkLineIntersection(lowBoundaryLineSegment, highMaskBoundarySeries);
 		}
 
 		return true;
@@ -1422,19 +1428,21 @@ public class GuiController implements Initializable {
 	 *            the line segment to compare against.
 	 * @return true if no collision, false otherwise.
 	 */
-	private boolean checkLineIntersection(Line2D lowBoundaryLineSegment) {
+	private boolean checkLineIntersection(Line2D lowBoundaryLineSegment,
+			XYChart.Series<Number, Number> highMaskBoundarySeries) {
 		for (int i = 0; i < highMaskBoundarySeries.getData().size() - 1; i++) {
 
 			// Points of opposite mask area
 			Data<Number, Number> currentDataPoint = highMaskBoundarySeries.getData().get(i);
 			Data<Number, Number> nextDataPoint = highMaskBoundarySeries.getData().get(i + 1);
 
-			// Overlaps
-			if (lowBoundaryLineSegment.intersectsLine(new Line2D(
-					new Point2D(currentDataPoint.getXValue().floatValue(),
+			Line2D test = new Line2D(new Point2D(currentDataPoint.getXValue().floatValue(),
 							currentDataPoint.getYValue().floatValue()),
 					new Point2D(nextDataPoint.getXValue().floatValue(),
-							nextDataPoint.getYValue().floatValue())))) {
+							nextDataPoint.getYValue().floatValue()));
+
+			// Overlaps
+			if (lowBoundaryLineSegment.intersectsLine(test)) {
 
 				// Warning message
 				GuiView.getInstance().illegalMaskPoint();
@@ -1465,12 +1473,13 @@ public class GuiController implements Initializable {
 
 		for (int i = 0; i < series.getData().size() - 1; i++) {
 			float currentX = series.getData().get(i).getXValue().floatValue();
-			float currentY = series.getData().get(i).getXValue().floatValue();
+			float currentY = series.getData().get(i).getYValue().floatValue();
 
 			float nextX = series.getData().get(i + 1).getXValue().floatValue();
 
+			// FIXME: a thing
 			if ((tempX > currentX) && (tempX < nextX)) {
-				System.out.println("in between: " + i + ", " + (i + 1));
+				System.out.println("in between: " + (i + 1) + ", " + (i + 2));
 				tempList.add(currentX);
 				tempList.add(currentY);
 				return tempList;
@@ -2092,7 +2101,7 @@ public class GuiController implements Initializable {
 		readingSeries.setName("multimeter data");
 
 		// SerialFramework.changePorts();
-		refreshSelectablePortsList();
+		// refreshSelectablePortsList();
 	}
 
 	/**
