@@ -2,6 +2,8 @@ package main;
 
 import java.text.DecimalFormat;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
@@ -29,20 +31,26 @@ public class EventHandlers {
 	 * @return the event handler.
 	 */
 	protected EventHandler<MouseEvent> getDataXYValues(XYChart.Data<Number, Number> dataPoint,
-			int index, Label xDataCoord, Label yDataCoord, double firstPointXValue) {
+			int index, Label xDataCoord, Label yDataCoord, IsoTime start, IsoTime end) {
 		EventHandler<MouseEvent> getValues = new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
-				String xValue = TIME_DECIMAL
-						.format(dataPoint.getXValue().doubleValue() - firstPointXValue); // index/sample_per_second
+				// xValue ->
+				// String xValue = TIME_DECIMAL
+				// .format(dataPoint.getXValue().doubleValue() - firstPointXValue); //
+				// index/sample_per_second
 				// IF LOADED FROM SD CARD -> USE ISO 8601 DURATION FORMAT
-				String isoDurationFormat = "PT" + xValue + "S";
+				LocalDateTime startDurationTime = LocalDateTime.parse(start.toString());
+				LocalDateTime endDurationTime = LocalDateTime.parse(end.toString());
+
+				Duration duration = Duration.between(startDurationTime, endDurationTime);
+				String isoDurationFormat = duration.toString();
 
 				// TODO: IF LOADED FROM REAL DATA -> USE ISO 8601 FORMAT
 				xDataCoord.setText("X: Sample: " + (index + 1) + " || Duration: "
-						+ Duration.parse(isoDurationFormat) + " :: "
-						+ TIME_DECIMAL.format(dataPoint.getXValue()));
+						+ Duration.parse(isoDurationFormat)); /*+ " :: "
+						+ TIME_DECIMAL.format(dataPoint.getXValue()));*/
 				yDataCoord.setText("Y: " + MEASUREMENT_DECIMAL.format(dataPoint.getYValue()));
 			}
 		};
