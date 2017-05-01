@@ -608,7 +608,7 @@ public class GuiController implements Initializable {
 					dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterReading));
 
 			// Add listener. TODO: check we need this behaviour in connected mode
-			System.out.println("ST: " + startTime.toString());
+			System.out.println("	ST: " + startTime.toString());
 			
 			readingSeries.getData().get(dataPlotPosition).getNode().addEventHandler(
 					MouseEvent.MOUSE_ENTERED,
@@ -719,6 +719,7 @@ public class GuiController implements Initializable {
 
 		if (isPaused) { // Only clear acquiring data, not displayed
 			pausedAquisitionData.clear();
+			establishIsoTime();
 		} else { // Clear displayed data
 			resetXAxis();
 			yUnit.clear();
