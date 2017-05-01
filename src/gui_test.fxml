@@ -171,7 +171,7 @@
                   <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureVoltage" text="V [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP" />
                   <Button fx:id="currentBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureCurrent" text="mA [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
                   <Button fx:id="resistanceBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureResistance" text="Ω" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="BOTTOM" />
-                  <Button fx:id="continuityBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" text="Continuity" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                  <Button fx:id="continuityBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#selectContinuityMode" text="Continuity" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                      <GridPane.margin>
                         <Insets top="70.0" />
                      </GridPane.margin>
@@ -193,7 +193,7 @@
                      <GridPane.margin>
                         <Insets bottom="10.0" left="5.0" right="5.0" top="25.0" />
                      </GridPane.margin></TextArea>
-                  <RadioButton fx:id="dcRBtn" disable="true" mnemonicParsing="false" onAction="#switchAcDc" text="DC" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                  <RadioButton fx:id="dcRBtn" disable="true" mnemonicParsing="false" onAction="#switchACDC" text="DC" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                      <GridPane.margin>
                         <Insets left="28.0" />
                      </GridPane.margin>
@@ -213,34 +213,43 @@
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
                </columnConstraints>
                <rowConstraints>
-                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="38.75921630859375" minHeight="53.0" prefHeight="38.75921630859375" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="33.87810516357422" vgrow="NEVER" />
+                  <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="488.1218948364258" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="48.10247802734375" minHeight="33.40997314453125" prefHeight="34.63433837890625" vgrow="SOMETIMES" />
                </rowConstraints>
                <children>
-                  <Button fx:id="rightBtn" focusTraversable="false" mnemonicParsing="false" onAction="#moveXAxisRight" text="&gt;" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                  <Button fx:id="rightBtn" focusTraversable="false" mnemonicParsing="false" onAction="#moveXAxisRight" text="&gt;" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                      <GridPane.margin>
-                        <Insets left="70.0" />
+                        <Insets left="90.0" />
                      </GridPane.margin>
                   </Button>
-                  <Button fx:id="leftBtn" focusTraversable="false" mnemonicParsing="false" onAction="#moveXAxisLeft" text="&lt;" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
-                  <Group GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.valignment="TOP">
-                     <children>
-                        <Label focusTraversable="false" layoutX="10.0" layoutY="15.0" minHeight="15.0" minWidth="150.0" prefHeight="15.0" text="X:" textFill="WHITE" fx:id="xDataCoord" />
-                        <Label fx:id="yDataCoord" focusTraversable="false" layoutX="10.0" layoutY="35.0" minHeight="15.0" minWidth="150.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" />
-                        <Label fx:id="plotCoordLabel" focusTraversable="false" layoutX="9.0" text="Plot Coordinates:" />
-                     </children>
+                  <Button fx:id="leftBtn" focusTraversable="false" mnemonicParsing="false" onAction="#moveXAxisLeft" text="&lt;" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                     <GridPane.margin>
+                        <Insets left="20.0" />
+                     </GridPane.margin></Button>
+                  <Label fx:id="maskStatusLabel" focusTraversable="false" text="FAIL" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.valignment="BOTTOM">
+                     <font>
+                        <Font size="32.0" />
+                     </font>
                      <GridPane.margin>
                         <Insets left="10.0" />
                      </GridPane.margin>
-                  </Group>
-                  <Label fx:id="maskStatusLabel" focusTraversable="false" text="FAIL" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="CENTER">
-                     <font>
-                        <Font size="34.0" />
-                     </font>
-                     <GridPane.margin>
-                        <Insets right="50.0" />
-                     </GridPane.margin>
                   </Label>
+                  <Group GridPane.halignment="CENTER" GridPane.valignment="TOP">
+                     <children>
+                        <Label fx:id="recordTimeLabel" focusTraversable="false" layoutX="10.0" layoutY="15.0" minHeight="15.0" minWidth="380.0" prefHeight="15.0" textFill="WHITE" />
+                        <Label fx:id="recordedTimeLabel" focusTraversable="false" layoutX="9.0" text="Recorded Time:" />
+                     </children>
+                     <GridPane.margin>
+                        <Insets left="260.0" />
+                     </GridPane.margin>
+                  </Group>
+                  <Group GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                     <children>
+                        <Label focusTraversable="false" layoutX="445.0" minHeight="15.0" minWidth="80.0" prefHeight="15.0" prefWidth="35.0" text="X:" textFill="WHITE" fx:id="xCoordValues" />
+                        <Label fx:id="yCoordValues" focusTraversable="false" layoutX="445.0" layoutY="15.0" minHeight="15.0" minWidth="80.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" />
+                     </children>
+                  </Group>
                </children>
             </GridPane>
          </children>
@@ -259,10 +268,11 @@
                   <Insets left="5.0" />
                </padding>
             </Label>
-            <Group layoutX="100.0" layoutY="1.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="1.0">
+            <Group layoutX="284.0" AnchorPane.leftAnchor="293.0" AnchorPane.rightAnchor="11.0" AnchorPane.topAnchor="0.0">
                <children>
-                  <Label focusTraversable="false" layoutX="445.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="X:" textFill="WHITE" fx:id="xCoordValues" />
-                  <Label fx:id="yCoordValues" focusTraversable="false" layoutX="445.0" layoutY="15.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" />
+                  <Label focusTraversable="false" layoutX="10.0" layoutY="15.0" minHeight="15.0" minWidth="250.0" prefHeight="15.0" text="X:" textFill="WHITE" fx:id="xDataCoord" />
+                  <Label fx:id="yDataCoord" focusTraversable="false" layoutX="250.0" layoutY="15.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" />
+                  <Label fx:id="plotCoordLabel" focusTraversable="false" layoutX="9.0" text="Plot Coordinates:" />
                </children>
             </Group>
          </children>

@@ -78,7 +78,7 @@ public class GuiModel {
 	/**
 	 * Saves data to a given file.
 	 * 
-	 * @precondition All data samples are the same length.
+	 * @precondition All data samples are the same length. and yUnit has values
 	 * @param bufferedWriter
 	 *            the buffered writer needed to write data to the file.
 	 * @throws IOException
@@ -92,6 +92,7 @@ public class GuiModel {
 		setupHeader(bufferedWriter);
 
 		for (int i = 0; i < series.getData().size(); i++) {
+			
 			writeColumnData(bufferedWriter, series.getData().get(i).getXValue(),
 					series.getData().get(i).getYValue(), yUnits.get(i));
 		}

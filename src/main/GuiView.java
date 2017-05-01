@@ -149,7 +149,8 @@ public class GuiView extends Application {
 		controller.lineChart = new ModifiedLineChart(xAxis, yAxis);
 
 		// Add line chart to grid pane
-		controller.chartGrid.add(controller.lineChart, 0, 0);
+		// FIXME: keep tabs on where it is
+		controller.chartGrid.add(controller.lineChart, 0, 1);
 		GridPane.setValignment(controller.lineChart, VPos.TOP);
 
 		controller.lineChart.getData().add(controller.lowMaskBoundarySeries);

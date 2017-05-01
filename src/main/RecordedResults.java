@@ -65,7 +65,8 @@ class RecordedResults {
 				if (!this.paused) {
 					final double yValue = Double
 							.parseDouble(multimeterReadingsDataY.get(dataIndex));
-
+					multimeterYUnit = model.readColumnData(filename, 2).get(dataIndex);
+					
 					GuiController.instance.recordAndDisplayDummyData(yValue, multimeterYUnit);
 				}
 

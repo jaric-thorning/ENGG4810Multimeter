@@ -13,6 +13,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 
 /**
@@ -35,14 +36,17 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	private ArrayList<Polygon> polygonsHigherBoundary = new ArrayList<>();
 
 	private NumberAxis yAxis;
+	private NumberAxis xAxis;
 
 	private double chartWidth = 645D;
 	private double chartHeight = 518D;
 
+	private Line fiveOhmMark;
+
 	public ModifiedLineChart(NumberAxis xAxis, NumberAxis yAxis) {
 		super(xAxis, yAxis);
 
-		setupLineChart(yAxis);
+		setupLineChart(yAxis, xAxis);
 	}
 
 	/**
@@ -55,7 +59,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	protected ArrayList<Polygon> getPolygonArray(XYChart.Series<Number, Number> series) {
 		ArrayList<Polygon> returnedPolygons = new ArrayList<>();
 
-		if (series.getName().equals("high")) {
+		if (series.getName().contains("high")) {
 			returnedPolygons.addAll(polygonsHigherBoundary);
 			return returnedPolygons;
 		} else {
@@ -70,15 +74,16 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	 * @param yAxis
 	 *            the y-axis of the line chart.
 	 */
-	private void setupLineChart(NumberAxis yAxis) {
+	private void setupLineChart(NumberAxis yAxis, NumberAxis xAxis) {
 		this.yAxis = yAxis;
+		this.xAxis = xAxis;
 
 		this.setHorizontalZeroLineVisible(false);
-		this.setLegendSide(Side.RIGHT);
+		this.setLegendSide(Side.BOTTOM);
 
 		this.setWidth(chartWidth);
 		this.setHeight(chartHeight);
-		
+
 		this.getXAxis().setAutoRanging(false);
 		this.setAnimated(false);
 	}
@@ -102,7 +107,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	public void setHighBoundarySelected(boolean newValue) {
 		isHighBoundary = newValue;
 	}
-	
+
 	public boolean getLowBoundarySelected() {
 		return isLowBoundary;
 	}
@@ -157,7 +162,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 			double x1 = getXAxis().getDisplayPosition(seriesData.get(i).getXValue());
 			double y1 = getYAxis().getDisplayPosition(this.yAxis.getUpperBound());
 
-			if (series.getName().equals("low")) { // Special case if series is low.
+			if (series.getName().contains("low")) { // Special case if series is low.
 				y1 = getYAxis().getDisplayPosition(this.yAxis.getLowerBound());
 			}
 
@@ -171,12 +176,12 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 							getYAxis().getDisplayPosition(seriesData.get((i + 1)).getYValue()), x2,
 							y1 });
 
-			if (series.getName().equals("low")) { // Special case if series is low.
+			if (series.getName().contains("low")) { // Special case if series is low.
 				polygon.setFill(Color.rgb(240, 128, 128, 0.3));
 			} else {
 				polygon.setFill(Color.rgb(100, 149, 237, 0.3));
 			}
-			
+
 			polygonList.add(polygon);
 		}
 	}
@@ -268,6 +273,40 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 			}
 		}
 		return errorCounter;
+	}
+
+	// FIXME: something happens with the line with the range. look into it.
+	/**
+	 * Sets the 'look' of the line chart to a modified style to distinctly separate standard mode
+	 * (voltage, current resistance measurements) and continuity mode.
+	 */
+	protected void setContinuityMode() {
+		// fiveOhmMark = new Line();
+		// System.out.println("SET 5 OHM");
+		// // Get the right boundaries
+		// double x1 = xAxis.getDisplayPosition(xAxis.getLowerBound());
+		// double y1 = yAxis.getDisplayPosition(5);
+		// double x2 = xAxis.getDisplayPosition(xAxis.getUpperBound());
+		// double y2 = yAxis.getDisplayPosition(5);
+		//
+		// fiveOhmMark.setStartX(x1);
+		// fiveOhmMark.setStartY(y1);
+		// fiveOhmMark.setEndX(x2);
+		// fiveOhmMark.setEndY(y2);
+		//
+		// fiveOhmMark.setStroke(Color.RED);
+		// fiveOhmMark.setStrokeWidth(2D);
+		lookup(".chart-plot-background").setStyle("-fx-background-color: #000000;");
+		// getPlotChildren().add(fiveOhmMark);
+	}
+
+	/**
+	 * Reverts the 'look' of the line chart back to standard style.
+	 */
+	protected void revertContinuityMode() {
+		System.out.println("REMOVE 5 OHM");
+		lookup(".chart-plot-background").setStyle("-fx-background-color: #ffffff;");
+		// getPlotChildren().remove(fiveOhmMark);
 	}
 
 }
