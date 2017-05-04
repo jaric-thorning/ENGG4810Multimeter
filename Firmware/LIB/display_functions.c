@@ -45,8 +45,7 @@ void display(char type, int range, int value, int decimal){
   		printLCD(".");
   		printLCD(decimal_buf);
   		printLCD("V");
-    }
-    else if(type == 'C'){
+    } else if(type == 'C'){
       clearLCD();
       printLCD("Current (");
       sendByte(0x00, TRUE);
@@ -61,7 +60,22 @@ void display(char type, int range, int value, int decimal){
       printLCD(".");
       printLCD(decimal_buf);
       printLCD("mA");
+    } else if(type == 'R'){
+      clearLCD();
+      printLCD("Res (");
+      printLCD(range_buf);
+      printLCD(" kOhm)");
+      setCursorPositionLCD(1,0);
+      printLCD("R: ");
+      if(set_negative == 1){
+          printLCD("-");
       }
+      printLCD(value_buf);
+      printLCD(".");
+      printLCD(decimal_buf);
+      printLCD(" kOhm");
+      }
+
     else{
         UARTprintf("No Match!\n");
     }

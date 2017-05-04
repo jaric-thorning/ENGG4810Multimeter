@@ -63,6 +63,7 @@ ADCTask(void *pvParameters)
   		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);
 
       mswitch_message.ui32Value = ui32Value;
+      mswitch_message.type = 'V'; //sending V for value
 
       if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
          pdPASS){

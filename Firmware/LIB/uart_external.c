@@ -43,5 +43,5 @@ ConfigureUART(void)
     //
     // Initialize the UART for console I/O.
     //
-    UARTStdioConfig(1, 115200, 16000000);
+    UARTStdioConfig(1, 9600, 16000000);
 }

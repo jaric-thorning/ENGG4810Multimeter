@@ -58,7 +58,7 @@ LCDTask(void *pvParameters)
       {
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
 
-        UARTprintf("%c: (+- %d) %d.%d\n\r", lcd_message2.type, lcd_message2.range, lcd_message2.value, lcd_message2.decimal);
+        UARTprintf("[%c: %d.%d]\n\r", lcd_message2.type, lcd_message2.value, lcd_message2.decimal);
 
         display(lcd_message2.type, lcd_message2.range, lcd_message2.value, lcd_message2.decimal);
         xSemaphoreGive(g_pUARTSemaphore);
