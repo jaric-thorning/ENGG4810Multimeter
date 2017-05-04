@@ -10,6 +10,8 @@
 #define __MSWITCH_TASK_H__
 
 extern struct mswitch_queue_message {
+  char type;
+  char mode;
   uint32_t ui32Value;
 };
 

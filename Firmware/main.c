@@ -1,26 +1,3 @@
-//*****************************************************************************
-//
-// freertos_demo.c - Simple FreeRTOS example.
-//
-// Copyright (c) 2012-2014 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-//
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-//
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-//
-// This is part of revision 2.1.0.12573 of the EK-TM4C123GXL Firmware Package.
-//
-//*****************************************************************************
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -45,6 +22,7 @@
 #include "switch_task.h"
 #include "ADC_task.h"
 #include "mswitch_task.h"
+#include "sd_task.h"
 
 #include "uart.h"
 
@@ -106,11 +84,6 @@ vApplicationStackOverflowHook(xTaskHandle *pxTask, char *pcTaskName)
 int
 main(void)
 {
-    //
-    // Set the clocking to run at 50 MHz from the PLL.
-    //
-    //ROM_SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |
-    //                   SYSCTL_OSC_MAIN);
 
     //Clock set for LCD
     SysCtlClockSet(SYSCTL_SYSDIV_8|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
@@ -121,9 +94,7 @@ main(void)
 
     g_pUARTSemaphore = xSemaphoreCreateMutex();
 
-    //
     // Create the LED task.
-    //
     if(LEDTASK){
     if(LEDTaskInit() != 0)
       {
@@ -146,10 +117,7 @@ main(void)
         }
       }
     }
-
-    //
     // Create the LCD task.
-    //
     if(LCDTASK){
     if(LCDTaskInit() != 0){
         while(1)
@@ -159,70 +127,48 @@ main(void)
       }
     }
 
-    //
-    // Create the LCD task.
-    //
+    // Create the COMM task.
     if(COMMTASK){
-      if(CommTaskInit() != 0)
-      {
-
-          while(1)
-          {
+      if(CommTaskInit() != 0){
+          while(1){
             UARTprintf("\n\nCOMM INIT ERROR!\n");
           }
       }
     }
 
-    //
     // Create the ADC task.
-    //
     if(ADCTASK){
-      if(ADCTaskInit() != 0)
-      {
-
-          while(1)
-          {
+      if(ADCTaskInit() != 0){
+          while(1){
             UARTprintf("\n\nADC INIT ERROR!\n");
           }
       }
     }
 
-    //
     // Create the MSWITCH task.
-    //
     if(MSWITCHTASK){
       if(MSWITCHTaskInit() != 0)
       {
-
-          while(1)
-          {
+          while(1){
             UARTprintf("\n\nMSWITCH INIT ERROR!\n");
           }
       }
     }
 
-    //
     // Create the SD task.
-    //
     if(SDTASK){
-      if(SDTaskInit() != 0)
-      {
-          while(1)
-          {
+      if(SDTaskInit() != 0){
+          while(1){
             UARTprintf("\n\nSD INIT ERROR!\n");
           }
       }
     }
 
-    //
     // Start the scheduler.  This should not return.
-    //
     vTaskStartScheduler();
 
-    //
     // In case the scheduler returns for some reason, print an error and loop
     // forever.
-    //
     UARTprintf("\n\nSCHEDULER RETURNED - ERROR!\n");
     while(1)
     {

@@ -21,6 +21,8 @@
 
 #include "stdlib.h"
 
+#include "mswitch_task.h"
+
 
 #define SWITCHTASKSTACKSIZE        128         // Stack size in words
 
@@ -37,6 +39,8 @@ SwitchTask(void *pvParameters)
 
     ui8CurButtonState = ui8PrevButtonState = 0;
     ui16LastTime = xTaskGetTickCount();
+
+    struct mswitch_queue_message mswitch_message;
 
     while(1)
     {
@@ -59,6 +63,16 @@ SwitchTask(void *pvParameters)
                     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
                     UARTprintf("Left Button is pressed.\n");
                     xSemaphoreGive(g_pUARTSemaphore);
+
+                    mswitch_message.ui32Value = 0; //doesn't matter
+                    mswitch_message.type = 'M'; //sending M for mode
+                    mswitch_message.mode = 'I'; //sending I to increment mode
+
+                    if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
+                       pdPASS){
+                         UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+                       }
+
                 }
                 else if((ui8CurButtonState & ALL_BUTTONS) == RIGHT_BUTTON)
                 {
