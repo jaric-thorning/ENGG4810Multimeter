@@ -352,11 +352,16 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void measureVoltage() {
-		System.out.println("I clicked on voltage");
-		voltage = true;
-		resistance = false;
-		current = false;
+		String byteTest = "[S M V]";
+		byte[] writeBuffer = new byte[7];
+		writeBuffer = byteTest.getBytes();
+		System.out.println("BT: " + byteTest);
+		SerialFramework.getOpenSerialPort().writeBytes(writeBuffer, writeBuffer.length);
 
+		// voltage = true;
+		// resistance = false;
+		// current = false;
+		//
 		// Reset the plot data
 		// resetXAxis();
 		// readingSeries.getData().clear();
@@ -365,14 +370,18 @@ public class GuiController implements Initializable {
 		// yAxis.setLabel("Measurements [V]");
 
 		// Run thread here with 2nd column of data
-		RecordedResults.shutdownRecordedResultsThread();
+		// RecordedResults.shutdownRecordedResultsThread();
+		//
+		// String file = FILE_DIR + "voltage.csv"; //"mixedBag.csv";//
+		// System.out.println(file);
+		// RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
+		// Thread thread = new Thread(container);
+		// RecordedResults.dataPlaybackContainer = container;
+		// thread.start();
+	}
 
-		String file = FILE_DIR + "mixedBag.csv";// "voltage.csv";
-		System.out.println(file);
-		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
-		Thread thread = new Thread(container);
-		RecordedResults.dataPlaybackContainer = container;
-		thread.start();
+	protected void driveVoltage() {
+		System.out.println("I clicked on voltage");
 	}
 
 	private String getVoltageRange(double dataValue) {
@@ -394,29 +403,37 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void measureCurrent() {
+		String byteTest = "[S M C]";
+		byte[] writeBuffer = new byte[7];
+		writeBuffer = byteTest.getBytes();
+		System.out.println("BT: " + byteTest);
+		SerialFramework.getOpenSerialPort().writeBytes(writeBuffer, writeBuffer.length);
+	}
+
+	protected void driveCurrent() {
 		System.out.println("I clicked on current");
-		voltage = false;
-		resistance = false;
-		current = true;
-
-		resetXAxis();
-
-		// Reset the plot data
-		readingSeries.getData().clear();
-		savedTimes.clear();
-		endTimes.clear();
-		yUnit.clear();
-
-		// yAxis.setLabel("Measurements [mA]");
-
-		String file = FILE_DIR + "current.csv";
-
-		// Run thread here with 2nd column of data
-		RecordedResults.shutdownRecordedResultsThread();
-		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
-		Thread thread = new Thread(container);
-		RecordedResults.dataPlaybackContainer = container;
-		thread.start();
+		// voltage = false;
+		// resistance = false;
+		// current = true;
+		//
+		// resetXAxis();
+		//
+		// // Reset the plot data
+		// readingSeries.getData().clear();
+		// savedTimes.clear();
+		// endTimes.clear();
+		// yUnit.clear();
+		//
+		// // yAxis.setLabel("Measurements [mA]");
+		//
+		// String file = FILE_DIR + "current.csv";
+		//
+		// // Run thread here with 2nd column of data
+		// RecordedResults.shutdownRecordedResultsThread();
+		// RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
+		// Thread thread = new Thread(container);
+		// RecordedResults.dataPlaybackContainer = container;
+		// thread.start();
 	}
 
 	private String getCurrentRange(double dataValue) {
@@ -1072,34 +1089,41 @@ public class GuiController implements Initializable {
 				createMaskLabel.setVisible(false);
 
 				// Disable what needs to be disabled & reset
-				maskTestingSelected = false;
-				isHighBtnSelected = false;
-				isLowBtnSelected = false;
-				lineChart.setHighBoundarySelected(false);
-				lineChart.setLowBoundarySelected(false);
-
-				lowCounter = 0;
-				maskStatusLabel.setText("FAIL");
-				maskTestResults.clear();
-
-				runMaskBtn.setDisable(true);
-				maskTestResults.setDisable(true);
-				exportMaskBtn.setDisable(true);
-				setLowBtn.setDisable(true);
-
-				highMaskBoundarySeries.getData().clear();
-				lowMaskBoundarySeries.getData().clear();
-				readingSeries.getData().clear();
-				savedTimes.clear();
-				endTimes.clear(); // TODO: check I'm ok
-				overlappedIntervals.clear();
-				yUnit.clear();
+				revertMaskTestingComponents();
 			} else {
 				System.out.println("DISCONNECTED MODE STAYING");
 
 				disconnRBtn.setSelected(true);
 			}
 		}
+	}
+
+	/**
+	 * Reverts the states of the mask-testing components.
+	 */
+	private void revertMaskTestingComponents() {
+		maskTestingSelected = false;
+		isHighBtnSelected = false;
+		isLowBtnSelected = false;
+		lineChart.setHighBoundarySelected(false);
+		lineChart.setLowBoundarySelected(false);
+
+		lowCounter = 0;
+		maskStatusLabel.setText("FAIL");
+		maskTestResults.clear();
+
+		runMaskBtn.setDisable(true);
+		maskTestResults.setDisable(true);
+		exportMaskBtn.setDisable(true);
+		setLowBtn.setDisable(true);
+
+		highMaskBoundarySeries.getData().clear();
+		lowMaskBoundarySeries.getData().clear();
+		readingSeries.getData().clear();
+		overlappedIntervals.clear();
+		yUnit.clear();
+
+		System.out.println(isHighBtnSelected);
 	}
 
 	/**
@@ -1285,6 +1309,7 @@ public class GuiController implements Initializable {
 		for (String s : model.readColumnData(selectedFile.getPath(), 3)) {
 			inputDataIsoTime.add(IsoTime.parseIsoTime(s));
 		}
+
 	}
 
 	/**
@@ -1868,6 +1893,13 @@ public class GuiController implements Initializable {
 
 			runMaskBtn.setVisible(false);
 			maskTestResults.setVisible(false);
+
+			// RESET MASK COMPONENTS
+			importMaskBtn.setDisable(false);
+			setHighBtn.setDisable(false);
+			setMaskBtn.setDisable(false);
+
+			revertMaskTestingComponents();
 			System.out.println("MASK TESTING DE-SELECTED");
 		}
 	}
@@ -2387,6 +2419,8 @@ public class GuiController implements Initializable {
 		}
 	}
 
+	// TODO: what if you want to save the mask without having data there first
+	// need the yunit value.
 	/**
 	 * Exports the current mask data to a file in .csv format.
 	 */
@@ -2428,7 +2462,7 @@ public class GuiController implements Initializable {
 		lowMaskBoundarySeries.setName("low boundary");
 		readingSeries.setName("multimeter data");
 
-		// SerialFramework.changePorts();
+		SerialFramework.changePorts();
 		// refreshSelectablePortsList();
 	}
 
