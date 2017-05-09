@@ -36,21 +36,23 @@ public class EventHandlers {
 
 			@Override
 			public void handle(MouseEvent event) {
-				// xValue ->
-				// String xValue = TIME_DECIMAL
-				// .format(dataPoint.getXValue().doubleValue() - firstPointXValue); //
-				// index/sample_per_second
-				// IF LOADED FROM SD CARD -> USE ISO 8601 DURATION FORMAT
+
+				// TODO: IF LOADED FROM REAL DATA -> USE ISO 8601 FORMAT for each data-point.
+				// ISO 8601 Duration Format
 				LocalDateTime startDurationTime = LocalDateTime.parse(start.toString());
 				LocalDateTime endDurationTime = LocalDateTime.parse(end.toString());
 
 				Duration duration = Duration.between(startDurationTime, endDurationTime);
 				String isoDurationFormat = duration.toString();
 
-				// TODO: IF LOADED FROM REAL DATA -> USE ISO 8601 FORMAT
-				xDataCoord.setText("X: Sample: " + (index + 1) + " || Duration: "
-						+ Duration.parse(isoDurationFormat)); /*+ " :: "
-						+ TIME_DECIMAL.format(dataPoint.getXValue()));*/
+				// ISO 8601 FORMAT only if recorded by software
+			//	if (GuiController.instance.connRBtn.isSelected()) {
+					xDataCoord.setText("X: Sample: " + (index + 1) + " at " + end.toString()
+							+ ", " + Duration.parse(isoDurationFormat));
+				//} else {
+//					xDataCoord.setText("X: Sample: " + (index + 1) + ", "
+//							+ Duration.parse(isoDurationFormat));
+//				}
 				yDataCoord.setText("Y: " + MEASUREMENT_DECIMAL.format(dataPoint.getYValue()));
 			}
 		};

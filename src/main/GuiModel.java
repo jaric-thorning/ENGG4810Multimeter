@@ -17,7 +17,7 @@ public class GuiModel {
 	private static final String NEW_LINE_SEPARATOR = "\n";
 
 	// The format for reading/writing files <x-value><y-value><y-value units>
-	private static String[] fileHeaders = { "Time", "Value", "Units" };
+	private static String[] fileHeaders = { "Time", "Value", "Units", "IsoTime" };
 
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
@@ -58,6 +58,9 @@ public class GuiModel {
 					case 2:
 						readData.add(tokens[column]); // Add y-value units
 						break;
+					case 3:
+						readData.add(tokens[column]); // Add iso units
+						break;
 					default:
 						System.err.println("Invalid column number supplied");
 						break;
@@ -85,16 +88,16 @@ public class GuiModel {
 	 *             occurs when there is a problem with the buffered writer.
 	 */
 	public void saveColumnData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
-			ArrayList<String> yUnits) throws IOException {
-		// TODO: REMOVE ME
-		// System.out.println(unit.size());
-		// System.out.println(series.getData().size());
+			ArrayList<String> yUnits, ArrayList<IsoTime> isoTimes) throws IOException {
+		// TODO: check that yUnits is always the correct value...
+		System.out.println(yUnits.size() + ", " + series.getData().size() + ", " + isoTimes.size());
+
 		setupHeader(bufferedWriter);
 
 		for (int i = 0; i < series.getData().size(); i++) {
-			
+
 			writeColumnData(bufferedWriter, series.getData().get(i).getXValue(),
-					series.getData().get(i).getYValue(), yUnits.get(i));
+					series.getData().get(i).getYValue(), yUnits.get(i), isoTimes.get(i));
 		}
 	}
 
@@ -133,13 +136,15 @@ public class GuiModel {
 	 *            is the unit value of the y-axis values.
 	 */
 	private void writeColumnData(BufferedWriter bufferedWriter, Number xValue, Number yValue,
-			String yUnit) {
+			String yUnit, IsoTime isoTime) {
 		try {
 			bufferedWriter.write(xValue.toString());
 			bufferedWriter.write(DELIMITER);
 			bufferedWriter.write(yValue.toString());
 			bufferedWriter.write(DELIMITER);
 			bufferedWriter.write(yUnit);
+			bufferedWriter.write(DELIMITER);
+			bufferedWriter.write(isoTime.toString());
 			bufferedWriter.write(NEW_LINE_SEPARATOR);
 		} catch (Exception e) {
 			e.printStackTrace();
