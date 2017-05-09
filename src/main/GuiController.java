@@ -78,14 +78,15 @@ public class GuiController implements Initializable {
 	public volatile boolean current = false;
 	private volatile boolean isContinuityMode = false;
 
+	private volatile boolean isChanged = false;
+
 	/* Components relating to the 'connected' mode */
 	@FXML
 	protected RadioButton connRBtn;
 	@FXML
 	private Button pauseBtn;
 	private volatile boolean isPaused = false; // Flag for if pauseBtn has been clicked
-	private volatile boolean isResumed = false; // Flag for de-clicking pauseBtn
-	private volatile boolean isChanged = false; // Flag for if measurement units changed values
+
 	@FXML
 	private Button saveBtn;
 	@FXML
@@ -158,7 +159,7 @@ public class GuiController implements Initializable {
 	XYChart.Series<Number, Number> highMaskBoundarySeries = new XYChart.Series<>();
 	XYChart.Series<Number, Number> lowMaskBoundarySeries = new XYChart.Series<>();
 	XYChart.Series<Number, Number> readingSeries = new XYChart.Series<>();
-	ArrayList<String> yUnit = new ArrayList<>(); // The y-unit displayed
+	ArrayList<String> yUnits = new ArrayList<>(); // The y-unit displayed
 
 	// Components for shifting the line chart x-axis left and right
 	@FXML
@@ -197,9 +198,8 @@ public class GuiController implements Initializable {
 
 	private static final String FILE_FORMAT_EXTENSION = "*.csv";
 	private static final String FILE_FORMAT_TITLE = "Comma Separated Files";
-	private static final String FILE_DIR = "./Saved Data/";
 
-	private static final double X_UPPER_BOUND = 10D;
+	private static final double X_UPPER_BOUND = 25D;//10D;
 	private static final double X_LOWER_BOUND = 0D;
 	private static final double Y_UPPER_BOUND = 50D;
 	private static final double Y_LOWER_BOUND = -10D;
@@ -213,8 +213,8 @@ public class GuiController implements Initializable {
 	public static GuiController instance;
 
 	// TODO: SORT
-	ArrayList<Data<Number, Number>> pausedAcquisitionData = new ArrayList<>();
-	ArrayList<String> pausedAcquisitionYUnitData = new ArrayList<>();
+	private ArrayList<Data<Number, Number>> pausedAcquisitionData = new ArrayList<>();
+	private ArrayList<String> pausedAcquisitionYUnitData = new ArrayList<>();
 
 	public GuiController() {
 		// I am empty :(
@@ -296,88 +296,32 @@ public class GuiController implements Initializable {
 		// TODO: SEND IN AC MODE TOKEN
 	}
 
+	// FIXME: SQUARE SINE WAVE 0-1 FOR CONTINUITY MODE BUT RESISTANCE
 	/**
 	 * Enters Continuity Mode
 	 */
 	@FXML
 	private void selectContinuityMode() {
-		if (!isContinuityMode) {
+		if (!isContinuityMode) { // Entering Continuity Mode
+			System.out.println("I clicked on continuity mode");
+
 			isContinuityMode = true;
 			graphingResultsLabel.setText("Graphing Results - Continuity Mode");
 			lineChart.setContinuityMode();
-
-			System.out.println("I clicked on continuity mode");
-
-			// FIXME: MODULARISE, Basically resistance mode with a difference.
-			// Run thread here with 2nd column of data
-			resistance = false;
-			voltage = false;
-			current = false;
-			resistanceBtn.setDisable(true);
-			voltageBtn.setDisable(true);
-			currentBtn.setDisable(true);
-
-			resetXAxis();
-
-			// Reset the plot data
-			readingSeries.getData().clear();
-			savedTimes.clear();
-			endTimes.clear(); // TODO CHECK ALL G
-			yUnit.clear();
-
-			String file = FILE_DIR + "resistance2.csv";
-			RecordedResults.shutdownRecordedResultsThread();
-
-			RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
-			Thread thread = new Thread(container);
-			RecordedResults.dataPlaybackContainer = container;
-			thread.start();
-		} else {
-			RecordedResults.shutdownRecordedResultsThread();
-			readingSeries.getData().clear();
-			savedTimes.clear();
-			endTimes.clear(); // TODO: check good
+		} else { // Leaving Continuity Mode
 			isContinuityMode = false;
-			resistanceBtn.setDisable(false);
-			voltageBtn.setDisable(false);
-			currentBtn.setDisable(false);
-
 			graphingResultsLabel.setText("Graphing Results");
 			lineChart.revertContinuityMode();
 		}
 	}
 
 	/**
-	 * Gets dummy data of voltage values and displays it. FIXME: convert to serial.
+	 * Writes out the code for switching to voltage
 	 */
 	@FXML
 	private void measureVoltage() {
-		String byteTest = "[S M V]";
-		byte[] writeBuffer = new byte[7];
-		writeBuffer = byteTest.getBytes();
-		System.out.println("BT: " + byteTest);
-		SerialFramework.getOpenSerialPort().writeBytes(writeBuffer, writeBuffer.length);
-
-		// voltage = true;
-		// resistance = false;
-		// current = false;
-		//
-		// Reset the plot data
-		// resetXAxis();
-		// readingSeries.getData().clear();
-		// yUnit.clear();
-
-		// yAxis.setLabel("Measurements [V]");
-
-		// Run thread here with 2nd column of data
-		// RecordedResults.shutdownRecordedResultsThread();
-		//
-		// String file = FILE_DIR + "voltage.csv"; //"mixedBag.csv";//
-		// System.out.println(file);
-		// RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
-		// Thread thread = new Thread(container);
-		// RecordedResults.dataPlaybackContainer = container;
-		// thread.start();
+		// port must be connected.
+		writeCode("V");
 	}
 
 	protected void driveVoltage() {
@@ -399,41 +343,19 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Gets dummy data of current values and displays it. FIXME: convert to serial.
+	 * Writes out the code for switching to current
 	 */
 	@FXML
 	private void measureCurrent() {
-		String byteTest = "[S M C]";
-		byte[] writeBuffer = new byte[7];
-		writeBuffer = byteTest.getBytes();
-		System.out.println("BT: " + byteTest);
-		SerialFramework.getOpenSerialPort().writeBytes(writeBuffer, writeBuffer.length);
+		// While it hasn't been received
+		writeCode("C");
 	}
 
+	/**
+	 * Where all the current related things happen
+	 */
 	protected void driveCurrent() {
 		System.out.println("I clicked on current");
-		// voltage = false;
-		// resistance = false;
-		// current = true;
-		//
-		// resetXAxis();
-		//
-		// // Reset the plot data
-		// readingSeries.getData().clear();
-		// savedTimes.clear();
-		// endTimes.clear();
-		// yUnit.clear();
-		//
-		// // yAxis.setLabel("Measurements [mA]");
-		//
-		// String file = FILE_DIR + "current.csv";
-		//
-		// // Run thread here with 2nd column of data
-		// RecordedResults.shutdownRecordedResultsThread();
-		// RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
-		// Thread thread = new Thread(container);
-		// RecordedResults.dataPlaybackContainer = container;
-		// thread.start();
 	}
 
 	private String getCurrentRange(double dataValue) {
@@ -449,46 +371,40 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Gets dummy data of resistance values and displays it. FIXME: Convert to serial
+	 * Writes out the code for switching to resistance
 	 */
 	@FXML
 	private void measureResistance() {
+		writeCode("R");
+	}
+
+	protected void driveResistance() {
 		System.out.println("I clicked on resistance");
-
-		resistance = true;
-
-		displayResistanceData();
 	}
 
 	/**
-	 * A private helper function to 'measureResistance' and 'continuityMode' which displays the
-	 * resistance data readings
+	 * Writes out the specified settings code.
+	 * 
+	 * @param type
+	 *            which mode to select (Voltage, Current, Resistance)
 	 */
-	private void displayResistanceData() {
-		voltage = false;
-		current = false;
+	private void writeCode(String type) {
+		String code = "[S M " + type + "]\n";
+		byte[] writeBuffer = new byte[15];
 
-		// Reset the plot data
-		resetXAxis();
-		readingSeries.getData().clear();
-		savedTimes.clear();
-		endTimes.clear();
-		yUnit.clear();
+		writeBuffer = code.getBytes();
 
-		// FIXME: Do I need to change to KOhm and MOhm
-		// yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
+		System.out.println("BT: " + code);
+		try {
 
-		String file = FILE_DIR + "resistance2.csv";
-		RecordedResults.shutdownRecordedResultsThread();
-
-		// Run thread here with 2nd column of data
-		RecordedResults.PlaybackData container = new RecordedResults.PlaybackData(file);
-		Thread thread = new Thread(container);
-		RecordedResults.dataPlaybackContainer = container;
-		thread.start();
+			// Write multimeter code over the open port
+			SerialFramework.getOpenSerialPort().writeBytes(writeBuffer, writeBuffer.length);
+		} catch (NullPointerException e) {
+			System.err.println("Port Cannot Be Written To");
+		}
 	}
 
-	// TODO: keep this just for updating the multi-meter range stuff.
+	// TODO: Keep this just for updating the multi-meter range stuff.
 	/**
 	 * Changes the y-axis label if the units change + the units' range.
 	 * 
@@ -578,173 +494,171 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Updates the displayed dummy data FIXME: convert to serial.
-	 * 
-	 * @param multimeterReading
+	 * Updates the data displayed on the analog, digital and strip chart displays.
 	 */
-	public void recordAndDisplayDummyData(double multimeterReading, String unit) {
+	public void recordAndDisplayNewResult(Double multimeterDataValue, String unit) {
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					recordAndDisplayDummyData(multimeterReading, unit);
+					recordAndDisplayNewResult(multimeterDataValue, unit);
 				}
 			});
 			return;
 		}
 
-		// Update all software displays
-		updateDisplay(multimeterReading, unit);
+		// Update Multimeter display
+		updateMultimeterDisplay(multimeterDataValue, unit);
 	}
 
+	////////////
 	/**
 	 * A private helper function for displaying dummy data on chart. FIXME: convert to serial.
 	 * 
 	 * @param multimeterReading
 	 */
-	private void updateDisplay(Double multimeterReading, String unit) {
+	private void updateMultimeterDisplay(Double multimeterReading, String unit) {
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					updateDisplay(multimeterReading, unit);
+					updateMultimeterDisplay(multimeterReading, unit);
 				}
 			});
 			return;
 		}
+		System.out.println("RS: " + readingSeries.getData().size() + ", " + yUnits.size());
 
-		// Modify graph if units have changed.
-		validateYAxisUnit(unit);
+		// TODO: update YAxis
+		// FIXME: ALWAYS STARTS AT 0....
+		//yUnits.add(getUnitToSave(unit));
 
-		if (!isPaused) {
-			// Update y-axis unit value.
-			yUnit.add(unit);
+		// Modify Plot Parts.
+		if (!validateYAxisUnits(unit)) {
+			modifyPlotParts();
+		}
+
+		// Add data
+		if (!isPaused) { // not paused
 
 			// Change multimeter text display according to ranges and values.
 			updateYAxisLabel(multimeterReading, unit);
 
-			// sort out isoTime
-			establishIsoTime(readingSeries.getData().size());
+			// Has been paused as some point
+			if (pausedAcquisitionData.size() > 0) {
+				// If y-unit has been changed, clear all reading data
+				if (isChanged) {
+					readingSeries.getData().clear();
+					resetXAxis();
 
-			// Add the acquired data to the reading series after it's been paused
-			addAllAcquiredDataAfterPaused();
+					isChanged = false;
+				}
 
-			// Display dummy data plot
+				readingSeries.getData().addAll(pausedAcquisitionData);
+
+				// Reset paused acquired data home.
+				pausedAcquisitionData.clear();
+			}
+
+			// FIXME: STILL NEED TO STORE THE SAMPLES/TIME SOMEWHERE
+			// Normally add received data
 			readingSeries.getData().add(new XYChart.Data<Number, Number>(
 					dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterReading));
 
-			readingSeries.getData().get(dataPlotPosition).getNode().addEventHandler(
-					MouseEvent.MOUSE_ENTERED,
-					event.getDataXYValues(readingSeries.getData().get(dataPlotPosition),
-							dataPlotPosition, xDataCoord, yDataCoord, startTime, endTime));
-
-			// Update chart
+			// Update chart bounds
 			int dataBoundsRange = (int) Math.ceil(dataPlotPosition / (SAMPLES / PER_TIMEFRAME));
 			if (dataBoundsRange > X_UPPER_BOUND) {
 				xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
 				xAxis.setUpperBound(dataBoundsRange);
 			}
-		} else { // User selected the pause button.
-			establishIsoTime(pausedAcquisitionData.size());
 
-			// Redirect serial values to a temporary list.
+			establishISOTime(readingSeries.getData().size()); // ISO Time Interval
+		} else { // Is paused
+			// Modify Plot Parts.
 			pausedAcquisitionData.add(new XYChart.Data<Number, Number>(
 					dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterReading));
-			pausedAcquisitionYUnitData.add(unit);
+
+			establishISOTime(pausedAcquisitionData.size()); // ISO Time Interval
 		}
+
+		// System.out.println("SIZE: " + pausedAcquisitionData.size());
+		// System.out.println(" DPP: " + dataPlotPosition);
 
 		dataPlotPosition++;
 	}
 
 	/**
-	 * Calculates the ISO 8601 time interval for the first and last point.
-	 */
-	private void establishIsoTime(int dataSize) {
-		System.out.println("DP: " + dataPlotPosition + ", " + dataSize);
-
-		if (dataPlotPosition == 0) { // Get the start time
-			LocalDateTime local = LocalDateTime.now();
-			startTime = new IsoTime(local, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-			endTime = startTime;
-			System.out.println("	StartL:" + local);
-		} else if (dataPlotPosition == dataSize) { // Get the end time
-			LocalDateTime local = LocalDateTime.now();
-			endTime = new IsoTime(local, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-			System.out.println("		1-End: " + local);
-		} else if (!isChanged && (dataPlotPosition == dataSize + readingSeries.getData().size())) {
-			LocalDateTime local = LocalDateTime.now();
-			endTime = new IsoTime(local, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-			System.out.println("		2-EndL: " + local);
-		}
-
-		if (!isPaused) {
-			savedTimes.add(endTime);
-		}
-		endTimes.add(endTime);
-
-		recordTimeLabel.setText(startTime + "/" + endTime);
-
-	}
-
-	/**
-	 * A private helper function to 'updateDisplay' which modifies the plot after it has been
-	 * resumed from a paused state.
-	 */
-	private void addAllAcquiredDataAfterPaused() {
-		if (isResumed) {
-			if (isChanged) { // Measurements have changed at some point
-				readingSeries.getData().clear();
-				resetXAxis();
-			}
-
-			System.out.println("SIZE: " + endTimes.size());
-
-			// Add all acquired data to the display
-			readingSeries.getData().addAll(pausedAcquisitionData);
-			yUnit.addAll(pausedAcquisitionYUnitData);
-
-			// Add listener to add aquired data when it was paused.
-			for (int i = 0; i < readingSeries.getData().size(); i++) {
-				readingSeries.getData().get(i).getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
-						event.getDataXYValues(readingSeries.getData().get(i), i, xDataCoord,
-								yDataCoord, startTime, endTimes.get(i)));
-			}
-
-			isResumed = false;
-		}
-	}
-
-	/**
-	 * A private helper function to 'updateDisplay' which modifies the plot if the measurement units
-	 * are modified during data acquisition.
+	 * Determines if the y-value unit has changed upon acquisition.
 	 * 
 	 * @param unit
-	 *            the y-axis measurement unit.
+	 *            the y-unit received in the data sent across
+	 * @return if there have been any changes in the y-unit data
 	 */
-	private void validateYAxisUnit(String unit) {
-		// Set y-unit measurement flags and modify plot
-		if (unit.equals("V") && !voltage) {
+	private boolean validateYAxisUnits(String unit) {
+		// System.out.println("UNIT: " + unit);
+		if (!(checkYUnitChangesVoltage(unit) && checkYUnitChangesCurrent(unit)
+				&& checkYUnitChangesResistance(unit))) {
+			return false;
+		}
 
+		return true;
+	}
+
+	/**
+	 * Determines if the y-value unit has changed to voltage if it's currently not voltage
+	 * 
+	 * @param unit
+	 *            the y-unit received in the data sent across
+	 * @return true if there has been no change, false otherwise
+	 */
+	private boolean checkYUnitChangesVoltage(String unit) {
+		if (unit.equals("V") && !voltage) {
 			voltage = true;
 			current = false;
 			resistance = false;
 
-			modifyPlotParts();
-		} else if (unit.equals("mA") && !current) {
-			System.out.println("mA");
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Determines if the y-value unit has changed to current if it's currently not current
+	 * 
+	 * @param unit
+	 *            the y-unit received in the data sent across
+	 * @return true if there has been no change, false otherwise
+	 */
+	private boolean checkYUnitChangesCurrent(String unit) {
+		if (unit.equals("C") && !current) {
 			voltage = false;
 			current = true;
 			resistance = false;
 
-			modifyPlotParts();
-		} else if (unit.equals("Ohm") && !resistance) {
+			return false;
+		}
 
+		return true;
+	}
+
+	/**
+	 * Determines if the y-value unit has changed to resistance if it's currently not resistance
+	 * 
+	 * @param unit
+	 *            the y-unit received in the data sent across
+	 * @return true if there has been no change, false otherwise
+	 */
+	private boolean checkYUnitChangesResistance(String unit) {
+		if (unit.equals("R") && !resistance) {
 			voltage = false;
 			current = false;
 			resistance = true;
 
-			modifyPlotParts();
+			return false;
 		}
+
+		return true;
 	}
 
 	/**
@@ -752,24 +666,27 @@ public class GuiController implements Initializable {
 	 * sets certain flags.
 	 */
 	private void modifyPlotParts() {
-		isChanged = true; // y-unit measurement has changed
-
 		// Reset the plot data
 		dataPlotPosition = 0;
 
-		if (isPaused) { // Only clear acquiring data, not displayed
-			pausedAcquisitionData.clear();
-			pausedAcquisitionYUnitData.clear();
-		} else { // Clear displayed data
-			resetXAxis();
-			yUnit.clear();
-			readingSeries.getData().clear();
-			pausedAcquisitionData.clear();
-			pausedAcquisitionYUnitData.clear();
-			savedTimes.clear();
+		if (readingSeries.getData().size() > 0) {
+			yUnits.clear();
 		}
 
-		endTimes.clear();
+		if (!isPaused) {
+			resetXAxis();
+			readingSeries.getData().clear();
+
+			// yUnit.clear();
+			// savedTimes.clear();
+		} else {
+			isChanged = true;
+
+			// Only clear acquiring data, not displayed
+			pausedAcquisitionData.clear();
+			// pausedAcquisitionYUnitData.clear();
+		}
+		// endTimes.clear();
 	}
 
 	// FIXME: does this need to be called everytime.
@@ -786,13 +703,13 @@ public class GuiController implements Initializable {
 		if (voltage) {
 			multimeterDisplay.setText(
 					getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getVoltageRange(multimeterReading)
-							+ " )" + "\n" + unit + ": " + multimeterReading.toString() + unit);
+							+ " )" + "\nV: " + multimeterReading.toString() + unit);
 
 			yAxis.setLabel("Measurements [V]");
 		} else if (current) {
 			multimeterDisplay.setText(
 					getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getCurrentRange(multimeterReading)
-							+ " )" + "\n" + unit + ": " + multimeterReading.toString() + unit);
+							+ " )" + "\nmA: " + multimeterReading.toString() + "mA");
 
 			yAxis.setLabel("Measurements [mA]");
 		} else if (resistance) {
@@ -803,9 +720,8 @@ public class GuiController implements Initializable {
 		}
 	}
 
-	// FIXME: other values??
 	/**
-	 * A private helper function to 'updateYAxiesLabel' which modifies text for displaying the
+	 * A private helper function to 'updateYAxisLabel' which modifies text for displaying the
 	 * multimeter values.
 	 * 
 	 * @param unit
@@ -815,52 +731,65 @@ public class GuiController implements Initializable {
 	private String getUnit(String unit) {
 		if (unit.equals("V")) {
 			return "Voltage";
-		} else if (unit.equals("mA")) { // need to convert to milliamps
+		} else if (unit.equals("C")) { // need to convert to milliamps
 			return "milliAmp";
-		} else if (unit.equals("Ohm")) {
+		} else if (unit.equals("R")) {
 			return "Ohm";
 		} else {
 			return "";
 		}
 	}
 
+	private String getUnitToSave(String unit) {
+		if (unit.equals("V")) {
+			return "V";
+		} else if (unit.equals("C")) { // need to convert to milliamps
+			return "mA";
+		} else if (unit.equals("R")) {
+			return "Ohm";
+		} else {
+			return "";
+		}
+	}
+
+	// FIXME: ISO TIME INTERVAL FOR FIRST AND LAST POINT
+	/**
+	 * Calculates the ISO 8601 time interval for the first and last point.
+	 */
+	private void establishISOTime(int dataSize) {
+		// System.out.println("DP: " + dataPlotPosition + ", " + dataSize);
+
+		if (dataPlotPosition == 0) { // Get the start time
+			LocalDateTime local = LocalDateTime.now();
+			startTime = new IsoTime(local, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+			endTime = startTime;
+			// System.out.println(" StartL:" + local);
+		} else { // Get the end time
+			LocalDateTime local = LocalDateTime.now();
+			endTime = new IsoTime(local, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+			// System.out.println(" 1-End: " + local);
+		}
+
+		if (!isPaused) {
+			recordTimeLabel.setText(startTime + "/" + endTime); // display if paused
+		}
+
+		// if (!isPaused) {
+		// savedTimes.add(endTime);
+		// }
+		// endTimes.add(endTime);
+		//
+	}
+
 	/**
 	 * If the units of the y-values change, then reset the axes bounds.
 	 */
 	private void resetXAxis() {
-		if (voltage || current || resistance || isContinuityMode) {
-			// dataPlotPosition = 0;
+		if (voltage || current || resistance) {
 			xAxis.setLowerBound(X_LOWER_BOUND);
 			xAxis.setUpperBound(X_UPPER_BOUND);
 		}
 	}
-
-	// // TODO: change the data values to reflect where it should be.
-	// /**
-	// * Changes the y-axis label if the units change + the units' range.
-	// *
-	// * @param dataValue
-	// * the y-axis value.
-	// */
-	// private void autoRangeYUnit(Double dataValue) {
-	// String ohmSymbol = Character.toString((char) 8486);
-	//
-	// if (voltage) {
-	// yUnit.add("V");
-	// } else if (current) {
-	// yUnit.add("mA");
-	// } else if (resistance) {
-	// yUnit.add("Ohm");
-	// if (dataValue < 1000) {
-	// yAxis.setLabel("Measurements [" + ohmSymbol + "]");
-	// } else if (dataValue >= 1000 && dataValue < 1000000) {
-	// yAxis.setLabel("Measurements [" + "k" + ohmSymbol + "]");
-	// } else if (dataValue >= 1000000) {
-	// yAxis.setLabel("Measurements [" + "M" + ohmSymbol + "]");
-	// }
-	// }
-	//
-	// }
 
 	/**
 	 * Selects the connected mode of the GUI if there is a connection, otherwise it's disabled.
@@ -876,6 +805,13 @@ public class GuiController implements Initializable {
 
 			setupConnectedComponents();
 
+			System.out.println("HEY");
+//			// FIXME: SET UP SAMPLES/TIME
+//
+//			// TODO: MOVE TO ANOTHER LOCATION???
+//			// Receive data
+			SerialFramework.selectPort();
+//			// refreshSelectablePortsList();
 		} else if (!testConnection(connRBtn)) {
 			System.out.println("There is no test connection");
 
@@ -883,12 +819,13 @@ public class GuiController implements Initializable {
 		} else { // Assuming 'else' just covers when radio button is not selected. TODO: check.
 
 			if (notifyUserConnected()) {
-				System.out.println("CONNECTED MODE EXITED");
+				SerialFramework.closeOpenPort();
 
 				disconnRBtn.setDisable(false);
 
 				revertConnectedComponents();
 
+				System.out.println("CONNECTED MODE EXITED");
 			} else {
 				System.out.println("CONNECTED MODE STAYING");
 
@@ -1008,10 +945,10 @@ public class GuiController implements Initializable {
 
 		pauseBtn.setDisable(true);
 		isPaused = false;
-		isResumed = false;
 		isChanged = false;
-		pausedAcquisitionData = new ArrayList<>();
-		pausedAcquisitionYUnitData = new ArrayList<>();
+
+		pausedAcquisitionData.clear();
+		// pausedAcquisitionYUnitData = new ArrayList<>();
 		pauseBtn.setText("Pause");
 
 		saveBtn.setDisable(true);
@@ -1027,8 +964,6 @@ public class GuiController implements Initializable {
 		graphingResultsLabel.setText("Graphing Results");
 
 		// Clear all data related things.
-		// TODO: Close open connections.
-		RecordedResults.shutdownRecordedResultsThread();
 
 		// Reset the plot data
 		readingSeries.getData().clear();
@@ -1037,7 +972,7 @@ public class GuiController implements Initializable {
 
 		dataPlotPosition = 0;
 		resetAxes();
-		yUnit.clear();
+		yUnits.clear();
 
 		// No listener apparently. TODO: ATTACH LISTENER
 		xDataCoord.setText("X: ");
@@ -1121,7 +1056,7 @@ public class GuiController implements Initializable {
 		lowMaskBoundarySeries.getData().clear();
 		readingSeries.getData().clear();
 		overlappedIntervals.clear();
-		yUnit.clear();
+		yUnits.clear();
 
 		System.out.println(isHighBtnSelected);
 	}
@@ -1174,18 +1109,16 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void pauseDataAcquisition() {
-		/*
-		 * TODO: NUT OUT THE ACQUISITION THING. Keep the connection open, but pause the thread that
-		 * displays the data on the line chart???
-		 */
 
 		if (!isPaused) {
 			System.out.println("DATA IS PAUSED");
+//			System.out
+//					.println("PAUSED RS: " + readingSeries.getData().size() + ", " + yUnits.size());
 
 			isPaused = true;
 			pauseBtn.setText("Unpause");
 
-			// Enable digital multimeter components
+			// Disable multimeter components
 			multimeterDisplay.setDisable(true);
 			voltageBtn.setDisable(true);
 			currentBtn.setDisable(true);
@@ -1195,17 +1128,11 @@ public class GuiController implements Initializable {
 			modeLabel.setDisable(true);
 			logicBtn.setDisable(true);
 			continuityBtn.setDisable(true);
+		} else {
+			System.out.println("DATA IS UNPAUSED");
 
-			// TODO: data aquisition
-			isResumed = true;
-			pausedAcquisitionData = new ArrayList<>();
-			pausedAcquisitionYUnitData = new ArrayList<>();
-			// RecordedResults.pauseRecordedResultsThread(true);
-
-		} else {// TODO: check for any yUnit changes
 			isPaused = false;
 			pauseBtn.setText("Pause");
-			// No justPaused here, because want to make it stop after it's loaded everything
 
 			// Enable digital multimeter components
 			multimeterDisplay.setDisable(false);
@@ -1217,9 +1144,6 @@ public class GuiController implements Initializable {
 			modeLabel.setDisable(false);
 			logicBtn.setDisable(false);
 			continuityBtn.setDisable(false);
-
-			// RecordedResults.pauseRecordedResultsThread(false);
-			System.out.println("DATA IS UNPAUSED");
 		}
 	}
 
@@ -1245,7 +1169,7 @@ public class GuiController implements Initializable {
 
 			// Clear data from list if reloaded multiple times
 			readingSeries.getData().clear();
-			yUnit.clear();
+			yUnits.clear();
 			yAxis.setLabel("Measurements");
 
 			// Set up new array
@@ -1262,9 +1186,9 @@ public class GuiController implements Initializable {
 			endTimes = inputDataIsoTime;
 
 			// Modify y-units
-			yUnit.addAll(inputDataYUnits);
-			if (yUnit.size() > 0) {
-				convertMeasurementYUnit(yUnit.get(0));
+			yUnits.addAll(inputDataYUnits);
+			if (yUnits.size() > 0) {
+				convertMeasurementYUnit(yUnits.get(0));
 			}
 
 			// FIXME: make sure autoranging is set true/false in right places
@@ -1405,7 +1329,7 @@ public class GuiController implements Initializable {
 				// Save the data to a file
 				try (BufferedWriter bw = new BufferedWriter(
 						new FileWriter(selectedFile.getPath()))) {
-					model.saveColumnData(bw, readingSeries, yUnit, savedTimes);
+					model.saveColumnData(bw, readingSeries, yUnits, savedTimes);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -1436,10 +1360,6 @@ public class GuiController implements Initializable {
 
 	// FIXME: MODULARSE THIS WITH REVERTCONNECTEDCOMPONENTS
 	private void revert() {
-
-		// TODO: Close open connections.
-		RecordedResults.shutdownRecordedResultsThread();
-
 		// FIXME: not sure if I control these
 		// -------------------------
 		dcRBtn.setSelected(false);
@@ -1450,11 +1370,11 @@ public class GuiController implements Initializable {
 		multimeterDisplay.setText("");
 
 		isPaused = false;
-		isResumed = false;
-		isChanged = false;
-		pausedAcquisitionData = new ArrayList<>();
-		pausedAcquisitionYUnitData = new ArrayList<>();
 		pauseBtn.setText("Pause");
+		isChanged = false;
+
+		pausedAcquisitionData.clear();
+		// pausedAcquisitionYUnitData = new ArrayList<>();
 
 		resistance = false;
 		voltage = false;
@@ -1464,11 +1384,11 @@ public class GuiController implements Initializable {
 
 		// Reset the plot data
 		readingSeries.getData().clear();
-		savedTimes.clear();
-		endTimes.clear(); // TODO CHECK ALL G
+		// savedTimes.clear();
+		// endTimes.clear(); // TODO CHECK ALL G
 		dataPlotPosition = 0;
 		resetAxes();
-		yUnit.clear();
+		yUnits.clear();
 
 		// TODO: make sure that I can remove this, add listener to the data.
 		xDataCoord.setText("X: ");
@@ -2355,10 +2275,10 @@ public class GuiController implements Initializable {
 			String yUnitValue = "";
 
 			// Check if there is a clash of units.
-			if (yUnit.size() > 0) {
+			if (yUnits.size() > 0) {
 				for (String[] column : model.readMaskData(selectedFile.getPath())) {
 					yUnitValue = column[3];
-					if (yUnitValue.equals(yUnit.get(0))) {
+					if (yUnitValue.equals(yUnits.get(0))) {
 						convertMeasurementYUnit(yUnitValue);
 						break;
 					} else {
@@ -2439,8 +2359,8 @@ public class GuiController implements Initializable {
 			// Save the data to a file
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(selectedFile.getPath()))) {
 				// Only need one element from yUnit saveMaskData
-				model.saveMaskData(bw, highMaskBoundarySeries, yUnit.get(0));
-				model.saveMaskData(bw, lowMaskBoundarySeries, yUnit.get(0));
+				model.saveMaskData(bw, highMaskBoundarySeries, yUnits.get(0));
+				model.saveMaskData(bw, lowMaskBoundarySeries, yUnits.get(0));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -2461,53 +2381,5 @@ public class GuiController implements Initializable {
 		highMaskBoundarySeries.setName("high boundary");
 		lowMaskBoundarySeries.setName("low boundary");
 		readingSeries.setName("multimeter data");
-
-		SerialFramework.changePorts();
-		// refreshSelectablePortsList();
 	}
-
-	/**
-	 * Refreshes the existing ports list to include any new ports detected.
-	 */
-	public static void refreshSelectablePortsList() {
-		if (!Platform.isFxApplicationThread()) {
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					refreshSelectablePortsList();
-				}
-			});
-			return;
-		}
-
-		SerialPort[] ports = SerialPort.getCommPorts();
-
-		// isOpen -> whether port is closed/ready to communicate
-		for (SerialPort serialPort : ports) {
-			// if (serialPort.isOpen()) {
-			// System.out.println("PORT IS OPEN");
-			// } else {
-			// System.out.println("PORT IS CLOSED: " + serialPort.getSystemPortName());
-			// }
-			if (serialPort.getSystemPortName().contains("tty.usbmodem0E21B171")) { // ->
-																					// /dev/tty.usbmodem0E21B171
-				serialPort.openPort();
-				serialPort.setBaudRate(115200); // baudrate
-
-				System.out.println(
-						"Binding to Serial Port " + serialPort.getSystemPortName() + "...");
-				if (SerialFramework.bindListen(serialPort)) {
-					System.out.println("Success.");
-				} else {
-					System.out.println("Failed to bind to Serial.");
-					refreshSelectablePortsList();
-				}
-
-				break;
-			}
-
-			System.out.println("PORTS: " + serialPort.getSystemPortName());
-		}
-	}
-
 }
