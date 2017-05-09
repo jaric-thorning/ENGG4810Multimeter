@@ -14,11 +14,15 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include <string.h>
+
 
 #include "mswitch_task.h"
 #include "lcd_task.h"
 
 #include "stdlib.h"
+
+#include "general_functions.h"
 //MSWITCH INCLUDES
 
 #include "display_functions.h"
@@ -29,6 +33,7 @@
 #include "display.h"
 #include "sd_task.h"
 
+#include "bget.h"
 
 #define MSWITCHTASKSTACKSIZE        128
 
@@ -85,6 +90,14 @@ MSWITCHTask(void *pvParameters)
     struct mswitch_queue_message mswitch_message;
     struct lcd_queue_message lcd_message;
     struct sd_queue_message sd_message;
+
+    sd_message.filename = (char*)bgetz(64 * sizeof(char));
+    sd_message.text = (char*)bgetz(64 * sizeof(char));
+
+    char * buffer = (char*)bget(64 * sizeof(char));
+
+    sd_message.filename  = "logfile3.txt";
+
 
     ui32MSWITCHRefreshTime = MSWITCH_REFRESH_TIME;
 
@@ -163,8 +176,24 @@ MSWITCHTask(void *pvParameters)
         lcd_message.decimal = decimal;
 
 
+        static char buffer2[64 * sizeof(char)];
+
+        char integer_buf[10];
+        char decimal_buf[10];
 
 
+        //memset(sd_message.text, 0, sizeof(sd_message.text));
+        sd_message.text = "TEST";
+
+        if(lcd_message.type == 'V'){
+          strcpy(buffer2, "[V: ");
+        } else if (lcd_message.type == "C"){
+          strcpy(buffer2, "C: ");
+        } else if (lcd_message.type == "R"){
+          strcpy(buffer2, "R: ");
+        } else{
+          strcpy(buffer2, "U: ");
+        }
         if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
            pdPASS){
              UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
@@ -172,13 +201,22 @@ MSWITCHTask(void *pvParameters)
 
         if(logging){
 
-          char filename[64] = "logfile.txt";
-          sd_message.filename = filename;
+          if(integer < 0){
+            integer *= -1;
+            strcat(buffer2, "-");
+          }
+          int2str(integer, integer_buf, 10);
+          int2str(decimal, decimal_buf, 10);
 
-          char text[64] = "logfile.txt";
-          sd_message.text = text;
+          strcat(buffer2, integer_buf);
+          strcat(buffer2, ".");
+          strcat(buffer2, decimal_buf);
+          strcat(buffer2, "]\n\r");
 
-          fprintf(sd_message.text, "%c: %d.%d", lcd_message.type, lcd_message.value, lcd_message.decimal);
+          sd_message.text = buffer2;
+
+          UARTprintf("Logging Data on SD...\n\r");
+
           if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=
              pdPASS){
                UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");

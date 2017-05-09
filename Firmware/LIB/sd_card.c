@@ -16,7 +16,6 @@
 #include "fatfs/src/ff.h"
 #include "fatfs/src/diskio.h"
 
-
 #define PATH_BUF_SIZE           80
 #define CMD_BUF_SIZE            64
 //static char g_pcCwdBuf[PATH_BUF_SIZE] = "/";
@@ -196,7 +195,8 @@ extern int append_to_file(char * filename, char * text){
             return iFResult;
         }
 
-        iFResult = f_write(&g_sFileObject, text, sizeof(text), &bytes_written);
+        //UARTprintf("APPEND WRITE: %s", text);
+        iFResult = f_write(&g_sFileObject, text, 64, &bytes_written);
         //
         // If there was some problem writing the file, then return an error.
         //

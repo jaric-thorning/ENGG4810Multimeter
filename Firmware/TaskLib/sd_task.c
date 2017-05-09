@@ -30,7 +30,7 @@
 
 #include "sd_card.h"
 
-
+#include "bget.h"
 
 #define SDTASKSTACKSIZE        128
 
@@ -59,11 +59,8 @@ SDTask(void *pvParameters)
     uint32_t ui32SDRefreshTime;
     struct sd_queue_message sd_message;
 
-    char filename[64] = "logfile.txt";
-    sd_message.filename = filename;
-
-    char text[64] = "logfile.txt";
-    sd_message.text = text;
+    sd_message.filename = (char*)bgetz(64 * sizeof(char));
+    sd_message.text = (char*)bgetz(64 * sizeof(char));
 
     ui32SDRefreshTime = SD_REFRESH_TIME;
 
@@ -78,7 +75,8 @@ SDTask(void *pvParameters)
       //
       if(xQueueReceive(g_pSDQueue, &sd_message, 0) == pdPASS)
       {
-        UARTprintf("SD CARD QUEUE RECIEVED\n\r");
+
+        //UARTprintf("Writing to SD: %s\n\r",sd_message.text);
         result = append_to_file(sd_message.filename, sd_message.text);
 
         if(result != 0){

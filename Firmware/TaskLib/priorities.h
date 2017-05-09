@@ -8,7 +8,7 @@
 #define PRIORITY_MSWITCH_TASK   4
 #define PRIORITY_SWITCH_TASK    3
 #define PRIORITY_LED_TASK       2
-#define PRIORITY_SD_TASK        2
+#define PRIORITY_SD_TASK        5
 
 
 

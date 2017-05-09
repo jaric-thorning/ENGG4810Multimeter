@@ -46,10 +46,17 @@ include ${ROOT}/makedefs
 VPATH=$(ROOT)/third_party/FreeRTOS/Source/portable/GCC/ARM_CM4F
 VPATH+=$(ROOT)/third_party/FreeRTOS/Source/portable/MemMang/
 VPATH+=$(ROOT)/third_party/FreeRTOS/Source
+VPATH+=$(ROOT)/third_party
+VPATH+=$(ROOT)/third_party/bget
+VPATH+=$(ROOT)/third_party/fatfs
+VPATH+=$(ROOT)/third_party/fatfs/src
+VPATH+=$(ROOT)/third_party/fatfs/port
+VPATH+=$(ROOT)/third_party/fatfs/option
 VPATH+=../drivers
 VPATH+=$(ROOT)/utils
 VPATH+=./LIB
 VPATH+=./TaskLib
+
 
 #
 # Where to find header files that do not live in the source directory.
@@ -65,6 +72,9 @@ IPATH+=$(ROOT)/third_party/FreeRTOS/Source/portable/GCC/ARM_CM4F
 IPATH+=$(ROOT)/third_party/FreeRTOS
 IPATH+=$(ROOT)/third_party/FreeRTOS/Source/include
 IPATH+=$(ROOT)/third_party
+IPATH+=$(ROOT)/third_party/bget
+IPATH+=$(ROOT)/third_party/fatfs
+IPATH+=$(ROOT)/third_party/fatfs/src
 
 
 #
@@ -113,6 +123,14 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/sd_task.o
 
 #-----------------#
 
+#--------SD CARD--------#
+#${COMPILER}/$(PROJECT).axf: ${COMPILER}/cc932.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/mmc-dk-tm4c123g.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/ff.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/cmdline.o
+
+#--------GENERAL--------#
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/bget.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display_functions.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uart.o
@@ -121,6 +139,8 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/sd_card.o
 
 ${COMPILER}/$(PROJECT).axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
 ${COMPILER}/$(PROJECT).axf: $(PROJECT).ld
+
+
 SCATTERgcc_$(PROJECT)=$(PROJECT).ld
 ENTRY_$(PROJECT)=ResetISR
 CFLAGSgcc=-DTARGET_IS_TM4C123_RB1
