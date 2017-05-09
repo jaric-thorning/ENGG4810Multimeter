@@ -1,6 +1,8 @@
 package main;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.InputStreamReader;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -19,9 +21,26 @@ public class SerialFramework {
 	private static ObservableList<String> portNames = FXCollections.observableArrayList();
 	// final static String INIT_PORT_SELECTION = "None"; // Default first element
 	private static SerialPort openSerialPort = null;
+	private static BufferedReader readFromSerial = null;
+	private static PrintWriter writeToSerial = null;
 
 	public static SerialPort getOpenSerialPort() {
 		return openSerialPort;
+	}
+
+	// FIXME: while haven't received change, keep sending code
+	public static void writeCode(String output) {
+		// System.out.println("output: " + output);
+
+		try {
+			// Write multimeter code over the open port
+			writeToSerial = new PrintWriter(openSerialPort.getOutputStream(), true);
+			writeToSerial.println(output);
+
+			writeToSerial.close();
+		} catch (NullPointerException e) {
+			System.err.println("Port Cannot Be Written To");
+		}
 	}
 
 	/**
@@ -47,19 +66,12 @@ public class SerialFramework {
 		}
 
 		portNames.clear();
-		// portNames.add(INIT_PORT_SELECTION);
 
 		SerialPort[] ports = SerialPort.getCommPorts();
 
-		// int portCounter = 0;
 		for (SerialPort serialPort : ports) {
 			portNames.add(serialPort.getDescriptivePortName());
-			// portCounter++;
 		}
-
-		// GuiController.getInstance().portsAvailable.setItems(portNames);
-		// GuiController.getInstance().portsAvailable.setValue(portNames.get(0));
-		// GuiController.getInstance().portsAvailable.setVisibleRowCount(portCounter + 1);
 	}
 
 	/**
@@ -82,6 +94,23 @@ public class SerialFramework {
 			openSerialPort = null;
 		}
 
+		// FIXME:
+		if (readFromSerial != null) {
+			try {
+				readFromSerial.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			readFromSerial = null;
+		}
+
+		if (writeToSerial != null) {
+			writeToSerial.close();
+			writeToSerial = null;
+		}
+
 	}
 
 	/**
@@ -101,7 +130,6 @@ public class SerialFramework {
 			System.out.println("PORTS: " + serialPort);
 			if (serialPort.getSystemPortName().contains("tty.usbmodem")) {// serialPort.getDescriptivePortName()equals(GuiController.getInstance().portsAvailable.getValue()))
 																			// {
-				System.out.println("1");
 				System.out.println(
 						"Binding to Serial Port " + serialPort.getSystemPortName() + "...");
 				if (bindListen(serialPort)) {
@@ -135,6 +163,8 @@ public class SerialFramework {
 		if (!serialPort.openPort()) {
 			return false;
 		}
+
+		// Add the data listener to the data. [also loads in the data]
 		if (!serialPort.addDataListener(new SerialFramework.SerialDataListener())) {
 			serialPort.closePort();
 			return false;
@@ -154,7 +184,6 @@ public class SerialFramework {
 	private static class SerialDataListener implements SerialPortDataListener {
 		private static final String PACKET_OPEN = "[";
 		private static final String PACKET_CLOSE = "]";
-		// private static final String PACKET_DELIMITER = ",";
 		private static final char MODE = 'M';
 
 		/** The buffer for building whole packets received over the serial port. */
@@ -180,42 +209,18 @@ public class SerialFramework {
 					// GuiController.getInstance().refreshPorts();
 					return;
 				}
-				// READ BY LINE
-				// BufferedReader readBuffer = new BufferedReader(
-				// new InputStreamReader(sEvent.getSerialPort().getInputStream()));
 
-				byte[] readBuffer = new byte[sEvent.getSerialPort().bytesAvailable()];
-				sEvent.getSerialPort().readBytes(readBuffer, readBuffer.length);
-				String text = new String(readBuffer);
-
-				System.out.println(text);
-				handleString(text);
+				// Read by line
+				try {
+					readFromSerial = new BufferedReader(
+							new InputStreamReader(sEvent.getSerialPort().getInputStream()));
+					getData(readFromSerial.readLine());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					// e.printStackTrace();
+					System.err.println("IO Exception, no bytes");
+				}
 			}
-		}
-
-		// TODO: FIXME
-		/**
-		 * Buffers and interprets the data sent over the serial port from the weather MCU.
-		 * 
-		 * @param text
-		 *            the data that was read in from the serial port.
-		 */
-		private void handleString(String text) {
-			serialBuffer += text;
-			// System.out.println(" SERIAL" + serialBuffer);
-			// System.out.println("Serial: \"" + text.replace("\r", "\\r").replace("\n", "\\n") +
-			// "\"");
-
-			// Clear the buffer if random text comes through for a while (not actually valid weather
-			// packets).
-			if (serialBuffer.length() > 100 && serialBuffer.indexOf(PACKET_OPEN) == -1
-					&& serialBuffer.indexOf(PACKET_CLOSE) == -1) {
-				serialBuffer = "";
-				return;
-			}
-
-			while (getData())
-				;
 		}
 
 		/**
@@ -230,37 +235,33 @@ public class SerialFramework {
 			return str != null && !str.equalsIgnoreCase("");
 		}
 
-		/**
-		 * Gets the data through the serial port connection.
-		 * 
-		 * @return true if the data failed to decode, and false if the data failed to decode.
-		 */
-		private boolean getData() {
-			int openPacket = serialBuffer.indexOf(PACKET_OPEN);
-			int closePacket = serialBuffer.indexOf(PACKET_CLOSE);
+		private boolean getData(String text) {
+			// System.out.println("T: |" + text + "|");
+			int openPacket = text.indexOf(PACKET_OPEN);
+			int closePacket = text.indexOf(PACKET_CLOSE);
 
 			if (openPacket < 0 || closePacket < 0) {
 				return false;
 			}
 			if (closePacket < openPacket) {
-				serialBuffer = serialBuffer.substring(openPacket);
+				text = text.substring(openPacket);
 				return true;
 			}
 
-			String data = serialBuffer.substring(openPacket + 1, closePacket);
-			System.out.println("	DATA: " + data);
+			String data = text.substring(openPacket + 1, closePacket);
 
 			if (data.charAt(0) == 'S') { // Change multimeter settings
+				//System.out.println("------SETTING: " + data);
 				// System.out.println("THIS IS S: " + data.charAt(0));
 
 				sortMultimeterCommand(data, openPacket, closePacket);
-			} else if (data.charAt(0) == 'V' || data.charAt(0) == 'C' || data.charAt(0) == 'R') { 
-
+			} else if (data.charAt(0) == 'V' || data.charAt(0) == 'C' || data.charAt(0) == 'R') {
+				//System.out.println("	DATA: " + data);
 				// Check for multimeter results.
 				sortMultimeterMeasurements(data, openPacket, closePacket);
 			}
 
-			serialBuffer = serialBuffer.substring(closePacket + 1);
+			text = text.substring(closePacket + 1); // not sure about this
 			return true;
 		}
 
@@ -291,7 +292,7 @@ public class SerialFramework {
 			if (!failedToDecode) {
 				switch (modeType) {
 				case 'C':
-					System.out.println("CHANGE SETTINGS -> MODE -> CURRENT");
+					//System.out.println("CHANGE SETTINGS -> MODE -> CURRENT");
 					GuiController.instance.driveCurrent();
 					break;
 				case 'V':
@@ -334,8 +335,8 @@ public class SerialFramework {
 				String unit = Character.toString(data.charAt(0));
 				GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
 			} else {
-				System.out.println("Failed to decode data:\""
-						+ serialBuffer.substring(openPacket, closePacket + 1) + "\"");
+				System.out.println("Failed to decode data.");
+				// + serialBuffer.substring(openPacket, closePacket + 1) + "\"");
 			}
 		}
 

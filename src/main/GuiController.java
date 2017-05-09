@@ -9,13 +9,11 @@ import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-import com.fazecast.jSerialComm.SerialPort;
 import com.sun.javafx.geom.Line2D;
 import com.sun.javafx.geom.Point2D;
 
@@ -50,10 +48,8 @@ public class GuiController implements Initializable {
 	GuiModel model = new GuiModel();
 	EventHandlers event = new EventHandlers();
 	Comparators compare = new Comparators();
-	IsoTime startTime;
-	IsoTime endTime;
-	ArrayList<IsoTime> endTimes = new ArrayList<>();
-	ArrayList<IsoTime> savedTimes = new ArrayList<>();
+	IsoTime startTime = null;
+	ArrayList<IsoTime> storedISOTimes = new ArrayList<>();
 
 	/* Components required for resizing the GUI when maximising or resizing */
 	@FXML
@@ -159,7 +155,7 @@ public class GuiController implements Initializable {
 	XYChart.Series<Number, Number> highMaskBoundarySeries = new XYChart.Series<>();
 	XYChart.Series<Number, Number> lowMaskBoundarySeries = new XYChart.Series<>();
 	XYChart.Series<Number, Number> readingSeries = new XYChart.Series<>();
-	ArrayList<String> yUnits = new ArrayList<>(); // The y-unit displayed
+	ArrayList<String> storedYUnits = new ArrayList<>(); // The y-unit displayed
 
 	// Components for shifting the line chart x-axis left and right
 	@FXML
@@ -199,7 +195,7 @@ public class GuiController implements Initializable {
 	private static final String FILE_FORMAT_EXTENSION = "*.csv";
 	private static final String FILE_FORMAT_TITLE = "Comma Separated Files";
 
-	private static final double X_UPPER_BOUND = 25D;//10D;
+	private static final double X_UPPER_BOUND = 20D;// 10D;
 	private static final double X_LOWER_BOUND = 0D;
 	private static final double Y_UPPER_BOUND = 50D;
 	private static final double Y_LOWER_BOUND = -10D;
@@ -213,8 +209,9 @@ public class GuiController implements Initializable {
 	public static GuiController instance;
 
 	// TODO: SORT
-	private ArrayList<Data<Number, Number>> pausedAcquisitionData = new ArrayList<>();
-	private ArrayList<String> pausedAcquisitionYUnitData = new ArrayList<>();
+	private ArrayList<Data<Number, Number>> totalAcquisitionData = new ArrayList<>();
+	private ArrayList<IsoTime> pausedStoredISOTimeData = new ArrayList<>();
+	private ArrayList<String> pausedStoredYUnitData = new ArrayList<>();
 
 	public GuiController() {
 		// I am empty :(
@@ -389,19 +386,10 @@ public class GuiController implements Initializable {
 	 *            which mode to select (Voltage, Current, Resistance)
 	 */
 	private void writeCode(String type) {
-		String code = "[S M " + type + "]\n";
-		byte[] writeBuffer = new byte[15];
+		// String code = "[S M " + type + "]\n\r";
+		String code = "[S M " + type + "]";
 
-		writeBuffer = code.getBytes();
-
-		System.out.println("BT: " + code);
-		try {
-
-			// Write multimeter code over the open port
-			SerialFramework.getOpenSerialPort().writeBytes(writeBuffer, writeBuffer.length);
-		} catch (NullPointerException e) {
-			System.err.println("Port Cannot Be Written To");
-		}
+		SerialFramework.writeCode(code);
 	}
 
 	// TODO: Keep this just for updating the multi-meter range stuff.
@@ -527,11 +515,9 @@ public class GuiController implements Initializable {
 			});
 			return;
 		}
-		System.out.println("RS: " + readingSeries.getData().size() + ", " + yUnits.size());
-
-		// TODO: update YAxis
-		// FIXME: ALWAYS STARTS AT 0....
-		//yUnits.add(getUnitToSave(unit));
+		System.out
+				.println("	RS: " + readingSeries.getData().size() + ", " + storedYUnits.size());
+		System.out.println("SS: " + storedISOTimes.size());
 
 		// Modify Plot Parts.
 		if (!validateYAxisUnits(unit)) {
@@ -545,22 +531,34 @@ public class GuiController implements Initializable {
 			updateYAxisLabel(multimeterReading, unit);
 
 			// Has been paused as some point
-			if (pausedAcquisitionData.size() > 0) {
+			if (totalAcquisitionData.size() > 0) {
 				// If y-unit has been changed, clear all reading data
 				if (isChanged) {
 					readingSeries.getData().clear();
+					pausedStoredYUnitData.clear();
+					pausedStoredISOTimeData.clear();
 					resetXAxis();
-
 					isChanged = false;
 				}
 
-				readingSeries.getData().addAll(pausedAcquisitionData);
+				readingSeries.getData().addAll(totalAcquisitionData);
+				pausedStoredYUnitData.addAll(storedYUnits);
+				pausedStoredISOTimeData.addAll(storedISOTimes);
 
 				// Reset paused acquired data home.
-				pausedAcquisitionData.clear();
+				totalAcquisitionData.clear();
+				storedYUnits.clear(); // TICK
+				storedISOTimes.clear(); //TICK
 			}
 
 			// FIXME: STILL NEED TO STORE THE SAMPLES/TIME SOMEWHERE
+
+			// Add to stored data
+			pausedStoredYUnitData.add(getUnitToSave(unit));
+
+			// ISO Time Intervals
+			pausedStoredISOTimeData.add(establishISOTime(readingSeries.getData().size()));
+
 			// Normally add received data
 			readingSeries.getData().add(new XYChart.Data<Number, Number>(
 					dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterReading));
@@ -572,17 +570,18 @@ public class GuiController implements Initializable {
 				xAxis.setUpperBound(dataBoundsRange);
 			}
 
-			establishISOTime(readingSeries.getData().size()); // ISO Time Interval
 		} else { // Is paused
+
 			// Modify Plot Parts.
-			pausedAcquisitionData.add(new XYChart.Data<Number, Number>(
+			totalAcquisitionData.add(new XYChart.Data<Number, Number>(
 					dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterReading));
 
-			establishISOTime(pausedAcquisitionData.size()); // ISO Time Interval
-		}
+			// Store total y-units
+			storedYUnits.add(getUnitToSave(unit));
 
-		// System.out.println("SIZE: " + pausedAcquisitionData.size());
-		// System.out.println(" DPP: " + dataPlotPosition);
+			// Store total ISO time intervals
+			storedISOTimes.add(establishISOTime(totalAcquisitionData.size()));
+		}
 
 		dataPlotPosition++;
 	}
@@ -595,7 +594,6 @@ public class GuiController implements Initializable {
 	 * @return if there have been any changes in the y-unit data
 	 */
 	private boolean validateYAxisUnits(String unit) {
-		// System.out.println("UNIT: " + unit);
 		if (!(checkYUnitChangesVoltage(unit) && checkYUnitChangesCurrent(unit)
 				&& checkYUnitChangesResistance(unit))) {
 			return false;
@@ -666,27 +664,23 @@ public class GuiController implements Initializable {
 	 * sets certain flags.
 	 */
 	private void modifyPlotParts() {
+
 		// Reset the plot data
 		dataPlotPosition = 0;
-
-		if (readingSeries.getData().size() > 0) {
-			yUnits.clear();
-		}
 
 		if (!isPaused) {
 			resetXAxis();
 			readingSeries.getData().clear();
-
-			// yUnit.clear();
-			// savedTimes.clear();
+			pausedStoredYUnitData.clear();
+			pausedStoredISOTimeData.clear();
 		} else {
 			isChanged = true;
 
 			// Only clear acquiring data, not displayed
-			pausedAcquisitionData.clear();
-			// pausedAcquisitionYUnitData.clear();
+			totalAcquisitionData.clear();
+			storedYUnits.clear(); // TICK
+			storedISOTimes.clear(); //TICK
 		}
-		// endTimes.clear();
 	}
 
 	// FIXME: does this need to be called everytime.
@@ -756,29 +750,24 @@ public class GuiController implements Initializable {
 	/**
 	 * Calculates the ISO 8601 time interval for the first and last point.
 	 */
-	private void establishISOTime(int dataSize) {
-		// System.out.println("DP: " + dataPlotPosition + ", " + dataSize);
+	private IsoTime establishISOTime(int dataSize) {
+		IsoTime endTime = null; // time of each data point
 
-		if (dataPlotPosition == 0) { // Get the start time
+		if (dataPlotPosition == 0) { // Get the start time and initial end time
 			LocalDateTime local = LocalDateTime.now();
 			startTime = new IsoTime(local, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 			endTime = startTime;
-			// System.out.println(" StartL:" + local);
 		} else { // Get the end time
 			LocalDateTime local = LocalDateTime.now();
 			endTime = new IsoTime(local, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-			// System.out.println(" 1-End: " + local);
 		}
 
+		// Display ISO time if the data is not paused.
 		if (!isPaused) {
-			recordTimeLabel.setText(startTime + "/" + endTime); // display if paused
+			recordTimeLabel.setText(startTime + "/" + endTime);
 		}
 
-		// if (!isPaused) {
-		// savedTimes.add(endTime);
-		// }
-		// endTimes.add(endTime);
-		//
+		return endTime;
 	}
 
 	/**
@@ -798,20 +787,12 @@ public class GuiController implements Initializable {
 	private void selectConnected() {
 
 		// If there a connection and the radio button is selected
-		if (connRBtn.isSelected() && testConnection(connRBtn)) {
+		if (connRBtn.isSelected()) {// && testConnection(connRBtn)) {
 			System.out.println("CONNECTED MODE INITIATED");
 			System.out.println("//-------------------//");
+
 			yAxis.setAutoRanging(true);
-
 			setupConnectedComponents();
-
-			System.out.println("HEY");
-//			// FIXME: SET UP SAMPLES/TIME
-//
-//			// TODO: MOVE TO ANOTHER LOCATION???
-//			// Receive data
-			SerialFramework.selectPort();
-//			// refreshSelectablePortsList();
 		} else if (!testConnection(connRBtn)) {
 			System.out.println("There is no test connection");
 
@@ -868,6 +849,7 @@ public class GuiController implements Initializable {
 		// Disable the disconnected mode from being editable during
 		// connected mode
 		disconnRBtn.setDisable(true);
+		startTime = null;
 
 		// Enable connected components
 		sampleRate.setDisable(false);
@@ -886,6 +868,12 @@ public class GuiController implements Initializable {
 		modeLabel.setDisable(false);
 		logicBtn.setDisable(false);
 		continuityBtn.setDisable(false);
+
+		// FIXME: SET UP SAMPLES/TIME
+		// TODO: SPLIT UP INTO CHECK PORT + NOT CHECKING PORT
+		// Receive data
+		SerialFramework.selectPort();
+		// refreshSelectablePortsList();
 	}
 
 	/**
@@ -945,10 +933,10 @@ public class GuiController implements Initializable {
 
 		pauseBtn.setDisable(true);
 		isPaused = false;
+
 		isChanged = false;
 
-		pausedAcquisitionData.clear();
-		// pausedAcquisitionYUnitData = new ArrayList<>();
+		totalAcquisitionData.clear();
 		pauseBtn.setText("Pause");
 
 		saveBtn.setDisable(true);
@@ -967,12 +955,13 @@ public class GuiController implements Initializable {
 
 		// Reset the plot data
 		readingSeries.getData().clear();
-		savedTimes.clear();
-		endTimes.clear(); // TODO: check i'm ok
+		pausedStoredISOTimeData.clear(); // TICK
+		pausedStoredYUnitData.clear(); // TICK
 
 		dataPlotPosition = 0;
 		resetAxes();
-		yUnits.clear();
+		storedYUnits.clear(); // TICK
+		storedISOTimes.clear(); // TICK
 
 		// No listener apparently. TODO: ATTACH LISTENER
 		xDataCoord.setText("X: ");
@@ -1056,7 +1045,8 @@ public class GuiController implements Initializable {
 		lowMaskBoundarySeries.getData().clear();
 		readingSeries.getData().clear();
 		overlappedIntervals.clear();
-		yUnits.clear();
+
+		storedYUnits.clear(); // FIXME
 
 		System.out.println(isHighBtnSelected);
 	}
@@ -1104,47 +1094,52 @@ public class GuiController implements Initializable {
 		}
 	}
 
+	// TODO: FIX ME WITH DISCARDED DATA.
 	/**
 	 * Pauses the displayed acquired data.
 	 */
 	@FXML
 	private void pauseDataAcquisition() {
 
-		if (!isPaused) {
+		if (!isPaused) {// FIXME?
 			System.out.println("DATA IS PAUSED");
-//			System.out
-//					.println("PAUSED RS: " + readingSeries.getData().size() + ", " + yUnits.size());
+			// System.out
+			// .println("PAUSED RS: " + readingSeries.getData().size() + ", " + yUnits.size());
 
 			isPaused = true;
 			pauseBtn.setText("Unpause");
 
 			// Disable multimeter components
-			multimeterDisplay.setDisable(true);
-			voltageBtn.setDisable(true);
-			currentBtn.setDisable(true);
-			resistanceBtn.setDisable(true);
-			dcRBtn.setDisable(true);
-			multimeterDisplay.setDisable(true);
-			modeLabel.setDisable(true);
-			logicBtn.setDisable(true);
-			continuityBtn.setDisable(true);
+			// multimeterDisplay.setDisable(true);
+			// voltageBtn.setDisable(true);
+			// currentBtn.setDisable(true);
+			// resistanceBtn.setDisable(true);
+			// dcRBtn.setDisable(true);
+			// multimeterDisplay.setDisable(true);
+			// modeLabel.setDisable(true);
+			// logicBtn.setDisable(true);
+			// continuityBtn.setDisable(true);
 		} else {
 			System.out.println("DATA IS UNPAUSED");
 
-			isPaused = false;
-			pauseBtn.setText("Pause");
-
-			// Enable digital multimeter components
-			multimeterDisplay.setDisable(false);
-			voltageBtn.setDisable(false);
-			currentBtn.setDisable(false);
-			resistanceBtn.setDisable(false);
-			dcRBtn.setDisable(false);
-			multimeterDisplay.setDisable(false);
-			modeLabel.setDisable(false);
-			logicBtn.setDisable(false);
-			continuityBtn.setDisable(false);
+			disablePausing();
 		}
+	}
+
+	private void disablePausing() {
+		isPaused = false;
+		pauseBtn.setText("Pause");
+
+		// Enable digital multimeter components
+		multimeterDisplay.setDisable(false);
+		voltageBtn.setDisable(false);
+		currentBtn.setDisable(false);
+		resistanceBtn.setDisable(false);
+		dcRBtn.setDisable(false);
+		multimeterDisplay.setDisable(false);
+		modeLabel.setDisable(false);
+		logicBtn.setDisable(false);
+		continuityBtn.setDisable(false);
 	}
 
 	/**
@@ -1169,7 +1164,9 @@ public class GuiController implements Initializable {
 
 			// Clear data from list if reloaded multiple times
 			readingSeries.getData().clear();
-			yUnits.clear();
+
+			storedYUnits.clear(); // FIXME
+
 			yAxis.setLabel("Measurements");
 
 			// Set up new array
@@ -1183,18 +1180,18 @@ public class GuiController implements Initializable {
 					inputDataIsoTime);
 
 			// Add to isoTime list:
-			endTimes = inputDataIsoTime;
+			storedISOTimes = inputDataIsoTime; // FIXME
 
 			// Modify y-units
-			yUnits.addAll(inputDataYUnits);
-			if (yUnits.size() > 0) {
-				convertMeasurementYUnit(yUnits.get(0));
+			storedYUnits.addAll(inputDataYUnits); // FIXME
+			if (storedYUnits.size() > 0) {
+				convertMeasurementYUnit(storedYUnits.get(0));
 			}
 
 			// FIXME: make sure autoranging is set true/false in right places
 			// MAKE SURE THAT THERE ARE ACTUALLY DATA TO BE HAD
 			yAxis.setAutoRanging(true);
-			addDataToSeries(inputDataXValues, inputDataYValues);
+			addDataToSeries(inputDataXValues, inputDataYValues, storedISOTimes);
 		} else {
 			System.out.println("YO");
 		}
@@ -1264,9 +1261,9 @@ public class GuiController implements Initializable {
 	 *            holds all the y values.
 	 */
 	private void addDataToSeries(ArrayList<Double> inputDataXValues,
-			ArrayList<Double> inputDataYValues) {
+			ArrayList<Double> inputDataYValues, ArrayList<IsoTime> isoTimes) {
 
-		IsoTime firstPointXValue = endTimes.get(0);
+		IsoTime firstPointXValue = isoTimes.get(0);
 
 		// Add data to series
 		for (int i = 0; i < inputDataXValues.size(); i++) {
@@ -1281,7 +1278,7 @@ public class GuiController implements Initializable {
 
 			// TODO: save the start and end time into the file, to load in
 			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED, event.getDataXYValues(
-					dataPoint, i, xDataCoord, yDataCoord, firstPointXValue, endTimes.get(i)));
+					dataPoint, i, xDataCoord, yDataCoord, firstPointXValue, isoTimes.get(i)));
 
 			dataPoint.getNode().addEventFilter(MouseEvent.MOUSE_EXITED,
 					event.resetDataXYValues(xDataCoord, yDataCoord));
@@ -1329,7 +1326,10 @@ public class GuiController implements Initializable {
 				// Save the data to a file
 				try (BufferedWriter bw = new BufferedWriter(
 						new FileWriter(selectedFile.getPath()))) {
-					model.saveColumnData(bw, readingSeries, yUnits, savedTimes);
+					System.out.println("SIZES: " + readingSeries.getData().size() + ", "
+							+ pausedStoredYUnitData.size() + ", " + pausedStoredISOTimeData.size());
+					model.saveColumnData(bw, readingSeries, pausedStoredYUnitData,
+							pausedStoredISOTimeData);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -1349,9 +1349,6 @@ public class GuiController implements Initializable {
 			// Reset the plot data
 			revert();
 
-			readingSeries.getData().clear();
-			savedTimes.clear();
-			endTimes.clear(); // TODO: check I'm ok
 			System.out.println("DATA DISCARDED");
 		} else {
 			System.out.println("DATA NOT DISCARDED");
@@ -1369,12 +1366,12 @@ public class GuiController implements Initializable {
 		// Clear all things
 		multimeterDisplay.setText("");
 
-		isPaused = false;
-		pauseBtn.setText("Pause");
-		isChanged = false;
+		disablePausing();
 
-		pausedAcquisitionData.clear();
-		// pausedAcquisitionYUnitData = new ArrayList<>();
+		isChanged = false;
+		totalAcquisitionData.clear();
+		pausedStoredYUnitData.clear();
+		pausedStoredISOTimeData.clear();
 
 		resistance = false;
 		voltage = false;
@@ -1384,11 +1381,11 @@ public class GuiController implements Initializable {
 
 		// Reset the plot data
 		readingSeries.getData().clear();
-		// savedTimes.clear();
-		// endTimes.clear(); // TODO CHECK ALL G
+		storedISOTimes.clear(); //TICK
+
 		dataPlotPosition = 0;
 		resetAxes();
-		yUnits.clear();
+		storedYUnits.clear(); // TICK
 
 		// TODO: make sure that I can remove this, add listener to the data.
 		xDataCoord.setText("X: ");
@@ -2275,10 +2272,10 @@ public class GuiController implements Initializable {
 			String yUnitValue = "";
 
 			// Check if there is a clash of units.
-			if (yUnits.size() > 0) {
+			if (storedYUnits.size() > 0) {
 				for (String[] column : model.readMaskData(selectedFile.getPath())) {
 					yUnitValue = column[3];
-					if (yUnitValue.equals(yUnits.get(0))) {
+					if (yUnitValue.equals(storedYUnits.get(0))) {
 						convertMeasurementYUnit(yUnitValue);
 						break;
 					} else {
@@ -2359,8 +2356,8 @@ public class GuiController implements Initializable {
 			// Save the data to a file
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(selectedFile.getPath()))) {
 				// Only need one element from yUnit saveMaskData
-				model.saveMaskData(bw, highMaskBoundarySeries, yUnits.get(0));
-				model.saveMaskData(bw, lowMaskBoundarySeries, yUnits.get(0));
+				model.saveMaskData(bw, highMaskBoundarySeries, storedYUnits.get(0));
+				model.saveMaskData(bw, lowMaskBoundarySeries, storedYUnits.get(0));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
