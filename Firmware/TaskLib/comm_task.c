@@ -24,6 +24,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
@@ -112,10 +113,24 @@ CommTask(void *pvParameters)
 
       //UARTprintf("Getting UART...\n\r");
       //display("voltage",0, 0, 0);
-      UARTgets(buffer, 64);
+      memset(buffer, 0, sizeof(buffer));
+      UARTgets(buffer, sizeof(buffer));
+
       xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
       UARTprintf("{%s}\n\r", buffer);
+      UARTprintf("RECIEVED CHARACTERS: ");
+      for(int i = 0; i < sizeof(buffer); i++){
+        UARTprintf("%c ", buffer[i]);
+      }
+      UARTprintf("\n\r");
+
+      UARTprintf("RECIEVED CHARACTERS DIGITS: ");
+      for(int i = 0; i < sizeof(buffer); i++){
+        UARTprintf("%d ", buffer[i]);
+      }
+      UARTprintf("\n\r");
       xSemaphoreGive(g_pUARTSemaphore);
+
 
       mswitch_message.ui32Value = 0; //doesn't matter
       received_valid = 0;
@@ -144,6 +159,7 @@ CommTask(void *pvParameters)
         }
       } else{
         UARTprintf("{INCORRECTLY FORMATTED MESSAGE RECIEVED}\n\r");
+        UARTprintf("RECIEVED: %s\n\r", buffer);
       }
       if(received_valid){
         if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=

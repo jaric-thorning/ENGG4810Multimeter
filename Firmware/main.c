@@ -34,7 +34,7 @@
 #define SWITCHTASK      1
 #define ADCTASK         1
 #define MSWITCHTASK     1
-#define SDTASK          1 //not implemented
+#define SDTASK          0 //not implemented
 
 // -----------------------------------------------
 

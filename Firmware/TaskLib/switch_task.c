@@ -23,6 +23,22 @@
 
 #include "mswitch_task.h"
 
+#define BUTTON3_PIN GPIO_PIN_2
+#define BUTTON4_PIN GPIO_PIN_3
+#define BUTTON5_PIN GPIO_PIN_3
+#define BUTTON6_PIN GPIO_PIN_2
+
+#define BUTTON3_PORT GPIO_PORTF_BASE
+#define BUTTON4_PORT GPIO_PORTF_BASE
+#define BUTTON5_PORT GPIO_PORTB_BASE
+#define BUTTON6_PORT GPIO_PORTB_BASE
+
+#define BUTTON3_PERIPH_GPIO SYSCTL_PERIPH_GPIOF
+#define BUTTON4_PERIPH_GPIO SYSCTL_PERIPH_GPIOF
+#define BUTTON5_PERIPH_GPIO SYSCTL_PERIPH_GPIOB
+#define BUTTON6_PERIPH_GPIO SYSCTL_PERIPH_GPIOB
+
+
 
 #define SWITCHTASKSTACKSIZE        128         // Stack size in words
 
@@ -32,7 +48,7 @@ extern xSemaphoreHandle g_pUARTSemaphore;
 static void
 SwitchTask(void *pvParameters)
 {
-    portTickType ui16LastTime;
+    portTickType ui16LastTime, currentTime;
     uint32_t ui32SwitchDelay = 25;
     uint8_t ui8CurButtonState, ui8PrevButtonState;
     uint8_t ui8Message;
@@ -42,9 +58,43 @@ SwitchTask(void *pvParameters)
 
     struct mswitch_queue_message mswitch_message;
 
+    uint32_t button3 = 0;
+    uint32_t button4 = 0;
+    uint32_t button5 = 0;
+    uint32_t button6 = 0;
+
+    int button3_time = 0;
+    int button4_time = 0;
+    int button5_time = 0;
+    int button6_time = 0;
+
     while(1)
     {
         ui8CurButtonState = ButtonsPoll(0, 0);
+
+        button3 = GPIOPinRead(BUTTON3_PORT,BUTTON3_PIN);
+        button4 = GPIOPinRead(BUTTON4_PORT,BUTTON4_PIN);
+        button5 = GPIOPinRead(BUTTON5_PORT,BUTTON5_PIN);
+        button6 = GPIOPinRead(BUTTON6_PORT,BUTTON6_PIN);
+
+        currentTime = xTaskGetTickCount();
+        if((button3 == BUTTON3_PIN) && (button3_time + 1000 < currentTime)){
+          UARTprintf("BUTTON3 is HIGH!\n\r");
+          button3_time = currentTime;
+        }
+        else if((button4 == BUTTON4_PIN) && (button4_time + 1000 < currentTime)){
+          UARTprintf("BUTTON4 is HIGH!\n\r");
+          button4_time = currentTime;
+        }
+        else if((button5 == BUTTON5_PIN) && (button5_time + 1000 < currentTime)){
+          UARTprintf("BUTTON5 is HIGH!\n\r");
+          button5_time = currentTime;
+        }
+        else if((button6 == BUTTON6_PIN) && (button6_time + 1000 < currentTime)){
+          UARTprintf("BUTTON6 is HIGH!\n\r");
+          button6_time = currentTime;
+        }
+
 
         if(ui8CurButtonState != ui8PrevButtonState)
         {
@@ -108,6 +158,37 @@ SwitchTaskInit(void)
     HWREG(GPIO_PORTF_BASE + GPIO_O_CR) = 0xFF;
 
     ButtonsInit();
+
+    //External Button Init
+    SysCtlPeripheralEnable(BUTTON3_PERIPH_GPIO);
+    while(!SysCtlPeripheralReady(BUTTON3_PERIPH_GPIO))
+	  {
+	  }
+    GPIOPinTypeGPIOInput(BUTTON3_PORT, BUTTON3_PIN);
+
+    SysCtlPeripheralEnable(BUTTON4_PERIPH_GPIO);
+    while(!SysCtlPeripheralReady(BUTTON4_PERIPH_GPIO))
+	  {
+	  }
+    GPIOPinTypeGPIOInput(BUTTON4_PORT, BUTTON4_PIN);
+
+    SysCtlPeripheralEnable(BUTTON5_PERIPH_GPIO);
+    while(!SysCtlPeripheralReady(BUTTON5_PERIPH_GPIO))
+	  {
+	  }
+    GPIOPinTypeGPIOInput(BUTTON5_PORT, BUTTON5_PIN);
+
+    SysCtlPeripheralEnable(BUTTON6_PERIPH_GPIO);
+    while(!SysCtlPeripheralReady(BUTTON6_PERIPH_GPIO))
+	  {
+	  }
+    GPIOPinTypeGPIOInput(BUTTON6_PORT, BUTTON6_PIN);
+
+
+
+
+
+
 
     if(xTaskCreate(SwitchTask, (signed portCHAR *)"Switch",
                    SWITCHTASKSTACKSIZE, NULL, tskIDLE_PRIORITY +

@@ -107,7 +107,7 @@ MSWITCHTask(void *pvParameters)
     int decimal = 0;
     float value = 0;
 
-    int logging = 1;
+    int logging = 0;
     while(1)
     {
       //
