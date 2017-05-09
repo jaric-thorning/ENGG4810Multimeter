@@ -45,7 +45,7 @@
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
-
+#include "mswitch_task.h"
 
 //*****************************************************************************
 //
@@ -87,11 +87,14 @@ CommTask(void *pvParameters)
     //
     ui32COMMRefreshTime = COMM_REFRESH_TIME;
 
+    struct mswitch_queue_message mswitch_message;
+
     //
     // Get the current tick count.
     //
     ui32WakeTime = xTaskGetTickCount();
 
+    int received_valid = 0;
 
     char buffer[64];
     //
@@ -111,10 +114,43 @@ CommTask(void *pvParameters)
       //display("voltage",0, 0, 0);
       UARTgets(buffer, 64);
       xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-      UARTprintf("%s\n\r", buffer);
+      UARTprintf("{%s}\n\r", buffer);
       xSemaphoreGive(g_pUARTSemaphore);
 
+      mswitch_message.ui32Value = 0; //doesn't matter
+      received_valid = 0;
 
+      if((buffer[0] == '[') && (buffer[6] == ']')){
+        if(buffer[1] == 'S'){
+          if(buffer[3] == 'M'){
+            mswitch_message.type = 'M'; //sending M for mode
+            if(buffer[5] == 'V'){
+              mswitch_message.mode = 'V'; //sending V to for voltage
+              received_valid = 1;
+            } else if(buffer[5] == 'C'){
+              mswitch_message.mode = 'C'; //sending C to for current
+              received_valid = 1;
+            } else if(buffer[5] == 'R'){
+              mswitch_message.mode = 'R'; //sending R to for resistance
+              received_valid = 1;
+            } else {
+              UARTprintf("{UNKNOWN MODE RECEIVED}\n\r");
+            }
+          } else{
+            UARTprintf("{UNKNOWN SETTING RECEIVED}\n\r");
+          }
+        } else{
+          UARTprintf("{UNKNOWN COMMAND RECEIVED}\n\r");
+        }
+      } else{
+        UARTprintf("{INCORRECTLY FORMATTED MESSAGE RECIEVED}\n\r");
+      }
+      if(received_valid){
+        if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
+           pdPASS){
+             UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+           }
+      }
       //
       // Wait for the required amount of time.
       //

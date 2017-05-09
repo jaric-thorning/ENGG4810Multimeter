@@ -27,6 +27,7 @@
 #include "driverlib/pin_map.h"
 
 #include "display.h"
+#include "sd_task.h"
 
 
 #define MSWITCHTASKSTACKSIZE        128
@@ -83,6 +84,7 @@ MSWITCHTask(void *pvParameters)
     uint32_t ui32MSWITCHRefreshTime;
     struct mswitch_queue_message mswitch_message;
     struct lcd_queue_message lcd_message;
+    struct sd_queue_message sd_message;
 
     ui32MSWITCHRefreshTime = MSWITCH_REFRESH_TIME;
 
@@ -92,6 +94,7 @@ MSWITCHTask(void *pvParameters)
     int decimal = 0;
     float value = 0;
 
+    int logging = 1;
     while(1)
     {
       //
@@ -160,10 +163,27 @@ MSWITCHTask(void *pvParameters)
         lcd_message.decimal = decimal;
 
 
+
+
         if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
            pdPASS){
              UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
            }
+
+        if(logging){
+
+          char filename[64] = "logfile.txt";
+          sd_message.filename = filename;
+
+          char text[64] = "logfile.txt";
+          sd_message.text = text;
+
+          fprintf(sd_message.text, "%c: %d.%d", lcd_message.type, lcd_message.value, lcd_message.decimal);
+          if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=
+             pdPASS){
+               UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
+             }
+        }
 
       //
       // Wait for the required amount of time.

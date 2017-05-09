@@ -35,7 +35,7 @@
 #define ADC_ITEM_SIZE           sizeof(struct ADC_queue_message)
 #define ADC_QUEUE_SIZE          5
 
-#define ADC_REFRESH_TIME 100
+#define ADC_REFRESH_TIME 1000
 
 uint32_t ui32Value;
 

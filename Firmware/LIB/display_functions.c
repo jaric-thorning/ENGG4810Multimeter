@@ -82,3 +82,7 @@ void display(char type, int range, int value, int decimal){
 
     return;
 }
+
+/*void menu(char * command){
+  if(str)
+}*/

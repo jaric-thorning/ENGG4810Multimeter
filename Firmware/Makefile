@@ -117,6 +117,7 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display_functions.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uart.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/general_functions.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/sd_card.o
 
 ${COMPILER}/$(PROJECT).axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
 ${COMPILER}/$(PROJECT).axf: $(PROJECT).ld

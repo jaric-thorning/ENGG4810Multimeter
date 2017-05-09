@@ -28,6 +28,9 @@
 
 #include "display.h"
 
+#include "sd_card.h"
+
+
 
 #define SDTASKSTACKSIZE        128
 
@@ -56,10 +59,17 @@ SDTask(void *pvParameters)
     uint32_t ui32SDRefreshTime;
     struct sd_queue_message sd_message;
 
+    char filename[64] = "logfile.txt";
+    sd_message.filename = filename;
+
+    char text[64] = "logfile.txt";
+    sd_message.text = text;
+
     ui32SDRefreshTime = SD_REFRESH_TIME;
 
     ui32WakeTime = xTaskGetTickCount();
 
+    int result;
 
     while(1)
     {
@@ -69,6 +79,11 @@ SDTask(void *pvParameters)
       if(xQueueReceive(g_pSDQueue, &sd_message, 0) == pdPASS)
       {
         UARTprintf("SD CARD QUEUE RECIEVED\n\r");
+        result = append_to_file(sd_message.filename, sd_message.text);
+
+        if(result != 0){
+          UARTprintf("FAILED TO POST TO LOG\n\r");
+        }
       }
 
       //
@@ -84,14 +99,7 @@ SDTaskInit(void)
 
     g_pSDQueue = xQueueCreate(SD_QUEUE_SIZE, SD_ITEM_SIZE);
 
-    //Enable required GPIO
-    /*SysCtlPeripheralEnable(SHIFT_REG_PERIPH_GPIO);
-
-	  while(!SysCtlPeripheralReady(SHIFT_REG_PERIPH_GPIO))
-	  {
-	  }
-    GPIOPinTypeGPIOOutput(SHIFT_REG_BASE, SHIFT_REG_PINS);*/
-
+    initialise_sd_card();
 
     if(xTaskCreate(SDTask, (signed portCHAR *)"SD", SDTASKSTACKSIZE, NULL,
                    tskIDLE_PRIORITY + PRIORITY_SD_TASK, NULL) != pdTRUE)

@@ -8,7 +8,8 @@
 #define __SD_TASK_H__
 
 extern struct sd_queue_message {
-  uint32_t ui32Value;
+  char * filename;
+  char * text;
 };
 
 xQueueHandle g_pSDQueue;
