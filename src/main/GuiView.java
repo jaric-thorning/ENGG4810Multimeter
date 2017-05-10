@@ -66,8 +66,6 @@ public class GuiView extends Application {
 	 */
 	@Override
 	public void stop() throws Exception {
-		RecordedResults.shutdownRecordedResultsThread();
-		// TODO: Close ports
 		SerialFramework.closeOpenPort();
 		super.stop();
 	}

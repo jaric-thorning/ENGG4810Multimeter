@@ -88,7 +88,7 @@ public class GuiModel {
 	 *             occurs when there is a problem with the buffered writer.
 	 */
 	public void saveColumnData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
-			ArrayList<String> yUnits, ArrayList<IsoTime> isoTimes) throws IOException {
+			ArrayList<String> yUnits, ArrayList<ISOTimeInterval> isoTimes) throws IOException {
 		// TODO: check that yUnits is always the correct value...
 		System.out.println(yUnits.size() + ", " + series.getData().size() + ", " + isoTimes.size());
 
@@ -136,7 +136,7 @@ public class GuiModel {
 	 *            is the unit value of the y-axis values.
 	 */
 	private void writeColumnData(BufferedWriter bufferedWriter, Number xValue, Number yValue,
-			String yUnit, IsoTime isoTime) {
+			String yUnit, ISOTimeInterval isoTime) {
 		try {
 			bufferedWriter.write(xValue.toString());
 			bufferedWriter.write(DELIMITER);
@@ -194,10 +194,10 @@ public class GuiModel {
 	 *             occurs when there is a problem with the buffered writer.
 	 */
 	public void saveMaskData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
-			String yUnit) throws IOException {
+			String yUnit, String seriesName) throws IOException {
 
 		for (int i = 0; i < series.getData().size(); i++) {
-			writeMaskData(bufferedWriter, series.getName(), series.getData().get(i).getXValue(),
+			writeMaskData(bufferedWriter, seriesName, series.getData().get(i).getXValue(),
 					series.getData().get(i).getYValue(), yUnit);
 		}
 
@@ -232,14 +232,4 @@ public class GuiModel {
 			e.printStackTrace();
 		}
 	}
-
-	// TODO: remove me or modify me
-	// /* Clears the data values from the received data */
-	// public void clearData() {
-	// System.out.println("YO");
-	// // for(Integer i : readings) {
-	// // readings.set(new ArrayList<Integer>());
-	// // }
-	// }
-
 }

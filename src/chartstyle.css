@@ -3,13 +3,29 @@
 .default-color1.chart-series-line { -fx-stroke:  #6495ED; }
 .default-color2.chart-series-line { -fx-stroke:  #80f080; }
 
-.default-color0.chart-line-symbol { -fx-background-color: black, #F08080; }
+.default-color0.chart-line-symbol
+{ 
+	-fx-background-color: black, #F08080; 
+/*	-fx-background-radius: 2px;
+    -fx-padding: 2px; */
+}
 
-.default-color1.chart-line-symbol { -fx-background-color: black, #6495ED; }
+.default-color1.chart-line-symbol
+{ 
+	-fx-background-color: black, #6495ED;
+/*	-fx-background-radius: 2px; 
+    -fx-padding: 2px; */
+}
 
-.default-color2.chart-line-symbol { -fx-background-color: black, #80f080; }
+.default-color2.chart-line-symbol
+{ 
+	-fx-background-color: black, #80f080; 
+/*	-fx-background-radius: 2px; 
+    -fx-padding: 2px; */
+}
 
 .chart-legend { -fx-background-color: transparent; }
+
 
 
 

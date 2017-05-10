@@ -157,6 +157,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	 */
 	private void createMaskArea(XYChart.Series<Number, Number> series,
 			ObservableList<Data<Number, Number>> seriesData, ArrayList<Polygon> polygonList) {
+
 		for (int i = 0; i < seriesData.size() - 1; i++) {
 			// First polygon point
 			double x1 = getXAxis().getDisplayPosition(seriesData.get(i).getXValue());

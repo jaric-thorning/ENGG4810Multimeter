@@ -141,6 +141,16 @@
                      <GridPane.margin>
                         <Insets left="25.0" />
                      </GridPane.margin></ComboBox>
+                  <Group GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                     <children>
+                        <RadioButton fx:id="maskVRBtn" mnemonicParsing="false" onAction="#selectSaveV" selected="true" text="V" visible="false" GridPane.rowIndex="4" />
+                        <RadioButton fx:id="maskARBtn" layoutX="37.0" mnemonicParsing="false" onAction="#selectSaveA" text="A" visible="false" GridPane.rowIndex="4" />
+                        <RadioButton fx:id="maskORBtn" layoutX="74.0" mnemonicParsing="false" onAction="#selectSaveO" text="Ω" visible="false" GridPane.rowIndex="4" />
+                     </children>
+                     <GridPane.margin>
+                        <Insets />
+                     </GridPane.margin>
+                  </Group>
                </children>
             </GridPane>
          </children>
@@ -227,21 +237,13 @@
                      <GridPane.margin>
                         <Insets left="20.0" />
                      </GridPane.margin></Button>
-                  <Label fx:id="maskStatusLabel" focusTraversable="false" text="FAIL" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.valignment="BOTTOM">
-                     <font>
-                        <Font size="32.0" />
-                     </font>
-                     <GridPane.margin>
-                        <Insets left="10.0" />
-                     </GridPane.margin>
-                  </Label>
-                  <Group GridPane.halignment="CENTER" GridPane.valignment="TOP">
+                  <Group GridPane.halignment="LEFT" GridPane.valignment="TOP">
                      <children>
-                        <Label fx:id="recordTimeLabel" focusTraversable="false" layoutX="10.0" layoutY="15.0" minHeight="15.0" minWidth="380.0" prefHeight="15.0" textFill="WHITE" />
-                        <Label fx:id="recordedTimeLabel" focusTraversable="false" layoutX="9.0" text="Recorded Time:" />
+                        <Label fx:id="recordTimeLabel" focusTraversable="false" layoutX="100.0" minHeight="15.0" minWidth="400.0" prefHeight="15.0" prefWidth="400.0" textFill="WHITE" />
+                        <Label fx:id="recordedTimeLabel" focusTraversable="false" layoutX="9.0" minWidth="90.0" prefWidth="90.0" text="Date-stamp:" />
                      </children>
                      <GridPane.margin>
-                        <Insets left="260.0" />
+                        <Insets left="5.0" top="5.0" />
                      </GridPane.margin>
                   </Group>
                   <Group GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="CENTER">

@@ -3,7 +3,6 @@ package main;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
@@ -14,7 +13,7 @@ import javafx.scene.input.MouseEvent;
 
 public class EventHandlers {
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
-	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
+	// private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
 
 	public EventHandlers() {
 		// I AM EMPTY :(
@@ -31,28 +30,31 @@ public class EventHandlers {
 	 * @return the event handler.
 	 */
 	protected EventHandler<MouseEvent> getDataXYValues(XYChart.Data<Number, Number> dataPoint,
-			int index, Label xDataCoord, Label yDataCoord, IsoTime start, IsoTime end) {
+			int index, Label xDataCoord, Label yDataCoord, String startTime, String endTime,
+			boolean isSD) {
 		EventHandler<MouseEvent> getValues = new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
 
-				// TODO: IF LOADED FROM REAL DATA -> USE ISO 8601 FORMAT for each data-point.
-				// ISO 8601 Duration Format
-				LocalDateTime startDurationTime = LocalDateTime.parse(start.toString());
-				LocalDateTime endDurationTime = LocalDateTime.parse(end.toString());
+				if (!isSD) { // Loaded from saved software-recorded file
+					LocalDateTime startDurationTime = LocalDateTime.parse(startTime);
+					LocalDateTime endDurationTime = LocalDateTime.parse(endTime.toString());
+					Duration duration = Duration.between(startDurationTime, endDurationTime);
 
-				Duration duration = Duration.between(startDurationTime, endDurationTime);
-				String isoDurationFormat = duration.toString();
+					xDataCoord.setText("X: Sample: " + (index + 1) + " at " + endTime.toString()
+							+ ", " + Duration.parse(duration.toString()));
 
-				// ISO 8601 FORMAT only if recorded by software
-			//	if (GuiController.instance.connRBtn.isSelected()) {
-					xDataCoord.setText("X: Sample: " + (index + 1) + " at " + end.toString()
-							+ ", " + Duration.parse(isoDurationFormat));
-				//} else {
-//					xDataCoord.setText("X: Sample: " + (index + 1) + ", "
-//							+ Duration.parse(isoDurationFormat));
-//				}
+				} else { // Loaded from SD card file
+					Long timeDurationInMillis = (long) ((Double.parseDouble(endTime) * 1000)
+							- (Double.parseDouble(startTime) * 1000));
+					Duration duration = Duration.ofMillis(timeDurationInMillis);
+					String isoDurationFormat = duration.toString();
+
+					xDataCoord.setText(
+							"X: Sample: " + (index + 1) + ", " + Duration.parse(isoDurationFormat));
+				}
+
 				yDataCoord.setText("Y: " + MEASUREMENT_DECIMAL.format(dataPoint.getYValue()));
 			}
 		};
@@ -117,7 +119,7 @@ public class EventHandlers {
 					System.out.println("DELETE NODE FROM: " + series.getName() + " NEW SIZE: "
 							+ series.getData().size());
 
-					if (series.getName().equals("low")) {
+					if (series.getName().contains("low")) {
 						GuiController.instance.lowCounter--;
 					}
 				}
