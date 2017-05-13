@@ -14,12 +14,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 /**
- * A class which handles serial comms.
+ * A class which handles serial comms. Note this code is modified off TP1 code which my team member
+ * originally wrote.
  */
 public class SerialFramework {
 
 	private static ObservableList<String> portNames = FXCollections.observableArrayList();
-	// final static String INIT_PORT_SELECTION = "None"; // Default first element
 	private static SerialPort openSerialPort = null;
 	private static BufferedReader readFromSerial = null;
 	private static PrintWriter writeToSerial = null;
@@ -28,7 +28,12 @@ public class SerialFramework {
 		return openSerialPort;
 	}
 
-	// FIXME: while haven't received change, keep sending code
+	/**
+	 * Writes out specified code to remotely control the multimeter
+	 * 
+	 * @param output
+	 *            the code to write out
+	 */
 	public static void writeCode(String output) {
 		// System.out.println("output: " + output);
 
@@ -185,6 +190,7 @@ public class SerialFramework {
 		private static final String PACKET_OPEN = "[";
 		private static final String PACKET_CLOSE = "]";
 		private static final char MODE = 'M';
+		private static final char FREQUENCY = 'F';
 
 		/** The buffer for building whole packets received over the serial port. */
 		private String serialBuffer = "";
@@ -251,13 +257,9 @@ public class SerialFramework {
 			String data = text.substring(openPacket + 1, closePacket);
 
 			if (data.charAt(0) == 'S') { // Change multimeter settings
-				//System.out.println("------SETTING: " + data);
-				// System.out.println("THIS IS S: " + data.charAt(0));
-
 				sortMultimeterCommand(data, openPacket, closePacket);
-			} else if (data.charAt(0) == 'V' || data.charAt(0) == 'C' || data.charAt(0) == 'R') {
-				//System.out.println("	DATA: " + data);
-				// Check for multimeter results.
+			} else if (data.charAt(0) == 'V' || data.charAt(0) == 'I' || data.charAt(0) == 'R') {
+				// Change values received
 				sortMultimeterMeasurements(data, openPacket, closePacket);
 			}
 
@@ -265,6 +267,17 @@ public class SerialFramework {
 			return true;
 		}
 
+		/**
+		 * A private helper function for 'getData' which checks that the command received is valid
+		 * and executes it
+		 * 
+		 * @param data
+		 *            the data read in serially
+		 * @param openPacket
+		 *            index of opening brace
+		 * @param closePacket
+		 *            index of closing brace
+		 */
 		private void sortMultimeterCommand(String data, int openPacket, int closePacket) {
 			boolean failedToDecode = false;
 
@@ -276,23 +289,24 @@ public class SerialFramework {
 			}
 
 			char modeType = 0;
+
 			// If data received from the serial connection was not the right type
-			if (trimmedData.charAt(0) != MODE)
+			if (trimmedData.charAt(0) != MODE) // M, F
 				failedToDecode = true;
 
-			// If the next bits of data were not matching to any measurement type
-			if (!(trimmedData.charAt(2) == 'C' || trimmedData.charAt(2) == 'V'
-					|| trimmedData.charAt(2) == 'R')) {
+			// If the next bits of data were not matching to any mode type
+			if (!(trimmedData.charAt(2) == 'I' || trimmedData.charAt(2) == 'V'
+					|| trimmedData.charAt(2) == 'R' || trimmedData.charAt(2) == 'C'
+					|| trimmedData.charAt(2) == 'L')) {
 				failedToDecode = true;
 			} else {
 				modeType = trimmedData.charAt(2);
 			}
 
-			// CHANGE MODE TO EITHER RESISTANCE, VOLTAGE, CURRENT
+			// Change the mode to either resistance, current, voltage, logic or continuity
 			if (!failedToDecode) {
 				switch (modeType) {
-				case 'C':
-					//System.out.println("CHANGE SETTINGS -> MODE -> CURRENT");
+				case 'I':
 					GuiController.instance.driveCurrent();
 					break;
 				case 'V':
@@ -300,6 +314,12 @@ public class SerialFramework {
 					break;
 				case 'R':
 					GuiController.instance.driveResistance();
+					break;
+				case 'C':
+					GuiController.instance.driveContinuity();
+					break;
+				case 'L':
+					GuiController.instance.driveLogic();
 					break;
 				default:
 					// FIXME: INVALID THING HERE

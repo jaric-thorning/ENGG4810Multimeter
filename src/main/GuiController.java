@@ -64,8 +64,6 @@ public class GuiController implements Initializable {
 	@FXML
 	AnchorPane graphLabelAnchor;
 	@FXML
-	Label graphingResultsLabel;
-	@FXML
 	GridPane chartGrid;
 
 	/* Components to display dummy data */
@@ -73,7 +71,8 @@ public class GuiController implements Initializable {
 	public volatile boolean resistance = false;
 	public volatile boolean voltage = false;
 	public volatile boolean current = false;
-	private volatile boolean isContinuityMode = false;
+	private volatile boolean continuity = false;
+	private volatile boolean logic = false;
 
 	private volatile boolean isChanged = false;
 
@@ -323,34 +322,79 @@ public class GuiController implements Initializable {
 
 	// FIXME: SQUARE SINE WAVE 0-1 FOR CONTINUITY MODE BUT RESISTANCE
 	/**
-	 * Enters Continuity Mode
+	 * Writes out code to remotely control multimeter's continuity mode
 	 */
 	@FXML
 	private void selectContinuityMode() {
-		if (!isContinuityMode) { // Entering Continuity Mode
-			System.out.println("I clicked on continuity mode");
-
-			isContinuityMode = true;
-			graphingResultsLabel.setText("Graphing Results - Continuity Mode");
-			lineChart.setContinuityMode();
-		} else { // Leaving Continuity Mode
-			isContinuityMode = false;
-			graphingResultsLabel.setText("Graphing Results");
-			lineChart.revertContinuityMode();
-		}
+		String code = MultimeterCodes.CONTINUITY.getCode();
+		SerialFramework.writeCode(code);
+		
+//		if (continuity) {
+//			lineChart.setContinuityMode();
+//		} else {
+//			lineChart.revertContinuityMode();
+//		}
+		// if (!isContinuityMode) { // Entering Continuity Mode
+		// System.out.println("I clicked on continuity mode");
+		//
+		// isContinuityMode = true;
+		// lineChart.setContinuityMode();
+		// } else { // Leaving Continuity Mode
+		// isContinuityMode = false;
+		// lineChart.revertContinuityMode();
+		// }
 	}
 
 	/**
-	 * Writes out the code for switching to voltage
+	 * Executes any continuity mode related events
+	 */
+	protected void driveContinuity() {
+		System.out.println("Driving continuity");
+		
+		voltage = false;
+		current = false;
+		resistance = false;
+		continuity = true;
+		logic = false;
+	}
+
+	/**
+	 * Writes out code to remotely control multimeter's logic mode
+	 */
+	@FXML
+	private void selectLogicMode() {
+		String code = MultimeterCodes.CONTINUITY.getCode();
+		SerialFramework.writeCode(code);
+	}
+
+	/**
+	 * Executes any logic mode related events
+	 */
+	protected void driveLogic() {
+		System.out.println("Driving Logic");
+		// Display LOW or HIGH
+		voltage = false;
+		current = false;
+		resistance = false;
+		continuity = false;
+		logic = true;
+	}
+
+	// FIXME CHECK PORT CONNECTED
+	/**
+	 * Writes out code to remotely control multimeter. [Select voltage].
 	 */
 	@FXML
 	private void measureVoltage() {
-		// port must be connected.
-		writeCode("V");
+		String code = MultimeterCodes.VOLTAGE.getCode();
+		SerialFramework.writeCode(code);
 	}
 
+	/**
+	 * Executes any voltage mode related events
+	 */
 	protected void driveVoltage() {
-		System.out.println("I clicked on voltage");
+		System.out.println("Driving voltage");
 	}
 
 	private String getVoltageRange(double dataValue) {
@@ -368,19 +412,19 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Writes out the code for switching to current
+	 * Writes out code to remotely control multimeter. [Select current].
 	 */
 	@FXML
 	private void measureCurrent() {
-		// While it hasn't been received
-		writeCode("C");
+		String code = MultimeterCodes.CURRENT.getCode();
+		SerialFramework.writeCode(code);
 	}
 
 	/**
-	 * Where all the current related things happen
+	 * Executes any current mode related events
 	 */
 	protected void driveCurrent() {
-		System.out.println("I clicked on current");
+		System.out.println("Driving current");
 	}
 
 	private String getCurrentRange(double dataValue) {
@@ -396,28 +440,19 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Writes out the code for switching to resistance
+	 * Writes out code to remotely control multimeter. [Select resistance].
 	 */
 	@FXML
 	private void measureResistance() {
-		writeCode("R");
-	}
-
-	protected void driveResistance() {
-		System.out.println("I clicked on resistance");
+		String code = MultimeterCodes.RESISTANCE.getCode();
+		SerialFramework.writeCode(code);
 	}
 
 	/**
-	 * Writes out the specified settings code.
-	 * 
-	 * @param type
-	 *            which mode to select (Voltage, Current, Resistance)
+	 * Executes any resistance mode related events.
 	 */
-	private void writeCode(String type) {
-		// String code = "[S M " + type + "]\n\r";
-		String code = "[S M " + type + "]";
-
-		SerialFramework.writeCode(code);
+	protected void driveResistance() {
+		System.out.println("Driving resistance");
 	}
 
 	// TODO: Keep this just for updating the multi-meter range stuff.
@@ -642,6 +677,8 @@ public class GuiController implements Initializable {
 			voltage = true;
 			current = false;
 			resistance = false;
+			continuity = false;
+			logic = false;
 
 			return false;
 		}
@@ -661,6 +698,8 @@ public class GuiController implements Initializable {
 			voltage = false;
 			current = true;
 			resistance = false;
+			continuity = false;
+			logic = false;
 
 			return false;
 		}
@@ -680,6 +719,8 @@ public class GuiController implements Initializable {
 			voltage = false;
 			current = false;
 			resistance = true;
+			continuity = false;
+			logic = false;
 
 			return false;
 		}
@@ -988,8 +1029,8 @@ public class GuiController implements Initializable {
 		resistance = false;
 		voltage = false;
 		current = false;
-		isContinuityMode = false;
-		graphingResultsLabel.setText("Graphing Results");
+		continuity = false;
+		logic = false;
 
 		// Clear all data related things.
 
@@ -1154,15 +1195,15 @@ public class GuiController implements Initializable {
 			pauseBtn.setText("Unpause");
 
 			// Disable multimeter components
-			// multimeterDisplay.setDisable(true);
-			// voltageBtn.setDisable(true);
-			// currentBtn.setDisable(true);
-			// resistanceBtn.setDisable(true);
-			// dcRBtn.setDisable(true);
-			// multimeterDisplay.setDisable(true);
-			// modeLabel.setDisable(true);
-			// logicBtn.setDisable(true);
-			// continuityBtn.setDisable(true);
+			multimeterDisplay.setDisable(true);
+			voltageBtn.setDisable(true);
+			currentBtn.setDisable(true);
+			resistanceBtn.setDisable(true);
+			dcRBtn.setDisable(true);
+			multimeterDisplay.setDisable(true);
+			modeLabel.setDisable(true);
+			logicBtn.setDisable(true);
+			continuityBtn.setDisable(true);
 		} else {
 			System.out.println("DATA IS UNPAUSED");
 
@@ -1470,9 +1511,9 @@ public class GuiController implements Initializable {
 		resistance = false;
 		voltage = false;
 		current = false;
-		isContinuityMode = false;
-		graphingResultsLabel.setText("Graphing Results");
-
+		continuity = false;
+		logic = false;
+		
 		// Reset the plot data
 		readingSeries.getData().clear();
 		storedISOTimes.clear(); // TICK
@@ -1592,7 +1633,8 @@ public class GuiController implements Initializable {
 	private boolean testOverlapPoint(XYChart.Series<Number, Number> newSeries,
 			XYChart.Series<Number, Number> existingSeries) {
 
-		if (existingSeries.getData().size() > 1 && newSeries.getData().size() > 1) {
+		System.out.println("-------------------------");
+		if (existingSeries.getData().size() > 1 && newSeries.getData().size() > 1) { // FIXME
 			for (int i = 0; i < existingSeries.getData().size() - 1; i++) {
 				for (int j = 0; j < newSeries.getData().size(); j++) {
 					Data<Number, Number> currentNDataPoint = newSeries.getData().get(j);
@@ -1621,7 +1663,13 @@ public class GuiController implements Initializable {
 					}
 				}
 			}
+		} else if (newSeries.getData().size() == 1) {
+			System.out.println("YO;");
+			Point2D firstPoint = new Point2D(newSeries.getData().get(0).getXValue().floatValue(),
+					newSeries.getData().get(0).getYValue().floatValue());
+			return checkSinglePointIntersection(firstPoint);
 		}
+		System.out.println("-------------------------");
 		return true;
 	}
 
@@ -1690,22 +1738,20 @@ public class GuiController implements Initializable {
 	private boolean determineCollinearness(Point2D newPoint, Point2D existingPointStart,
 			Point2D existingPointEnd) {
 
-		// Find slope of existing points
-		float m = (existingPointStart.y - existingPointEnd.y)
-				/ (existingPointStart.x - existingPointEnd.x);
+		// Took collinear formula from: http://www.math-for-all-grades.com/Collinear-points.html
+		float a = existingPointStart.x - newPoint.x;
+		float b = newPoint.x - existingPointEnd.x;
+		float c = existingPointStart.y - newPoint.y;
+		float d = newPoint.y - existingPointEnd.y;
 
-		// Find slope between existing point and moved point
-		float mDash = (existingPointStart.y - newPoint.y) / (existingPointStart.x - newPoint.x);
+		float ad = a * d;
+		float bc = b * c;
 
-		// Convert for leeway
-		int newM = Math.round(m);
-		int newMDash = Math.round(mDash);
-		System.out.println(newM + ", " + newMDash);
+		float gradient = (1F / 2F) * (ad - bc);
 
-		// FIXME: make sure it's working both angles.
-		double leeway = 0.5;
-		if (newMDash <= (newM + leeway) && newMDash >= (newM - leeway)) {
-			System.out.println("	LW: " + mDash + ", " + m);
+		System.out.println(gradient);
+		// The point is more or less collinear [taking into account float decimals]
+		if (gradient < 2 && gradient > -2) {
 			return false;
 		}
 
@@ -1845,6 +1891,7 @@ public class GuiController implements Initializable {
 		// Values of new points
 		float tempX = coordX.floatValue();
 		float tempY = coordY.floatValue();
+		Point2D newPoint = new Point2D(tempX, tempY);
 
 		if (lowMaskBoundarySeries.getData().size() > 0) {
 			ArrayList<Float> existingValues = assignExistingXValue(lowMaskBoundarySeries, tempX,
@@ -1855,24 +1902,48 @@ public class GuiController implements Initializable {
 			float existingY = existingValues.get(1);
 
 			Point2D existingPoint = new Point2D(existingX, existingY);
-			Point2D newPoint = new Point2D(tempX, tempY);
 
 			System.out.println(highMaskBoundarySeries.getData().toString());
 
 			return checkLineIntersection(existingPoint, newPoint);
+		} else if (lowMaskBoundarySeries.getData().size() == 0) {
+			System.out.println("YO;");
+			return checkSinglePointIntersection(newPoint);
 		}
 
 		return true;
 	}
 
-	// /**
-	// * A private helper function to 'checkOverlap' that determines if the point to be added would
-	// * cause an overlap if added.
-	// *
-	// * @param lowBoundaryLineSegment
-	// * the line segment to compare against.
-	// * @return true if no collision, false otherwise.
-	// */
+	/**
+	 * A private helper function for 'checkOverlap' which determines if the first low mask series
+	 * placed on the chart overlaps with any of the existing mask series (high)
+	 * 
+	 * @param newPoint
+	 *            the point to be added
+	 * @return true if there is no overlap, false otherwise
+	 */
+	private boolean checkSinglePointIntersection(Point2D newPoint) {
+		for (int i = 0; i < highMaskBoundarySeries.getData().size() - 1; i++) {
+
+			// Points of the high mask area
+			Data<Number, Number> currentDataPoint = highMaskBoundarySeries.getData().get(i);
+			Data<Number, Number> nextDataPoint = highMaskBoundarySeries.getData().get(i + 1);
+
+			Point2D currentPoint = new Point2D(currentDataPoint.getXValue().floatValue(),
+					currentDataPoint.getYValue().floatValue());
+			Point2D nextPoint = new Point2D(nextDataPoint.getXValue().floatValue(),
+					nextDataPoint.getYValue().floatValue());
+
+			// Check if point overlaps
+			if (!determineCollinearness(newPoint, currentPoint, nextPoint)) {
+				GuiView.getInstance().illegalMaskPoint();
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	/**
 	 * A private helper function to 'checkOverlap' which determines if the point to be added would
 	 * cause an overlap if added.

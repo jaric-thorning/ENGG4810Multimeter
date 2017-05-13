@@ -188,7 +188,7 @@
                   </Button>
                   <Group GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
                      <children>
-                        <Button fx:id="logicBtn" disable="true" focusTraversable="false" layoutY="30.0" minWidth="96.0" mnemonicParsing="false" text="Logic Level" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="BOTTOM">
+                        <Button fx:id="logicBtn" disable="true" focusTraversable="false" layoutY="30.0" minWidth="96.0" mnemonicParsing="false" onAction="#selectLogicMode" text="Logic Level" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="BOTTOM">
                            <GridPane.margin>
                               <Insets left="5.0" right="5.0" />
                            </GridPane.margin>
@@ -262,7 +262,7 @@
       </AnchorPane>
       <AnchorPane fx:id="graphLabelAnchor" layoutX="447.0" layoutY="4.0" maxWidth="645.0" minWidth="645.0" stylesheets="@tabstyle.css">
          <children>
-            <Label id="anchorPaneHeadings" fx:id="graphingResultsLabel" focusTraversable="false" prefHeight="35.0" prefWidth="642.0" text="Graphing Results" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <Label id="anchorPaneHeadings" focusTraversable="false" prefHeight="35.0" prefWidth="642.0" text="Graphing Results" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <font>
                   <Font size="14.0" />
                </font>

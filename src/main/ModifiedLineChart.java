@@ -276,38 +276,19 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 		return errorCounter;
 	}
 
-	// FIXME: something happens with the line with the range. look into it.
 	/**
 	 * Sets the 'look' of the line chart to a modified style to distinctly separate standard mode
 	 * (voltage, current resistance measurements) and continuity mode.
 	 */
 	protected void setContinuityMode() {
-		// fiveOhmMark = new Line();
-		// System.out.println("SET 5 OHM");
-		// // Get the right boundaries
-		// double x1 = xAxis.getDisplayPosition(xAxis.getLowerBound());
-		// double y1 = yAxis.getDisplayPosition(5);
-		// double x2 = xAxis.getDisplayPosition(xAxis.getUpperBound());
-		// double y2 = yAxis.getDisplayPosition(5);
-		//
-		// fiveOhmMark.setStartX(x1);
-		// fiveOhmMark.setStartY(y1);
-		// fiveOhmMark.setEndX(x2);
-		// fiveOhmMark.setEndY(y2);
-		//
-		// fiveOhmMark.setStroke(Color.RED);
-		// fiveOhmMark.setStrokeWidth(2D);
 		lookup(".chart-plot-background").setStyle("-fx-background-color: #000000;");
-		// getPlotChildren().add(fiveOhmMark);
 	}
 
 	/**
 	 * Reverts the 'look' of the line chart back to standard style.
 	 */
 	protected void revertContinuityMode() {
-		System.out.println("REMOVE 5 OHM");
 		lookup(".chart-plot-background").setStyle("-fx-background-color: #ffffff;");
-		// getPlotChildren().remove(fiveOhmMark);
 	}
 
 }
