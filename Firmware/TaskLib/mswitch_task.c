@@ -96,7 +96,7 @@ MSWITCHTask(void *pvParameters)
 
     char * buffer = (char*)bget(64 * sizeof(char));
 
-    sd_message.filename  = "logfile3.txt";
+    sd_message.filename  = "logfile4.txt";
 
 
     ui32MSWITCHRefreshTime = MSWITCH_REFRESH_TIME;
@@ -142,7 +142,23 @@ MSWITCHTask(void *pvParameters)
             set_mode('R');
       	   }
 
+        } else if(mswitch_message.type == 'F'){
+          UARTprintf("TODO: IMPLEMENT FREQUENCY CHANGING -> FORWARD TO ADC\n\r");
+
+        } else if(mswitch_message.type == 'X'){
+          UARTprintf("TODO: ENTER MENU MODE\n\r");
+
+        } else if(mswitch_message.type == 'R'){
+          if(logging == 0){
+            UARTprintf("Recording to SD....\n\r");
+            logging = 1;
+          } else{
+            UARTprintf("Recording done.\n\r");
+            logging = 0;
+          }
+
         } else if(mswitch_message.type == 'V'){
+          //UARTprintf("ADC 1 : %d\n\r", mswitch_message.ui32Value);
           if(mode == 0){ //current
             value = mswitch_message.ui32Value/4095.0 * 2 * range_current - range_current;
             //UARTprintf("Recieved uValue = %d", mswitch_message.ui32Value);
@@ -215,7 +231,7 @@ MSWITCHTask(void *pvParameters)
 
           sd_message.text = buffer2;
 
-          UARTprintf("Logging Data on SD...\n\r");
+          //UARTprintf("Logging Data on SD...\n\r");
 
           if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=
              pdPASS){

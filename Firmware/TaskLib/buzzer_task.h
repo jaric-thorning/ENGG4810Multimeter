@@ -1,26 +1,26 @@
 /*
- *  Header file for LCD_Task
+ *  Header file for BUZZER_Task
  *
  *
  */
 
 
 
-#ifndef __ADC_TASK_H__
-#define __ADC_TASK_H__
+#ifndef __BUZZER_TASK_H__
+#define __BUZZER_TASK_H__
 
-extern struct adc_queue_message {
+extern struct buzzer_queue_message {
   int frequency;
 };
 
-xQueueHandle g_pADCQueue;
+xQueueHandle g_pBuzzerQueue;
 
 //*****************************************************************************
 //
 // Prototypes for the LED task.
 //
 //*****************************************************************************
-extern uint32_t ADCTaskInit(void);
+extern uint32_t BuzzerTaskInit(void);
 
 
 

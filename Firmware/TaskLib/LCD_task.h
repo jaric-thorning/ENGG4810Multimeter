@@ -10,6 +10,8 @@
 #define __LCD_TASK_H__
 
 extern struct lcd_queue_message {
+  int setting;
+  int brightness;
   char type;
   int range;
   int value;

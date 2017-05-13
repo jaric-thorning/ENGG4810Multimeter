@@ -14,6 +14,8 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include "bget.h"
+
 
 #include "LCD_task.h"
 
@@ -26,6 +28,8 @@
 #include "driverlib/pin_map.h"
 
 #include "display.h"
+
+#include "driverlib/pwm.h"
 
 
 #define LCDTASKSTACKSIZE        128
@@ -48,6 +52,11 @@ LCDTask(void *pvParameters)
 
     ui32WakeTime = xTaskGetTickCount();
 
+    //top_line = (char*)bgetz(16 * sizeof(char));
+    //bottom_line = (char*)bgetz(16 * sizeof(char));
+    unsigned long period = 5000;
+
+    int brightness_setting = 10;
 
     while(1)
     {
@@ -58,11 +67,25 @@ LCDTask(void *pvParameters)
       {
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
 
+        if(lcd_message2.setting == 1){
+          PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, period * lcd_message2.brightness/5);;
+          PWMOutputState(PWM0_BASE, PWM_OUT_3_BIT, lcd_message2.brightness);
+          if(lcd_message2.brightness == 0){
+            GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);
+          }
+          else{
+            GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, 0);
+          }
+        }
         UARTprintf("[%c: %d.%d]\n\r", lcd_message2.type, lcd_message2.value, lcd_message2.decimal);
 
         display(lcd_message2.type, lcd_message2.range, lcd_message2.value, lcd_message2.decimal);
         xSemaphoreGive(g_pUARTSemaphore);
       }
+
+
+
+
 
 
       //
@@ -78,6 +101,49 @@ LCDTaskInit(void)
     g_pLCDQueue = xQueueCreate(LCD_QUEUE_SIZE, LCD_ITEM_SIZE);
 
     initLCD();
+
+    // Enable the peripherals used by this program.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0);  //The Tiva Launchpad has two modules (0 and 1).
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOB))
+    {
+    }
+
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_PWM0))
+    {
+    }
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOE))
+    {
+    }
+
+    GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_1);
+    GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, 0);
+
+    GPIOPinConfigure(GPIO_PB5_M0PWM3);
+    GPIOPinTypePWM(GPIO_PORTB_BASE, GPIO_PIN_5);
+
+
+    //Configure PWM Options
+    //PWM_GEN_2 Covers M1PWM4 and M1PWM5
+    //PWM_GEN_3 Covers M1PWM6 and M1PWM7 See page 207 4/11/13 DriverLib doc
+    PWMGenConfigure(PWM0_BASE, PWM_GEN_1, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
+
+    unsigned long period = 5000;
+    unsigned long pwmNow = period/10.0;
+
+    //Set the Period (expressed in clock ticks)
+    PWMGenPeriodSet(PWM0_BASE, PWM_GEN_1, period);
+
+    //Set PWM duty-50% (Period /2)
+    PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3,period);
+
+    // Enable the PWM generator
+    PWMGenEnable(PWM0_BASE, PWM_GEN_1);
+
+    // Turn on the Output pins
+    //PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_2_BIT | PWM_OUT_4_BIT | PWM_OUT_5_BIT | PWM_OUT_6_BIT | PWM_OUT_7_BIT, true);
+    PWMOutputState(PWM0_BASE, PWM_OUT_3_BIT, true);
 
     printLCD("Starting LCD...");
 

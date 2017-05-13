@@ -12,6 +12,7 @@
 extern struct mswitch_queue_message {
   char type;
   char mode;
+  int frequency; 
   uint32_t ui32Value;
 };
 

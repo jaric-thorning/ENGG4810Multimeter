@@ -32,7 +32,7 @@
 
 #define ADCTASKSTACKSIZE        128
 
-#define ADC_ITEM_SIZE           sizeof(struct ADC_queue_message)
+#define ADC_ITEM_SIZE           sizeof(struct adc_queue_message)
 #define ADC_QUEUE_SIZE          5
 
 #define ADC_REFRESH_TIME 100
@@ -52,6 +52,7 @@ ADCTask(void *pvParameters)
     ui32WakeTime = xTaskGetTickCount();
 
     struct mswitch_queue_message mswitch_message;
+    struct adc_queue_message adc_message;
 
     while(1)
     {
@@ -62,6 +63,7 @@ ADCTask(void *pvParameters)
   		}
   		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);
 
+      //UARTprintf("ADC : %dw")
       mswitch_message.ui32Value = ui32Value;
       mswitch_message.type = 'V'; //sending V for value
 
@@ -70,6 +72,12 @@ ADCTask(void *pvParameters)
            UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
          }
 
+      if(xQueueReceive(g_pADCQueue, &adc_message, 0) == pdPASS)
+      {
+          if( adc_message.frequency > 0){
+            ui32ADCRefreshTime = adc_message.frequency * 100;
+          }
+      }
       //
       // Wait for the required amount of time.
       //
@@ -80,7 +88,7 @@ ADCTask(void *pvParameters)
 uint32_t
 ADCTaskInit(void)
 {
-    //g_pADCQueue = xQueueCreate(ADC_QUEUE_SIZE, ADC_ITEM_SIZE);
+    g_pADCQueue = xQueueCreate(ADC_QUEUE_SIZE, ADC_ITEM_SIZE);
 
   	//
   	// Enable the ADC0 module.

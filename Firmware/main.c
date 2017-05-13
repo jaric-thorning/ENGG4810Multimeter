@@ -23,8 +23,11 @@
 #include "ADC_task.h"
 #include "mswitch_task.h"
 #include "sd_task.h"
+#include "buzzer_task.h"
 
 #include "uart.h"
+
+
 
 // --------------- TASK CONTROL ------------------
 
@@ -34,7 +37,8 @@
 #define SWITCHTASK      1
 #define ADCTASK         1
 #define MSWITCHTASK     1
-#define SDTASK          0 //not implemented
+#define SDTASK          1
+#define BUZZERTASK      1
 
 // -----------------------------------------------
 
@@ -117,6 +121,16 @@ main(void)
         }
       }
     }
+
+    // Create the Buzzer task.
+    if(BUZZERTASK){
+      if(BuzzerTaskInit() != 0){
+          while(1){
+            UARTprintf("\n\nBUZZER INIT ERROR!\n");
+          }
+      }
+    }
+
     // Create the LCD task.
     if(LCDTASK){
     if(LCDTaskInit() != 0){
@@ -163,6 +177,8 @@ main(void)
           }
       }
     }
+
+
 
     // Start the scheduler.  This should not return.
     vTaskStartScheduler();
