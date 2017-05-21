@@ -10,13 +10,16 @@ import java.util.ArrayList;
 
 import javafx.scene.chart.XYChart;
 
+/**
+ * The GuiModel class represents the Model of the Model-View-Controller pattern 
+ * @author dayakern
+ *
+ */
 public class GuiModel {
-	// private ArrayList<Integer> multimeterReadings = new ArrayList<>();
-
 	private static final String DELIMITER = ",";
 	private static final String NEW_LINE_SEPARATOR = "\n";
 
-	// The format for reading/writing files <x-value><y-value><y-value units>
+	// The format for reading/writing files <x-value><y-value><y-value units><recorded time>
 	private static String[] fileHeaders = { "Time", "Value", "Units", "IsoTime" };
 
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
@@ -26,15 +29,14 @@ public class GuiModel {
 	}
 
 	/**
-	 * Reads the contents of a selected .csv file and returns an array of the read data. If the
-	 * filename is not found or there is a problem with the buffered reader, exceptions will be
-	 * caught.
+	 * Reads the contents of a selected .csv file and returns an array of the read data. If the filename is not found or
+	 * there is a problem with the buffered reader, exceptions will be caught.
 	 * 
 	 * @param fileName
-	 *            the file to read the data from.
+	 *            the file to read the data from
 	 * @param column
-	 *            which column to read from.
-	 * @return an array made up of only 1 column's worth of data.
+	 *            which column to read from
+	 * @return an array made up of only 1 column's worth of data
 	 */
 	public ArrayList<String> readColumnData(String fileName, int column) {
 		ArrayList<String> readData = new ArrayList<String>();
@@ -69,9 +71,9 @@ public class GuiModel {
 					System.err.println("There are no elements");
 				}
 			}
-		} catch (FileNotFoundException e1) { // The file name supplied was incorrect.
+		} catch (FileNotFoundException e1) { // The file name supplied was incorrect
 			e1.printStackTrace();
-		} catch (IOException e1) { // There was a problem using the buffered reader.
+		} catch (IOException e1) { // There was a problem using the buffered reader
 			e1.printStackTrace();
 		}
 
@@ -81,34 +83,35 @@ public class GuiModel {
 	/**
 	 * Saves data to a given file.
 	 * 
-	 * @precondition All data samples are the same length. and yUnit has values
+	 * @precondition All data samples are the same length & yUnit has values.
 	 * @param bufferedWriter
-	 *            the buffered writer needed to write data to the file.
+	 *            the buffered writer needed to write data to the file
 	 * @throws IOException
-	 *             occurs when there is a problem with the buffered writer.
+	 *             occurs when there is a problem with the buffered writer
 	 */
 	public void saveColumnData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
 			ArrayList<String> yUnits, ArrayList<ISOTimeInterval> isoTimes) throws IOException {
+
 		// TODO: check that yUnits is always the correct value...
 		System.out.println(yUnits.size() + ", " + series.getData().size() + ", " + isoTimes.size());
 
+		// Add a file header
 		setupHeader(bufferedWriter);
 
+		// Write out data
 		for (int i = 0; i < series.getData().size(); i++) {
-
-			writeColumnData(bufferedWriter, series.getData().get(i).getXValue(),
-					series.getData().get(i).getYValue(), yUnits.get(i), isoTimes.get(i));
+			writeColumnData(bufferedWriter, series.getData().get(i).getXValue(), series.getData().get(i).getYValue(),
+					yUnits.get(i), isoTimes.get(i));
 		}
 	}
 
 	/**
-	 * A private helper function to 'saveColumnData' which inserts the headers to be the first row
-	 * of the .csv file.
+	 * A private helper function to 'saveColumnData' which inserts the headers to be the first row of the .csv file.
 	 * 
 	 * @param bufferedWriter
-	 *            the buffered writer needed to write data to the file.
+	 *            the buffered writer needed to write data to the file
 	 * @throws IOException
-	 *             occurs when there is a problem with the buffered writer.
+	 *             occurs when there is a problem with the buffered writer
 	 */
 	private void setupHeader(BufferedWriter bufferedWriter) throws IOException {
 		for (int i = 0; i < fileHeaders.length; i++) {
@@ -123,20 +126,21 @@ public class GuiModel {
 	}
 
 	/**
-	 * A private helper function to 'saveColumnData' which writes the contents of the .csv file
-	 * after the header.
+	 * A private helper function to 'saveColumnData' which writes the contents of the .csv file after the header.
 	 * 
 	 * @param bufferedWriter
-	 *            the buffered writer needed to write data to the file.
+	 *            the buffered writer needed to write data to the file
 	 * @param xValue
-	 *            is a single data value for time data values.
+	 *            is a single data value for time data values
 	 * @param yValue
-	 *            is a single data value for the voltage/current/resistant values.
+	 *            is a single data value for the voltage/current/resistant values
 	 * @param yUnit
-	 *            is the unit value of the y-axis values.
+	 *            is the unit value of the y-axis values
+	 * @param isoTime
+	 *            is the iso time value of when the x/y point was displayed
 	 */
-	private void writeColumnData(BufferedWriter bufferedWriter, Number xValue, Number yValue,
-			String yUnit, ISOTimeInterval isoTime) {
+	private void writeColumnData(BufferedWriter bufferedWriter, Number xValue, Number yValue, String yUnit,
+			ISOTimeInterval isoTime) {
 		try {
 			bufferedWriter.write(xValue.toString());
 			bufferedWriter.write(DELIMITER);
@@ -152,13 +156,12 @@ public class GuiModel {
 	}
 
 	/**
-	 * Reads the contents of a selected mask data .csv file and returns an array of the read data.
-	 * If the filename is not found or there is a problem with the buffered reader, exceptions will
-	 * be caught.
+	 * Reads the contents of a selected mask data .csv file and returns an array of the read data. If the filename is
+	 * not found or there is a problem with the buffered reader, exceptions will be caught.
 	 * 
 	 * @param fileName
-	 *            the file to read the mask data from.
-	 * @return an array with elements made up of each row of mask data.
+	 *            the file to read the mask data from
+	 * @return an array with elements made up of each row of mask data
 	 */
 	public ArrayList<String[]> readMaskData(String fileName) {
 		ArrayList<String[]> readData = new ArrayList<>();
@@ -175,9 +178,9 @@ public class GuiModel {
 					System.err.println("There are no elements");
 				}
 			}
-		} catch (FileNotFoundException e1) { // The file name supplied was incorrect.
+		} catch (FileNotFoundException e1) { // The file name supplied was incorrect
 			e1.printStackTrace();
-		} catch (IOException e1) { // There was a problem using the buffered reader.
+		} catch (IOException e1) { // There was a problem using the buffered reader
 			e1.printStackTrace();
 		}
 
@@ -187,15 +190,16 @@ public class GuiModel {
 	/**
 	 * Saves mask data to a given file.
 	 * 
-	 * @precondition All data samples are the same length.
+	 * @precondition All data samples are the same length
 	 * @param bufferedWriter
-	 *            the buffered writer needed to write data to the file.
+	 *            the buffered writer needed to write data to the file
 	 * @throws IOException
-	 *             occurs when there is a problem with the buffered writer.
+	 *             occurs when there is a problem with the buffered writer
 	 */
-	public void saveMaskData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
-			String yUnit, String seriesName) throws IOException {
+	public void saveMaskData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series, String yUnit,
+			String seriesName) throws IOException {
 
+		// Write out mask data
 		for (int i = 0; i < series.getData().size(); i++) {
 			writeMaskData(bufferedWriter, seriesName, series.getData().get(i).getXValue(),
 					series.getData().get(i).getYValue(), yUnit);
@@ -207,18 +211,18 @@ public class GuiModel {
 	 * A private helper function to 'saveMaskData' which writes the contents of the mask .csv file.
 	 * 
 	 * @param bufferedWriter
-	 *            the buffered writer needed to write data to the file.
+	 *            the buffered writer needed to write data to the file
 	 * @param boundaryName
-	 *            the type of boundary (high or low).
+	 *            the type of boundary (high or low)
 	 * @param xValue
-	 *            is a single data value for time data values.
+	 *            is a single data value for time data values
 	 * @param yValue
-	 *            is a single data value for the voltage/current/resistant values.
+	 *            is a single data value for the voltage/current/resistant values
 	 * @param yUnit
-	 *            is the unit value of the y-axis values.
+	 *            is the unit value of the y-axis values
 	 */
-	private void writeMaskData(BufferedWriter bufferedWriter, String boundaryName, Number xValue,
-			Number yValue, String yUnit) {
+	private void writeMaskData(BufferedWriter bufferedWriter, String boundaryName, Number xValue, Number yValue,
+			String yUnit) {
 		try {
 			bufferedWriter.write(boundaryName);
 			bufferedWriter.write(DELIMITER);

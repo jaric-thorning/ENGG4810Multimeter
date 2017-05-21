@@ -14,8 +14,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 /**
- * A class which handles serial comms. Note this code is modified off TP1 code which my team member
+ *  class which handles serial comms. Note this code is modified off TP1 code which my team member
  * originally wrote.
+ */
+/**
+ * The SerialFramework class handles serial communications between software/hardware/firmware. NOTE: This code is
+ * modified off TP1 code which my team member originally wrote.
+ * 
+ * @author dayakern
+ *
  */
 public class SerialFramework {
 
@@ -47,14 +54,6 @@ public class SerialFramework {
 			System.err.println("Port Cannot Be Written To");
 		}
 	}
-
-	/**
-	 * Resets the selected port to default first element (None).
-	 */
-	// public static void resetSelectablePortsList() {
-	// if (portNames.size() >= 1)
-	// //GuiController.getInstance().portsAvailable.setValue(portNames.get(0));
-	// }
 
 	/**
 	 * Refreshes the existing ports list to include any new ports detected.
@@ -119,9 +118,8 @@ public class SerialFramework {
 	}
 
 	/**
-	 * Handles the changing of the serial port selection. If there are ports (with valid names) it
-	 * binds the serial port (refreshes the port list if it didn't bind); otherwise is closes the
-	 * open port.
+	 * Handles the changing of the serial port selection. If there are ports (with valid names) it binds the serial port
+	 * (refreshes the port list if it didn't bind); otherwise is closes the open port.
 	 */
 	public static void selectPort() {
 		// if (GuiController.getInstance().portsAvailable.getValue() != null
@@ -135,8 +133,7 @@ public class SerialFramework {
 			System.out.println("PORTS: " + serialPort);
 			if (serialPort.getSystemPortName().contains("tty.usbmodem")) {// serialPort.getDescriptivePortName()equals(GuiController.getInstance().portsAvailable.getValue()))
 																			// {
-				System.out.println(
-						"Binding to Serial Port " + serialPort.getSystemPortName() + "...");
+				System.out.println("Binding to Serial Port " + serialPort.getSystemPortName() + "...");
 				if (bindListen(serialPort)) {
 					System.out.println("Success.");
 				} else {
@@ -160,8 +157,7 @@ public class SerialFramework {
 	 * 
 	 * @param serialPort
 	 *            the port that needs to be binded to.
-	 * @return whether or not the serial port was binded to successfully (true if it did, false if
-	 *         if didn't).
+	 * @return whether or not the serial port was binded to successfully (true if it did, false if if didn't).
 	 */
 	static boolean bindListen(SerialPort serialPort) {
 		closeOpenPort();
@@ -218,8 +214,7 @@ public class SerialFramework {
 
 				// Read by line
 				try {
-					readFromSerial = new BufferedReader(
-							new InputStreamReader(sEvent.getSerialPort().getInputStream()));
+					readFromSerial = new BufferedReader(new InputStreamReader(sEvent.getSerialPort().getInputStream()));
 					getData(readFromSerial.readLine());
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -230,8 +225,8 @@ public class SerialFramework {
 		}
 
 		/**
-		 * Checks the validity of a supplied string. To be used in getData(), as a means to
-		 * determine whether the data has been decoded successfully.
+		 * Checks the validity of a supplied string. To be used in getData(), as a means to determine whether the data
+		 * has been decoded successfully.
 		 * 
 		 * @param str
 		 *            the string which needs it's validity checked.
@@ -268,8 +263,7 @@ public class SerialFramework {
 		}
 
 		/**
-		 * A private helper function for 'getData' which checks that the command received is valid
-		 * and executes it
+		 * A private helper function for 'getData' which checks that the command received is valid and executes it
 		 * 
 		 * @param data
 		 *            the data read in serially
@@ -295,9 +289,8 @@ public class SerialFramework {
 				failedToDecode = true;
 
 			// If the next bits of data were not matching to any mode type
-			if (!(trimmedData.charAt(2) == 'I' || trimmedData.charAt(2) == 'V'
-					|| trimmedData.charAt(2) == 'R' || trimmedData.charAt(2) == 'C'
-					|| trimmedData.charAt(2) == 'L')) {
+			if (!(trimmedData.charAt(2) == 'I' || trimmedData.charAt(2) == 'V' || trimmedData.charAt(2) == 'R'
+					|| trimmedData.charAt(2) == 'C' || trimmedData.charAt(2) == 'L')) {
 				failedToDecode = true;
 			} else {
 				modeType = trimmedData.charAt(2);
@@ -327,8 +320,8 @@ public class SerialFramework {
 					break;
 				}
 			} else {
-				System.out.println("******Failed to decode data:\""
-						+ serialBuffer.substring(openPacket, closePacket + 1) + "\"");
+				System.out.println(
+						"******Failed to decode data:\"" + serialBuffer.substring(openPacket, closePacket + 1) + "\"");
 			}
 		}
 

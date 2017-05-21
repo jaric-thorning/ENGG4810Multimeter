@@ -24,14 +24,20 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+/**
+ * The GuiView class represents the View of the Model-View-Controller pattern.
+ * 
+ * @author dayakern
+ *
+ */
 public class GuiView extends Application {
-	EventHandlers event = new EventHandlers();
+	DataEvents event = new DataEvents();
 
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
 
 	private String fxmlFileName = "/gui_test.fxml";
-	private String GuiTitle = "Digital Multimeter Mark 9999.0";
+	private String GuiTitle = "Digital Multimeter Mark 90001";
 	private Stage stage = new Stage();
 
 	private static GuiView instance;
@@ -42,10 +48,9 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * Enables other classes to access methods within this class, once the program has been
-	 * launched.
+	 * Enables other classes to access methods within this class, once the program has been launched.
 	 * 
-	 * @return an instance of the GuiView class.
+	 * @return an instance of the GuiView class
 	 */
 	public static GuiView getInstance() {
 		return instance;
@@ -54,19 +59,19 @@ public class GuiView extends Application {
 	/**
 	 * Gets the Stage object for other classes to modify.
 	 * 
-	 * @return the Stage object.
+	 * @return the Stage object
 	 */
 	public Stage getStage() {
 		return this.stage;
 	}
 
-	/**
-	 * Hooks onto GUI shutdown event and does relevant tasks (i.e. close any open ports, shutdown
-	 * threads).
-	 */
 	@Override
 	public void stop() throws Exception {
+
+		// Close any open ports
 		SerialFramework.closeOpenPort();
+
+		// Shuts down any threads
 		super.stop();
 	}
 
@@ -85,7 +90,7 @@ public class GuiView extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setResizable(true); // Enable maximisation of screen
 
-		// Original dimensions of stage
+		// Set stage to original dimensions of stage
 		primaryStage.setMinWidth(1096D);
 		primaryStage.setMinHeight(622D);
 
@@ -114,47 +119,51 @@ public class GuiView extends Application {
 	 * Displays the mouse coordinates relative to the chart background.
 	 * 
 	 * @param controller
-	 *            access components of the GUI Controller.
+	 *            the GUI Controller with components to access/modify
 	 */
 	private void displayPlotCoordinates(GuiController controller) {
 		controller.chartBackground.setOnMouseMoved(new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
-				controller.xCoordValues.setText(
-						"X: " + TIME_DECIMAL.format(controller.getMouseChartCoords(event, true)));
-				controller.yCoordValues.setText("Y: "
-						+ MEASUREMENT_DECIMAL.format(controller.getMouseChartCoords(event, false)));
+				controller.xCoordValues
+						.setText("X: " + TIME_DECIMAL.format(controller.getMouseChartCoords(event, true)));
+				controller.yCoordValues
+						.setText("Y: " + MEASUREMENT_DECIMAL.format(controller.getMouseChartCoords(event, false)));
 			}
 		});
 	}
 
 	/**
-	 * Setup the line-chart.
+	 * Setup the line chart to display and behave accordingly.
 	 * 
 	 * @param xAxis
-	 *            the x-axis to be modified.
+	 *            the x-axis to be modified
 	 * @param yAxis
-	 *            the y-axis to be modified.
+	 *            the y-axis to be modified
 	 * @param controller
-	 *            access line chart components of the GUI Controller.
+	 *            the GUI Controller with components to access/modify
 	 */
 	private void setupLineChart(NumberAxis xAxis, NumberAxis yAxis, GuiController controller) {
+
 		// Setup axes
 		setupAxes(xAxis, yAxis);
 
-		// Create the chart
+		// Add line chart to the GUI application
 		controller.lineChart = new ModifiedLineChart(xAxis, yAxis);
 
-		// Add line chart to grid pane
-		// FIXME: keep tabs on where it is
 		controller.chartGrid.add(controller.lineChart, 0, 1);
 		GridPane.setValignment(controller.lineChart, VPos.TOP);
 
-		controller.lineChart.getData().add(controller.lowMaskBoundarySeries);
-		controller.lineChart.getData().add(controller.highMaskBoundarySeries);
-		controller.lineChart.getData().add(controller.readingSeries);
-
+		// Add series to chart
+		controller.lineChart.getData().add(controller.getLowSeries());
+		controller.getLowSeries().setName("low boundary");
+		controller.lineChart.getData().add(controller.getHighSeries());
+		controller.getHighSeries().setName("high boundary");
+		controller.lineChart.getData().add(controller.getDataSeries());
+		controller.getDataSeries().setName("multimeter data");
+		
+		// Setup chart plot background
 		controller.chartBackground = controller.lineChart.lookup(".chart-plot-background");
 		controller.chartBackground.setCursor(Cursor.CROSSHAIR);
 
@@ -162,13 +171,13 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * A private function which sets up the necessary modifies on the x and y axes of the line
+	 * A private function to 'setupLineChart' which sets up the necessary modifiers on the x and y axes of the line
 	 * chart.
 	 * 
 	 * @param xAxis
-	 *            the x-axis to be modified.
+	 *            the x-axis to be modified
 	 * @param yAxis
-	 *            the y-axis to be modified.
+	 *            the y-axis to be modified
 	 */
 	private void setupAxes(NumberAxis xAxis, NumberAxis yAxis) {
 		xAxis.setLabel("Time (seconds)");
@@ -193,13 +202,13 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * A private helper function which adds a listener to the width property of the scene, and to
-	 * some of the contained elements.
+	 * A private helper function to 'start' which adds a listener to the width property of the scene, and to some of the
+	 * contained elements.
 	 * 
 	 * @param scene
-	 *            the scene which has the width listener attached to it.
+	 *            the scene which has the width listener attached to it
 	 * @param controller
-	 *            access components of the GUI Controller.
+	 *            the GUI Controller with components to access/modify
 	 */
 	private void sceneWidthChange(Stage stage, Scene scene, GuiController controller) {
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
@@ -218,13 +227,13 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * A private helper function which adds a listener to the height property of the scene, and to
-	 * some of the contained elements.
+	 * A private helper function to 'start' which adds a listener to the height property of the scene, and to some of
+	 * the contained elements.
 	 * 
 	 * @param scene
-	 *            the scene which has the height listener attached to it.
+	 *            the scene which has the height listener attached to it
 	 * @param controller
-	 *            the GuiController to access the elements of the scene.
+	 *            the GUI Controller with components to access/modify
 	 */
 	private void sceneHeightChange(Stage stage, Scene scene, GuiController controller) {
 		scene.heightProperty().addListener(new ChangeListener<Number>() {
@@ -244,8 +253,8 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * A helper function, to display a pop-up dialog box to the user, when they are about to exit
-	 * connected or disconnected mode, or save a file. Dialog box structure modified from
+	 * A helper function, to display a pop-up dialog box to the user (i.e. when they are about to exit connected or
+	 * disconnected mode or save a file). Dialog box structure modified from
 	 * http://code.makery.ch/blog/javafx-dialogs-official/.
 	 * 
 	 * @param title
@@ -259,12 +268,14 @@ public class GuiView extends Application {
 	 * @return the status of the User's selection
 	 */
 	public Alert alertUser(String title, String context, String errorType, AlertType alertType) {
-		ImageView image = new ImageView(new Image(
-				getClass().getResourceAsStream("/com/sun/javafx/scene/control/skin/" + errorType)));
+		ImageView image = new ImageView(
+				new Image(getClass().getResourceAsStream("/com/sun/javafx/scene/control/skin/" + errorType)));
 		Node graphic = image;
 		Alert alert = new Alert(alertType);
 
-		alert.setGraphic(graphic); // Changes the graphic from a confirmation one to a warning one
+		// Changes the graphic displayed to match the error type
+		alert.setGraphic(graphic);
+
 		alert.setTitle(title);
 		alert.setHeaderText(null);
 		alert.setContentText(context);
@@ -272,29 +283,30 @@ public class GuiView extends Application {
 		// Keeps alert box on the screen when stage is maximised
 		alert.initOwner(GuiView.getInstance().getStage());
 
-		// Linking CSS style sheet to dialog pane.
+		// Link CSS style sheet
 		DialogPane dialogPane = alert.getDialogPane();
-		dialogPane.getStylesheets()
-				.add(getClass().getResource("/dialogstyle.css").toExternalForm());
+		dialogPane.getStylesheets().add(getClass().getResource("/dialogstyle.css").toExternalForm());
 
 		return alert;
 	}
 
 	/**
-	 * Launches a warning message box to the user. To inform them that they cannot add the latest
-	 * point to the mask boundaries.
+	 * Launches a warning message box to the user. This is to inform them that they cannot add the latest point to the
+	 * high/low mask boundaries.
 	 */
 	public void illegalMaskPoint() {
-		// Add a warning pop up
+
 		String title = "Illegal Region Selection";
 		String warning = "The lower and upper bounds cannot overlap!";
+
+		// Add a warning pop up
 		String errorType = "modena/dialog-warning.png";
 		AlertType alertType = AlertType.WARNING;
 
-		// Notify User of existing file.
-		Optional<ButtonType> result = this.alertUser(title, warning, errorType, alertType)
-				.showAndWait();
+		// Notify User
+		Optional<ButtonType> result = this.alertUser(title, warning, errorType, alertType).showAndWait();
 
+		// Do nothing if user selected 'OK'
 		if (result.get() == ButtonType.OK) {
 			return;
 		}
