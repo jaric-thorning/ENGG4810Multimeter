@@ -45,12 +45,20 @@ import javafx.scene.shape.Line;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
+/**
+ * The GuiController class represents the Controller of the Model-View-Controller pattern
+ * 
+ * @author dayakern
+ *
+ */
 public class GuiController implements Initializable {
-	GuiModel model = new GuiModel();
-	EventHandlers event = new EventHandlers();
-	Comparators compare = new Comparators();
-	ISOTimeInterval startTime = null;
-	ArrayList<ISOTimeInterval> storedISOTimes = new ArrayList<>();
+	public static GuiController instance;
+
+	private GuiModel model = new GuiModel();
+	private DataEvents event = new DataEvents();
+	private DataComparator compare = new DataComparator();
+	private ModifyMultimeterMeasurements modifyMeasurements = new ModifyMultimeterMeasurements();
+	private ISOTimeInterval startTime = null;
 
 	/* Components required for resizing the GUI when maximising or resizing */
 	@FXML
@@ -66,13 +74,13 @@ public class GuiController implements Initializable {
 	@FXML
 	GridPane chartGrid;
 
-	/* Components to display dummy data */
+	/* Components relating to which data to display */
 	private int dataPlotPosition = 0;
-	public volatile boolean resistance = false;
-	public volatile boolean voltage = false;
-	public volatile boolean current = false;
-	private volatile boolean continuity = false;
-	private volatile boolean logic = false;
+	protected volatile boolean resistance = false;
+	protected volatile boolean voltage = false;
+	protected volatile boolean current = false;
+	protected volatile boolean continuity = false;
+	protected volatile boolean logic = false;
 
 	private volatile boolean isChanged = false;
 
@@ -107,7 +115,7 @@ public class GuiController implements Initializable {
 	@FXML
 	protected Label recordTimeLabel;
 
-	// Holds x & y coords of mouse position relative to linechart background
+	// Holds x/y coordinates of mouse position relative to line chart background
 	@FXML
 	Label yCoordValues;
 	@FXML
@@ -123,7 +131,6 @@ public class GuiController implements Initializable {
 	private Button importMaskBtn;
 	@FXML
 	private Button exportMaskBtn;
-	/* Components for exporting mask type */
 	@FXML
 	private RadioButton maskVRBtn;
 	@FXML
@@ -142,6 +149,8 @@ public class GuiController implements Initializable {
 	private Button setMaskBtn;
 	@FXML
 	private Button runMaskBtn;
+
+	/* Components relating to mask testing */
 	@FXML
 	protected TextArea maskTestResults;
 	private List<Line2D> overlappedIntervals = new ArrayList<>();
@@ -153,12 +162,12 @@ public class GuiController implements Initializable {
 	NumberAxis xAxis = new NumberAxis();
 	NumberAxis yAxis = new NumberAxis();
 	ModifiedLineChart lineChart;
-	Node chartBackground; // Handle on chart background for getting lineChart coords
+	Node chartBackground; // Handle on chart background for getting lineChart coordinates
 
 	// Holds the upper & lower boundary points and read data
-	XYChart.Series<Number, Number> highMaskBoundarySeries = new XYChart.Series<>();
-	XYChart.Series<Number, Number> lowMaskBoundarySeries = new XYChart.Series<>();
-	XYChart.Series<Number, Number> readingSeries = new XYChart.Series<>();
+	private XYChart.Series<Number, Number> highMaskBoundarySeries = new XYChart.Series<>();
+	private XYChart.Series<Number, Number> lowMaskBoundarySeries = new XYChart.Series<>();
+	private XYChart.Series<Number, Number> readingSeries = new XYChart.Series<>();
 	ArrayList<String> storedYUnits = new ArrayList<>(); // The y-unit displayed
 
 	// Components for shifting the line chart x-axis left and right
@@ -192,6 +201,12 @@ public class GuiController implements Initializable {
 	private ComboBox<String> sampleRate;
 	private ObservableList<String> sampleRates = FXCollections.observableArrayList();
 
+	/* Components relating to acquired data */
+	private ArrayList<Data<Number, Number>> totalAcquisitionData = new ArrayList<>();
+	private ArrayList<ISOTimeInterval> storedISOTimes = new ArrayList<>();
+	private ArrayList<ISOTimeInterval> pausedStoredISOTimeData = new ArrayList<>();
+	private ArrayList<String> pausedStoredYUnitData = new ArrayList<>();
+
 	/* Constants */
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
@@ -200,40 +215,59 @@ public class GuiController implements Initializable {
 	private static final String FILE_FORMAT_EXTENSION = "*.csv";
 	private static final String FILE_FORMAT_TITLE = "Comma Separated Files";
 
-	private static final double X_UPPER_BOUND = 20D;// 10D;
+	private static final double X_UPPER_BOUND = 20D;
 	private static final double X_LOWER_BOUND = 0D;
 	private static final double Y_UPPER_BOUND = 50D;
 	private static final double Y_LOWER_BOUND = -10D;
 
 	public static double SAMPLES = 2D;
-	public static double PER_TIMEFRAME = 1D; // default second
+	public static double PER_TIMEFRAME = 1D; // Default second
 
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
-	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
-
-	public static GuiController instance;
-
-	private ArrayList<Data<Number, Number>> totalAcquisitionData = new ArrayList<>();
-	private ArrayList<ISOTimeInterval> pausedStoredISOTimeData = new ArrayList<>();
-	private ArrayList<String> pausedStoredYUnitData = new ArrayList<>();
 
 	public GuiController() {
-		// I am empty :(
 		instance = this;
 	}
 
 	/**
-	 * Getter method for if the intervals of the mask are overlapped TODO: COMMENT
+	 * Getter method for overlapped mask intervals.
 	 * 
-	 * @return
+	 * @return the overlapped intervals
 	 */
-	protected List<Line2D> getOverlappedIntervals() {
+	public List<Line2D> getOverlappedIntervals() {
 		return overlappedIntervals;
 	}
 
 	/**
-	 * Decreases the upper and lower bounds of the x-axis. To let the user see the whole data plot
-	 * instead of just a snapshot. Zero is the farthest the user can move the plot left.
+	 * Getter method for high mask boundary.
+	 * 
+	 * @return the high mask boundary series
+	 */
+	public XYChart.Series<Number, Number> getHighSeries() {
+		return highMaskBoundarySeries;
+	}
+
+	/**
+	 * Getter method for lower mask boundary.
+	 * 
+	 * @return the low mask boundary series
+	 */
+	public XYChart.Series<Number, Number> getLowSeries() {
+		return lowMaskBoundarySeries;
+	}
+
+	/**
+	 * Getter method for lower mask boundary.
+	 * 
+	 * @return the low mask boundary series
+	 */
+	public XYChart.Series<Number, Number> getDataSeries() {
+		return readingSeries;
+	}
+
+	/**
+	 * Decreases the upper and lower bounds of the x-axis. TTo let the user see as much plotted data as they want
+	 * instead of just a set amount. Zero is the farthest the user can move the plot left.
 	 */
 	@FXML
 	private void moveXAxisLeft() {
@@ -242,46 +276,20 @@ public class GuiController implements Initializable {
 		double newAxisLowerValue = xAxis.getLowerBound() - 1;
 
 		if (newAxisLowerValue >= 0) {
-			updateMaskBoundary(highMaskBoundarySeries, newAxisUpperValue);
-			updateMaskBoundary(lowMaskBoundarySeries, newAxisUpperValue);
-
-			xAxis.setUpperBound(newAxisUpperValue);
-			xAxis.setLowerBound(newAxisLowerValue);
+			lineChart.updateMaskBoundaries(newAxisUpperValue, newAxisLowerValue);
 		}
 	}
 
 	/**
-	 * Increases the upper and lower bounds of the x-axis. To let the user see the whole data plot
-	 * instead of just a snapshot.
+	 * Increases the upper and lower bounds of the x-axis. To let the user see as much plotted data as they want instead
+	 * of just a set amount.
 	 */
 	@FXML
 	private void moveXAxisRight() {
 		double newAxisUpperValue = xAxis.getUpperBound() + 1;
 		double newAxisLowerValue = xAxis.getLowerBound() + 1;
 
-		updateMaskBoundary(highMaskBoundarySeries, newAxisUpperValue);
-		updateMaskBoundary(lowMaskBoundarySeries, newAxisUpperValue);
-
-		xAxis.setUpperBound(newAxisUpperValue);
-		xAxis.setLowerBound(newAxisLowerValue);
-	}
-
-	/**
-	 * Updates the set high and low boundary mask final point if the upper boundary of the xaxis
-	 * changes
-	 * 
-	 * @param series
-	 *            either low or high boundary
-	 * @param newUpper
-	 *            the new x-axis boundary value.
-	 */
-	private void updateMaskBoundary(XYChart.Series<Number, Number> series, double newUpper) {
-		if (series.getData().size() > 0 && series.getData().get(series.getData().size() - 1)
-				.getXValue().doubleValue() == xAxis.getUpperBound()) {
-
-			// Update the mask upper value
-			series.getData().get(series.getData().size() - 1).setXValue(newUpper);
-		}
+		lineChart.updateMaskBoundaries(newAxisUpperValue, newAxisLowerValue);
 	}
 
 	/**
@@ -320,7 +328,6 @@ public class GuiController implements Initializable {
 		// TODO: SEND IN AC MODE TOKEN
 	}
 
-	// FIXME: SQUARE SINE WAVE 0-1 FOR CONTINUITY MODE BUT RESISTANCE
 	/**
 	 * Writes out code to remotely control multimeter's continuity mode
 	 */
@@ -328,12 +335,12 @@ public class GuiController implements Initializable {
 	private void selectContinuityMode() {
 		String code = MultimeterCodes.CONTINUITY.getCode();
 		SerialFramework.writeCode(code);
-		
-//		if (continuity) {
-//			lineChart.setContinuityMode();
-//		} else {
-//			lineChart.revertContinuityMode();
-//		}
+
+		// if (continuity) {
+		// lineChart.setContinuityMode();
+		// } else {
+		// lineChart.revertContinuityMode();
+		// }
 		// if (!isContinuityMode) { // Entering Continuity Mode
 		// System.out.println("I clicked on continuity mode");
 		//
@@ -350,7 +357,7 @@ public class GuiController implements Initializable {
 	 */
 	protected void driveContinuity() {
 		System.out.println("Driving continuity");
-		
+
 		voltage = false;
 		current = false;
 		resistance = false;
@@ -397,20 +404,6 @@ public class GuiController implements Initializable {
 		System.out.println("Driving voltage");
 	}
 
-	private String getVoltageRange(double dataValue) {
-		if (dataValue >= -1 && dataValue <= 1) { // +- 1 range
-			return "1";
-		} else if (dataValue >= -5 && dataValue <= 5) { // +- 5 range
-			return "5";
-		} else if (dataValue >= -12 && dataValue <= 12) { // +- 12 range
-			return "12";
-		} else if (dataValue < -12 && dataValue > 12) { // FIXME: MAKE IT SO EVERYTHING IS LIKE THAT
-			return "OL";
-		} else {
-			return "";
-		}
-	}
-
 	/**
 	 * Writes out code to remotely control multimeter. [Select current].
 	 */
@@ -427,18 +420,6 @@ public class GuiController implements Initializable {
 		System.out.println("Driving current");
 	}
 
-	private String getCurrentRange(double dataValue) {
-		if (dataValue >= -10 && dataValue <= 10) { // +- 10 mA range
-			return "10";
-		} else if (dataValue >= -200 && dataValue <= 200) { // +- 200 mA range
-			return "200";
-		} else if (dataValue < -200 && dataValue > 200) { // FIXME: MAKE WHOLE MULTIMETER SET-TEXT
-			return "OL";
-		} else {
-			return "";
-		}
-	}
-
 	/**
 	 * Writes out code to remotely control multimeter. [Select resistance].
 	 */
@@ -453,43 +434,6 @@ public class GuiController implements Initializable {
 	 */
 	protected void driveResistance() {
 		System.out.println("Driving resistance");
-	}
-
-	// TODO: Keep this just for updating the multi-meter range stuff.
-	/**
-	 * Changes the y-axis label if the units change + the units' range.
-	 * 
-	 * @param dataValue
-	 *            the y-axis value.
-	 */
-	private String getResistanceRange(double dataValue) {
-		if (dataValue >= 0 && dataValue <= 1000) { // 0 - 1 kOhm range (1 Ohm = 0.001 kOhm)
-			return "0 - 1k" + OHM_SYMBOL;
-		} else if (dataValue > 1000 && dataValue <= 1000000) { // 0 - 1 MOhm range (1 kOhm = 0.001
-																// MOhm)
-			return "0 - 1M" + OHM_SYMBOL;
-		} else if (dataValue > 1000000) { // FIXME: MAKE WHOLE MULTIMETER SET-TEXT
-			return "OL";
-		} else {
-			return "";
-		}
-	}
-
-	private String convertRange(Double dataValue) {
-		if (dataValue < 1000) {
-			String kOhm = "k" + OHM_SYMBOL;
-			// yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
-			return kOhm + ": " + (dataValue /= 1000).toString() + kOhm;
-			// } else if (dataValue >= 1000 && dataValue <= 1000000) {
-			// yAxis.setLabel("Measurements [" + "k" + OHM_SYMBOL + "]");
-			// return (dataValue /= 1000);
-		} else if (dataValue >= 1000 && dataValue <= 1000000) {
-			String MOhm = "M" + OHM_SYMBOL;
-			// yAxis.setLabel("Measurements [" + "M" + OHM_SYMBOL + "]");
-			return MOhm + ": " + (dataValue /= 1000000).toString() + MOhm;
-		} else {
-			return "";
-		}
 	}
 
 	/**
@@ -545,7 +489,12 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Updates the data displayed on the analog, digital and strip chart displays.
+	 * Updates the data displayed on the line chart, and takes care of any extra data storage/display.
+	 * 
+	 * @param multimeterDataValue
+	 *            the received multimeter data value
+	 * @param unit
+	 *            the received y-unit value
 	 */
 	public void recordAndDisplayNewResult(Double multimeterDataValue, String unit) {
 		if (!Platform.isFxApplicationThread()) {
@@ -562,175 +511,134 @@ public class GuiController implements Initializable {
 		updateMultimeterDisplay(multimeterDataValue, unit);
 	}
 
-	////////////
 	/**
-	 * A private helper function for displaying dummy data on chart. FIXME: convert to serial.
+	 * A private helper function to 'recordAndDisplayNewResult' which displays multimeter data on chart.
 	 * 
-	 * @param multimeterReading
+	 * @param multimeterDataValue
+	 *            the received multimeter data value
+	 * @param unit
+	 *            the received y-unit value
 	 */
-	private void updateMultimeterDisplay(Double multimeterReading, String unit) {
+	private void updateMultimeterDisplay(Double multimeterDataValue, String unit) {
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					updateMultimeterDisplay(multimeterReading, unit);
+					updateMultimeterDisplay(multimeterDataValue, unit);
 				}
 			});
 			return;
 		}
-		System.out
-				.println("	RS: " + readingSeries.getData().size() + ", " + storedYUnits.size());
+
+		System.out.println("	RS: " + readingSeries.getData().size() + ", " + storedYUnits.size());
 		System.out.println("SS: " + storedISOTimes.size());
 
 		// Modify Plot Parts.
-		if (!validateYAxisUnits(unit)) {
+		if (!modifyMeasurements.validateYAxisUnits(unit)) {
 			modifyPlotParts();
 		}
 
 		// Add data
-		if (!isPaused) { // not paused
-
-			// Change multimeter text display according to ranges and values.
-			updateYAxisLabel(multimeterReading, unit);
-
-			// Has been paused as some point
-			if (totalAcquisitionData.size() > 0) {
-				// If y-unit has been changed, clear all reading data
-				if (isChanged) {
-					readingSeries.getData().clear();
-					pausedStoredYUnitData.clear();
-					pausedStoredISOTimeData.clear();
-					resetXAxis();
-					isChanged = false;
-				}
-
-				readingSeries.getData().addAll(totalAcquisitionData);
-				pausedStoredYUnitData.addAll(storedYUnits);
-				pausedStoredISOTimeData.addAll(storedISOTimes);
-
-				// Reset paused acquired data home.
-				totalAcquisitionData.clear();
-				storedYUnits.clear(); // TICK
-				storedISOTimes.clear(); // TICK
-			}
-
-			// FIXME: STILL NEED TO STORE THE SAMPLES/TIME SOMEWHERE
-
-			// Add to stored data
-			pausedStoredYUnitData.add(getUnitToSave(unit));
-
-			// ISO Time Intervals
-			pausedStoredISOTimeData.add(establishISOTime(readingSeries.getData().size()));
-
-			// Normally add received data
-			readingSeries.getData().add(new XYChart.Data<Number, Number>(
-					dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterReading));
-
-			// Update chart bounds
-			int dataBoundsRange = (int) Math.ceil(dataPlotPosition / (SAMPLES / PER_TIMEFRAME));
-			if (dataBoundsRange > X_UPPER_BOUND) {
-				xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
-				xAxis.setUpperBound(dataBoundsRange);
-			}
-
-		} else { // Is paused
-
-			// Modify Plot Parts.
-			totalAcquisitionData.add(new XYChart.Data<Number, Number>(
-					dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterReading));
-
-			// Store total y-units
-			storedYUnits.add(getUnitToSave(unit));
-
-			// Store total ISO time intervals
-			storedISOTimes.add(establishISOTime(totalAcquisitionData.size()));
+		if (!isPaused) { // Not paused
+			liveDataMode(multimeterDataValue, unit);
+		} else { // Paused
+			pausedDataMode(multimeterDataValue, unit);
 		}
 
 		dataPlotPosition++;
 	}
 
 	/**
-	 * Determines if the y-value unit has changed upon acquisition.
+	 * A private helper function to 'updateMultimeterDisplay' which dictates how the storage of data occurs and how the
+	 * data looks like displayed within the GUI when it's not paused.
 	 * 
+	 * @param multimeterDataValue
+	 *            the received multimeter data value
 	 * @param unit
-	 *            the y-unit received in the data sent across
-	 * @return if there have been any changes in the y-unit data
+	 *            the received y-unit value
 	 */
-	private boolean validateYAxisUnits(String unit) {
-		if (!(checkYUnitChangesVoltage(unit) && checkYUnitChangesCurrent(unit)
-				&& checkYUnitChangesResistance(unit))) {
-			return false;
-		}
+	private void liveDataMode(Double multimeterDataValue, String unit) {
+		// FIXME: STILL NEED TO STORE THE SAMPLES/TIME SOMEWHERE
 
-		return true;
+		// Change multimeter text display according to ranges and values.
+		modifyMeasurements.updateYAxisLabel(multimeterDataValue, unit, multimeterDisplay, yAxis);
+
+		// Has been paused as some point
+		acquiredDataHasBeenPaused();
+
+		// Add to stored data
+		pausedStoredYUnitData.add(modifyMeasurements.getUnitToSave(unit));
+
+		// ISO Time Intervals
+		pausedStoredISOTimeData.add(establishISOTime(readingSeries.getData().size()));
+
+		// Normally add received data
+		readingSeries.getData().add(
+				new XYChart.Data<Number, Number>(dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterDataValue));
+
+		// Update chart bounds
+		int dataBoundsRange = (int) Math.ceil(dataPlotPosition / (SAMPLES / PER_TIMEFRAME));
+		if (dataBoundsRange > X_UPPER_BOUND) {
+			xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
+			xAxis.setUpperBound(dataBoundsRange);
+		}
 	}
 
 	/**
-	 * Determines if the y-value unit has changed to voltage if it's currently not voltage
-	 * 
-	 * @param unit
-	 *            the y-unit received in the data sent across
-	 * @return true if there has been no change, false otherwise
+	 * A private helper function to 'liveData' which adds the accumulated data to the displayed multimeter data on the
+	 * chart (as well as adding to the ISO time and y-units list).
 	 */
-	private boolean checkYUnitChangesVoltage(String unit) {
-		if (unit.equals("V") && !voltage) {
-			voltage = true;
-			current = false;
-			resistance = false;
-			continuity = false;
-			logic = false;
+	private void acquiredDataHasBeenPaused() {
+		if (totalAcquisitionData.size() > 0) {
 
-			return false;
+			// If the y-unit has been changed, clear all multimeter data
+			if (isChanged) {
+				readingSeries.getData().clear();
+				pausedStoredYUnitData.clear();
+				pausedStoredISOTimeData.clear();
+
+				resetXAxis();
+
+				isChanged = false;
+			}
+
+			// Add results to multimeter data, y-units and time
+			readingSeries.getData().addAll(totalAcquisitionData);
+			pausedStoredYUnitData.addAll(storedYUnits);
+			pausedStoredISOTimeData.addAll(storedISOTimes);
+
+			// Reset paused acquired data
+			totalAcquisitionData.clear();
+			storedYUnits.clear();
+			storedISOTimes.clear();
 		}
-
-		return true;
 	}
 
 	/**
-	 * Determines if the y-value unit has changed to current if it's currently not current
+	 * A private helper function to 'updateMultimeterDisplay' which dictates how the storage of data occurs when it's
+	 * paused.
 	 * 
+	 * @param multimeterDataValue
+	 *            the received multimeter data value
 	 * @param unit
-	 *            the y-unit received in the data sent across
-	 * @return true if there has been no change, false otherwise
+	 *            the received y-unit value
 	 */
-	private boolean checkYUnitChangesCurrent(String unit) {
-		if (unit.equals("C") && !current) {
-			voltage = false;
-			current = true;
-			resistance = false;
-			continuity = false;
-			logic = false;
+	private void pausedDataMode(Double multimeterDataValue, String unit) {
 
-			return false;
-		}
+		// Modify Plot Parts.
+		totalAcquisitionData.add(
+				new XYChart.Data<Number, Number>(dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterDataValue));
 
-		return true;
+		// Store total y-units
+		storedYUnits.add(modifyMeasurements.getUnitToSave(unit));
+
+		// Store total ISO time intervals
+		storedISOTimes.add(establishISOTime(totalAcquisitionData.size()));
 	}
 
 	/**
-	 * Determines if the y-value unit has changed to resistance if it's currently not resistance
-	 * 
-	 * @param unit
-	 *            the y-unit received in the data sent across
-	 * @return true if there has been no change, false otherwise
-	 */
-	private boolean checkYUnitChangesResistance(String unit) {
-		if (unit.equals("R") && !resistance) {
-			voltage = false;
-			current = false;
-			resistance = true;
-			continuity = false;
-			logic = false;
-
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * A private helper function to 'validateYAxisUnit' which does the modifying of the plot and
-	 * sets certain flags.
+	 * A private helper function to 'updateMultimeterDisplay' which does the modifying of the plot and sets the flag
+	 * that when the data was paused, the measurement value changed (i.e. V->A)
 	 */
 	private void modifyPlotParts() {
 
@@ -747,80 +655,16 @@ public class GuiController implements Initializable {
 
 			// Only clear acquiring data, not displayed
 			totalAcquisitionData.clear();
-			storedYUnits.clear(); // TICK
-			storedISOTimes.clear(); // TICK
+			storedYUnits.clear();
+			storedISOTimes.clear();
 		}
 	}
 
-	// FIXME: does this need to be called everytime.
-	/**
-	 * A private helper function to 'updateDisplay' which updates the multimeter text display to
-	 * match the data coming through the serial channel.
-	 * 
-	 * @param multimeterReading
-	 *            the area which displays the multimeter readings
-	 * @param unit
-	 *            the unit of the y-axis values.
-	 */
-	private void updateYAxisLabel(Double multimeterReading, String unit) {
-		if (voltage) {
-			multimeterDisplay.setText(
-					getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getVoltageRange(multimeterReading)
-							+ " )" + "\nV: " + multimeterReading.toString() + unit);
-
-			yAxis.setLabel("Measurements [V]");
-		} else if (current) {
-			multimeterDisplay.setText(
-					getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getCurrentRange(multimeterReading)
-							+ " )" + "\nmA: " + multimeterReading.toString() + "mA");
-
-			yAxis.setLabel("Measurements [mA]");
-		} else if (resistance) {
-			multimeterDisplay.setText(getUnit(unit) + " ( " + getResistanceRange(multimeterReading)
-					+ " )" + "\n" + convertRange(multimeterReading));
-
-			yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
-		}
-	}
-
-	/**
-	 * A private helper function to 'updateYAxisLabel' which modifies text for displaying the
-	 * multimeter values.
-	 * 
-	 * @param unit
-	 *            the abbreviated forms of voltage, current and resistance.
-	 * @return an extended string version of the unit.
-	 */
-	private String getUnit(String unit) {
-		if (unit.equals("V")) {
-			return "Voltage";
-		} else if (unit.equals("C")) { // need to convert to milliamps
-			return "milliAmp";
-		} else if (unit.equals("R")) {
-			return "Ohm";
-		} else {
-			return "";
-		}
-	}
-
-	private String getUnitToSave(String unit) {
-		if (unit.equals("V")) {
-			return "V";
-		} else if (unit.equals("C")) { // need to convert to milliamps
-			return "mA";
-		} else if (unit.equals("R")) {
-			return "Ohm";
-		} else {
-			return "";
-		}
-	}
-
-	// FIXME: ISO TIME INTERVAL FOR FIRST AND LAST POINT
 	/**
 	 * Calculates the ISO 8601 time interval for the first and last point.
 	 */
 	private ISOTimeInterval establishISOTime(int dataSize) {
-		ISOTimeInterval endTime = null; // time of each data point
+		ISOTimeInterval endTime = null; // Time of each data point
 
 		if (dataPlotPosition == 0) { // Get the start time and initial end time
 			LocalDateTime local = LocalDateTime.now();
@@ -899,8 +743,8 @@ public class GuiController implements Initializable {
 	// TODO: setup connection test.
 	// TODO: make sure we can tell if there is a oneway/twoway connection
 	/**
-	 * A private helper function to selectConnected. This function is called to determine if there
-	 * is a connection (optical link).
+	 * A private helper function to selectConnected. This function is called to determine if there is a connection
+	 * (optical link).
 	 * 
 	 * @param connRBtn
 	 *            the radio button which controls the
@@ -922,8 +766,7 @@ public class GuiController implements Initializable {
 
 	// FIXME: make sure that the closed/reset stuff is done properly.
 	/**
-	 * A private helper function to 'selectConnected' which modifies the status of related
-	 * components.
+	 * A private helper function to 'selectConnected' which modifies the status of related components.
 	 */
 	private void setupConnectedComponents() {
 
@@ -958,8 +801,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'selectConnected'. Displays a pop-up message asking the user if
-	 * they wish to exit connected mode.
+	 * A private helper function to 'selectConnected'. Displays a pop-up message asking the user if they wish to exit
+	 * connected mode.
 	 * 
 	 * @return true if the user decides to exit connected mode, false otherwise.
 	 */
@@ -972,8 +815,8 @@ public class GuiController implements Initializable {
 		AlertType alertType = AlertType.CONFIRMATION;
 
 		// Notify User of existing file.
-		Optional<ButtonType> result = GuiView.getInstance()
-				.alertUser(title, warning, errorType, alertType).showAndWait();
+		Optional<ButtonType> result = GuiView.getInstance().alertUser(title, warning, errorType, alertType)
+				.showAndWait();
 
 		if (result.get() == ButtonType.OK) {
 
@@ -988,8 +831,7 @@ public class GuiController implements Initializable {
 
 	// FIXME: make sure that the closed/reset stuff is done properly.
 	/**
-	 * A private helper function to 'selectConnected' which modifies the status of related
-	 * components.
+	 * A private helper function to 'selectConnected' which modifies the status of related components.
 	 */
 	private void revertConnectedComponents() {
 
@@ -1036,15 +878,14 @@ public class GuiController implements Initializable {
 
 		// Reset the plot data
 		readingSeries.getData().clear();
-		pausedStoredISOTimeData.clear(); // TICK
-		pausedStoredYUnitData.clear(); // TICK
+		pausedStoredISOTimeData.clear();
+		pausedStoredYUnitData.clear();
 
 		dataPlotPosition = 0;
 		resetAxes();
-		storedYUnits.clear(); // TICK
-		storedISOTimes.clear(); // TICK
+		storedYUnits.clear();
+		storedISOTimes.clear();
 
-		// No listener apparently. TODO: ATTACH LISTENER
 		xDataCoord.setText("X: ");
 		yDataCoord.setText("Y: ");
 		recordTimeLabel.setText("");
@@ -1148,15 +989,15 @@ public class GuiController implements Initializable {
 		yAxis.setLabel("Measurements");
 		yAxis.setAutoRanging(true);
 
-		// Also reset the displayed chart coord values.
+		// Also reset the displayed chart coordinate values.
 		xCoordValues.setText("X: ");
 		yCoordValues.setText("Y: ");
 		recordTimeLabel.setText("");
 	}
 
 	/**
-	 * A private helper function to 'selectDisconnected'. Displays a pop-up message asking the user
-	 * if they wish to exit disconnected mode.
+	 * A private helper function to 'selectDisconnected'. Displays a pop-up message asking the user if they wish to exit
+	 * disconnected mode.
 	 * 
 	 * @return true if the user decides to exit disconnected mode, false otherwise.
 	 */
@@ -1169,8 +1010,8 @@ public class GuiController implements Initializable {
 		AlertType alertType = AlertType.CONFIRMATION;
 
 		// Notify User of existing file.
-		Optional<ButtonType> result = GuiView.getInstance()
-				.alertUser(title, warning, errorType, alertType).showAndWait();
+		Optional<ButtonType> result = GuiView.getInstance().alertUser(title, warning, errorType, alertType)
+				.showAndWait();
 
 		if (result.get() == ButtonType.OK) { // User was OK exiting disconnected mode
 			return true;
@@ -1207,11 +1048,14 @@ public class GuiController implements Initializable {
 		} else {
 			System.out.println("DATA IS UNPAUSED");
 
-			disablePausing();
+			resume();
 		}
 	}
 
-	private void disablePausing() {
+	/**
+	 * Enable multimeter components when pause button has been clicked on again, and pause is now resumed
+	 */
+	private void resume() {
 		isPaused = false;
 		pauseBtn.setText("Pause");
 
@@ -1238,8 +1082,7 @@ public class GuiController implements Initializable {
 		loadFileOptions.setTitle("Load Saved Data");
 
 		// Select file
-		loadFileOptions.getExtensionFilters()
-				.add(new ExtensionFilter(FILE_FORMAT_TITLE, FILE_FORMAT_EXTENSION));
+		loadFileOptions.getExtensionFilters().add(new ExtensionFilter(FILE_FORMAT_TITLE, FILE_FORMAT_EXTENSION));
 
 		File selectedFile = loadFileOptions.showOpenDialog(GuiView.getInstance().getStage());
 
@@ -1261,16 +1104,15 @@ public class GuiController implements Initializable {
 			ArrayList<String> inputDataIsoTime = new ArrayList<>();
 
 			// Read from file
-			readDataFromFile(selectedFile, inputDataXValues, inputDataYValues, inputDataYUnits,
-					inputDataIsoTime);
+			readDataFromFile(selectedFile, inputDataXValues, inputDataYValues, inputDataYUnits, inputDataIsoTime);
 
 			// Modify y-units
 			storedYUnits.addAll(inputDataYUnits); // FIXME?
 			if (storedYUnits.size() > 0) { // should be greater than 0.
-				convertMeasurementYUnit(storedYUnits.get(0));
+				modifyMeasurements.convertMeasurementYUnit(storedYUnits.get(0), yAxis);
 			}
 
-			// FIXME: make sure autoranging is set true/false in right places
+			// FIXME: make sure auto-ranging is set true/false in right places
 			yAxis.setAutoRanging(true);
 
 			// Display data + plot behaviours
@@ -1284,15 +1126,16 @@ public class GuiController implements Initializable {
 	 * A private helper function for 'loadFile' which reads in data from a given file.
 	 * 
 	 * @param selectedFile
-	 *            file to read data from.
+	 *            file to read data from
 	 * @param inputDataXValues
-	 *            temporary placeholder for x values.
+	 *            temporary placeholder for x values
 	 * @param inputDataYValues
-	 *            temporary placeholder for y values.
+	 *            temporary placeholder for y values
+	 * @param inputDataIsoTime
+	 *            temporary placeholder for ISO time values
 	 */
 	private void readDataFromFile(File selectedFile, ArrayList<Double> inputDataXValues,
-			ArrayList<Double> inputDataYValues, ArrayList<String> inputDataYUnits,
-			ArrayList<String> inputDataIsoTime) {
+			ArrayList<Double> inputDataYValues, ArrayList<String> inputDataYUnits, ArrayList<String> inputDataIsoTime) {
 
 		// Read in x-values
 		for (String s : model.readColumnData(selectedFile.getPath(), 0)) {
@@ -1311,34 +1154,15 @@ public class GuiController implements Initializable {
 
 		// Read in ISO time values & convert to ISO time
 		for (String s : model.readColumnData(selectedFile.getPath(), 3)) {
-
 			inputDataIsoTime.add(s);
 		}
 
 	}
 
 	/**
-	 * Sets the y-axis label
-	 * 
-	 * @param value
-	 *            the y-unit value.
-	 */
-	private void convertMeasurementYUnit(String value) {
-		String displayedYUnit = value;
-		System.out.println("Displayed Unit: " + displayedYUnit);
-
-		// Convert Ohm to Ohm symbol.
-		if (value.equals("Ohm")) {
-			displayedYUnit = OHM_SYMBOL;
-		}
-
-		yAxis.setLabel("Measurements [" + displayedYUnit + "]");
-	}
-
-	/**
-	 * A private helper function to 'loadFile' which adds the x and y values to the correct line
-	 * chart series (readingSeries) as well as determine which ISO display behaviour to use (files
-	 * from SD card and from recorded software are different).
+	 * A private helper function to 'loadFile' which adds the x and y values to the correct line chart series
+	 * (readingSeries) as well as determine which ISO display behaviour to use (files from SD card and from recorded
+	 * software are different).
 	 * 
 	 * @param inputDataXValues
 	 *            the x values loaded in from the file
@@ -1347,15 +1171,14 @@ public class GuiController implements Initializable {
 	 * @param isoTimes
 	 *            the ISO times loaded in from the file
 	 */
-	private void addDataToSeries(ArrayList<Double> inputDataXValues,
-			ArrayList<Double> inputDataYValues, ArrayList<String> isoTimes) {
+	private void addDataToSeries(ArrayList<Double> inputDataXValues, ArrayList<Double> inputDataYValues,
+			ArrayList<String> isoTimes) {
 
 		String checkedIsoTime = "";
 		ArrayList<String> checkedIsoTimes = new ArrayList<>();
 		boolean isSD = false;
 
-		try {
-			// Software
+		try { // Software mode
 			System.out.println("SOFTWARE");
 
 			ISOTimeInterval firstPointXValue = ISOTimeInterval.parseISOTime(isoTimes.get(0));
@@ -1365,8 +1188,8 @@ public class GuiController implements Initializable {
 
 			// Display Time-stamp
 			displayDateStamp(isoTimes.get(0), isoTimes.get(isoTimes.size() - 1));
-		} catch (DateTimeParseException e) {
-			// SD
+		} catch (DateTimeParseException e) { // SD mode
+
 			System.out.println("SD");
 			checkedIsoTime = inputDataXValues.get(0).toString();
 
@@ -1382,41 +1205,39 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'addDataToSeries' which adds the data loaded from the file to
-	 * the correct line-chart series.
+	 * A private helper function to 'addDataToSeries' which adds the data loaded from the file to the correct line-chart
+	 * series.
 	 * 
 	 * @param inputDataXValues
 	 *            the x values loaded in from the file
 	 * @param inputDataYValues
 	 *            the y values loaded in from the file
 	 * @param checkedIsoTime
-	 *            the start value for displaying ISO time of first data point (has been checked if
-	 *            it belongs to the SD file or recorded software file)
+	 *            the start value for displaying ISO time of first data point (has been checked if it belongs to the SD
+	 *            file or recorded software file)
 	 * @param checkedIsoTimes
-	 *            the others values for displaying ISO time of all data points (have been checked if
-	 *            it belongs to the SD file or recorded software file)
+	 *            the others values for displaying ISO time of all data points (have been checked if it belongs to the
+	 *            SD file or recorded software file)
 	 * @param isSD
 	 *            whether or not the data belongs to an SD file or the recorded software file.
 	 */
-	private void addData(ArrayList<Double> inputDataXValues, ArrayList<Double> inputDataYValues,
-			String checkedIsoTime, ArrayList<String> checkedIsoTimes, boolean isSD) {
+	private void addData(ArrayList<Double> inputDataXValues, ArrayList<Double> inputDataYValues, String checkedIsoTime,
+			ArrayList<String> checkedIsoTimes, boolean isSD) {
 
 		for (int i = 0; i < inputDataXValues.size(); i++) {
 			double inputXDataValue = inputDataXValues.get(i);
 			double inputYDataValue = inputDataYValues.get(i);
 
-			readingSeries.getData()
-					.add(new XYChart.Data<Number, Number>(inputXDataValue, inputYDataValue));
+			readingSeries.getData().add(new XYChart.Data<Number, Number>(inputXDataValue, inputYDataValue));
 
 			// Assign indexing to each node.
 			Data<Number, Number> dataPoint = readingSeries.getData().get(i);
 
-			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
-					event.getDataXYValues(dataPoint, i, xDataCoord, yDataCoord, checkedIsoTime,
-							checkedIsoTimes.get(i), isSD));
+			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED, event.getDataXYValues(dataPoint, i,
+					xDataCoord, yDataCoord, checkedIsoTime, checkedIsoTimes.get(i), isSD));
 
 			dataPoint.getNode().addEventFilter(MouseEvent.MOUSE_EXITED,
-					event.resetDataXYValues(xDataCoord, yDataCoord));
+					event.clearDataXYValues(xDataCoord, yDataCoord));
 
 			// Update chart bounds if line chart exceeds them.
 			int dataBoundsRange = (int) Math.ceil(i / SAMPLES);
@@ -1428,8 +1249,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Saves the currently acquired data if data acquisition is paused. An error message will pop up
-	 * if the data has not been paused, and the data will not be saved.
+	 * Saves the currently acquired data if data acquisition is paused. An error message will pop up if the data has not
+	 * been paused, and the data will not be saved.
 	 * 
 	 * @precondition readingSeries has data in it.
 	 */
@@ -1450,8 +1271,7 @@ public class GuiController implements Initializable {
 			saveFileOptions.setTitle("Save Acquired Data");
 
 			// Set file format
-			saveFileOptions.getExtensionFilters()
-					.add(new ExtensionFilter(FILE_FORMAT_TITLE, FILE_FORMAT_EXTENSION));
+			saveFileOptions.getExtensionFilters().add(new ExtensionFilter(FILE_FORMAT_TITLE, FILE_FORMAT_EXTENSION));
 
 			File selectedFile = saveFileOptions.showSaveDialog(GuiView.getInstance().getStage());
 
@@ -1459,12 +1279,10 @@ public class GuiController implements Initializable {
 				System.out.println("Saving file name in directory: " + selectedFile.getPath());
 
 				// Save the data to a file
-				try (BufferedWriter bw = new BufferedWriter(
-						new FileWriter(selectedFile.getPath()))) {
-					System.out.println("SIZES: " + readingSeries.getData().size() + ", "
-							+ pausedStoredYUnitData.size() + ", " + pausedStoredISOTimeData.size());
-					model.saveColumnData(bw, readingSeries, pausedStoredYUnitData,
-							pausedStoredISOTimeData);
+				try (BufferedWriter bw = new BufferedWriter(new FileWriter(selectedFile.getPath()))) {
+					System.out.println("SIZES: " + readingSeries.getData().size() + ", " + pausedStoredYUnitData.size()
+							+ ", " + pausedStoredISOTimeData.size());
+					model.saveColumnData(bw, readingSeries, pausedStoredYUnitData, pausedStoredISOTimeData);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -1481,6 +1299,7 @@ public class GuiController implements Initializable {
 	@FXML
 	private void discardData() {
 		if (notifyDiscardingData()) {
+
 			// Reset the plot data
 			revert();
 
@@ -1501,7 +1320,7 @@ public class GuiController implements Initializable {
 		// Clear all things
 		multimeterDisplay.setText("");
 
-		disablePausing();
+		resume();
 
 		isChanged = false;
 		totalAcquisitionData.clear();
@@ -1513,28 +1332,28 @@ public class GuiController implements Initializable {
 		current = false;
 		continuity = false;
 		logic = false;
-		
+
 		// Reset the plot data
 		readingSeries.getData().clear();
-		storedISOTimes.clear(); // TICK
+		storedISOTimes.clear();
 
 		dataPlotPosition = 0;
 		resetAxes();
-		storedYUnits.clear(); // TICK
+		storedYUnits.clear();
 
-		// TODO: make sure that I can remove this, add listener to the data.
 		xDataCoord.setText("X: ");
 		yDataCoord.setText("Y: ");
 		recordTimeLabel.setText("");
 	}
 
 	/**
-	 * A private helper function to 'discardData'. Displays a pop-up message notifying the user that
-	 * data will be discarded if they continue.
+	 * A private helper function to 'discardData'. Displays a pop-up message notifying the user that data will be
+	 * discarded if they continue.
 	 * 
 	 * @return true when data is to be retained, false otherwise.
 	 */
 	private boolean notifyDiscardingData() {
+
 		// Add a warning pop up
 		String title = "Discard Data";
 		String warning = "Are you sure you want to discard all of the data? This action is irreversible.";
@@ -1542,8 +1361,8 @@ public class GuiController implements Initializable {
 		AlertType alertType = AlertType.CONFIRMATION;
 
 		// Notify User of discarding data
-		Optional<ButtonType> result = GuiView.getInstance()
-				.alertUser(title, warning, errorType, alertType).showAndWait();
+		Optional<ButtonType> result = GuiView.getInstance().alertUser(title, warning, errorType, alertType)
+				.showAndWait();
 
 		if (result.get() == ButtonType.OK) {
 			return true;
@@ -1556,14 +1375,14 @@ public class GuiController implements Initializable {
 	 * Gets the mouse coordinates relative to the chart background.
 	 * 
 	 * @param mouseEvent
-	 *            the mouse event to attach this to.
-	 * @return the stored values of both coords.
+	 *            the mouse event to attach this to
+	 * @return the stored values of both coordinates
 	 */
 	private ArrayList<Number> getMouseToChartCoords(MouseEvent mouseEvent) {
 		ArrayList<Number> foundCoordinates = new ArrayList<>();
 
-		foundCoordinates.add(getMouseChartCoords(mouseEvent, true)); // add x
-		foundCoordinates.add(getMouseChartCoords(mouseEvent, false)); // add y
+		foundCoordinates.add(getMouseChartCoords(mouseEvent, true)); // Add x
+		foundCoordinates.add(getMouseChartCoords(mouseEvent, false)); // Add y
 
 		return foundCoordinates;
 	}
@@ -1582,15 +1401,13 @@ public class GuiController implements Initializable {
 
 		// Get x coordinate
 		if (isX) {
-			double x = lineChart.getXAxis().sceneToLocal(event.getSceneX(), event.getSceneY())
-					.getX();
+			double x = lineChart.getXAxis().sceneToLocal(event.getSceneX(), event.getSceneY()).getX();
 
 			returnedCoord = lineChart.getXAxis().getValueForDisplay(x);
 
 		} else {
 			// Get y coordinate
-			double y = lineChart.getYAxis().sceneToLocal(event.getSceneX(), event.getSceneY())
-					.getY();
+			double y = lineChart.getYAxis().sceneToLocal(event.getSceneX(), event.getSceneY()).getY();
 
 			returnedCoord = lineChart.getYAxis().getValueForDisplay(y);
 		}
@@ -1599,13 +1416,14 @@ public class GuiController implements Initializable {
 	}
 
 	/**
+	 * TODO Sets up the specified mask
 	 * 
 	 * @param series
-	 * @param coordinates
-	 * @param seriesName
+	 *            the high/low mask boundaries to modify.
+	 * @param coordX
+	 * @param coordY
 	 */
-	private void setUpBoundaries(XYChart.Series<Number, Number> series, Number coordX,
-			Number coordY) {
+	private void setUpBoundaries(XYChart.Series<Number, Number> series, Number coordX, Number coordY) {
 
 		// Add data to specified series.
 		series.getData().add(new XYChart.Data<Number, Number>(coordX, coordY));
@@ -1619,17 +1437,23 @@ public class GuiController implements Initializable {
 			Data<Number, Number> dataPoint = series.getData().get(i);
 
 			// Changes mouse cursor type
-			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
-					event.changeCursor(dataPoint));
+			dataPoint.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED, event.changeCursor(dataPoint));
 
 			// Deletes the point that was clicked
-			event.deleteData(dataPoint, series);
+			event.removeMaskDataPoint(dataPoint, series);
 
 			// Moves the point that was hovered over + changes mouse cursor type
 			moveData(dataPoint, series);
 		}
 	}
 
+	/**
+	 * TODO
+	 * 
+	 * @param newSeries
+	 * @param existingSeries
+	 * @return
+	 */
 	private boolean testOverlapPoint(XYChart.Series<Number, Number> newSeries,
 			XYChart.Series<Number, Number> existingSeries) {
 
@@ -1647,15 +1471,13 @@ public class GuiController implements Initializable {
 					Data<Number, Number> currentDataPoint = existingSeries.getData().get(i);
 					Data<Number, Number> nextDataPoint = existingSeries.getData().get(i + 1);
 
-					Point2D existingCurrentPoint = new Point2D(
-							currentDataPoint.getXValue().floatValue(),
+					Point2D existingCurrentPoint = new Point2D(currentDataPoint.getXValue().floatValue(),
 							currentDataPoint.getYValue().floatValue());
 					Point2D existingNextPoint = new Point2D(nextDataPoint.getXValue().floatValue(),
 							nextDataPoint.getYValue().floatValue());
 
 					// Determine if the new series point overlaps onto the exisiting series line.
-					if (!determineCollinearness(currentNPoint, existingCurrentPoint,
-							existingNextPoint)) {
+					if (!determineCollinearness(currentNPoint, existingCurrentPoint, existingNextPoint)) {
 
 						GuiView.getInstance().illegalMaskPoint();
 
@@ -1674,8 +1496,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private function helper for 'addMaskDataPoints' & 'moveData' which checks if overlap
-	 * between the two mask boundaries has occurred.
+	 * A private function helper for 'addMaskDataPoints' & 'moveData' which checks if overlap between the two mask
+	 * boundaries has occurred.
 	 * 
 	 * @param newSeries
 	 *            the mask boundary which has not been set yet. (low mask boundary)
@@ -1704,15 +1526,13 @@ public class GuiController implements Initializable {
 					Data<Number, Number> currentDataPoint = existingSeries.getData().get(i);
 					Data<Number, Number> nextDataPoint = existingSeries.getData().get(i + 1);
 
-					Point2D existingCurrentPoint = new Point2D(
-							currentDataPoint.getXValue().floatValue(),
+					Point2D existingCurrentPoint = new Point2D(currentDataPoint.getXValue().floatValue(),
 							currentDataPoint.getYValue().floatValue());
 					Point2D existingNextPoint = new Point2D(nextDataPoint.getXValue().floatValue(),
 							nextDataPoint.getYValue().floatValue());
 
 					// Overlaps
-					if (checkIntersection
-							.intersectsLine(new Line2D(existingCurrentPoint, existingNextPoint))) {
+					if (checkIntersection.intersectsLine(new Line2D(existingCurrentPoint, existingNextPoint))) {
 
 						GuiView.getInstance().illegalMaskPoint();
 						return false;
@@ -1724,8 +1544,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private function for 'testOverlapPoint' which determines if the moved data point collides
-	 * with any line segments of the existing series.
+	 * A private function for 'testOverlapPoint' which determines if the moved data point collides with any line
+	 * segments of the existing series.
 	 * 
 	 * @param newPoint
 	 *            the point selected and moved.
@@ -1735,8 +1555,7 @@ public class GuiController implements Initializable {
 	 *            the points which are end of the line segment
 	 * @return true if there is no collision, false otherwise
 	 */
-	private boolean determineCollinearness(Point2D newPoint, Point2D existingPointStart,
-			Point2D existingPointEnd) {
+	private boolean determineCollinearness(Point2D newPoint, Point2D existingPointStart, Point2D existingPointEnd) {
 
 		// Took collinear formula from: http://www.math-for-all-grades.com/Collinear-points.html
 		float a = existingPointStart.x - newPoint.x;
@@ -1751,7 +1570,7 @@ public class GuiController implements Initializable {
 
 		System.out.println(gradient);
 		// The point is more or less collinear [taking into account float decimals]
-		if (gradient < 2 && gradient > -2) {
+		if (gradient < 1 && gradient > -1) {
 			return false;
 		}
 
@@ -1759,16 +1578,14 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * When the data-point is moved by the mouse, make sure the user cannot drag it into the other
-	 * mask area.
+	 * When the data-point is moved by the mouse, make sure the user cannot drag it into the other mask area.
 	 * 
 	 * @param dataPoint
 	 *            the data point that is moved.
 	 * @param series
 	 *            the series the data-point comes from (high/low).
 	 */
-	protected void moveData(XYChart.Data<Number, Number> dataPoint,
-			XYChart.Series<Number, Number> series) {
+	protected void moveData(XYChart.Data<Number, Number> dataPoint, XYChart.Series<Number, Number> series) {
 
 		// Keep tabs on the original data
 		double originX = dataPoint.getXValue().doubleValue();
@@ -1812,21 +1629,22 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'moveData' which updates the displayed x and y positions of the
-	 * cursor within the line-chart space.
+	 * A private helper function for 'moveData' which updates the displayed x and y positions of the cursor within the
+	 * line-chart space.
 	 * 
 	 * @param mouseEvent
 	 *            the mouse event to attach this to.
 	 */
 	private void updateXYCoordinates(MouseEvent mouseEvent) {
 		xCoordValues.setText("X: " + TIME_DECIMAL.format(getMouseChartCoords(mouseEvent, true)));
-		yCoordValues.setText(
-				"Y: " + MEASUREMENT_DECIMAL.format(getMouseChartCoords(mouseEvent, false)));
+		yCoordValues.setText("Y: " + MEASUREMENT_DECIMAL.format(getMouseChartCoords(mouseEvent, false)));
 	}
 
 	/**
-	 * Gets the values of the mouse within the line chart graph. Modified off:
-	 * http://stackoverflow.com/questions/28562195/how-to-get-mouse-position-in-chart-space. To be
+	 * TODO
+	 * 
+	 * @param chartBackground
+	 *            the background of the line chart to attach this event to
 	 */
 	protected void createHighLowBoundaryAreas(Node chartBackground) {
 
@@ -1834,12 +1652,14 @@ public class GuiController implements Initializable {
 
 			@Override
 			public void handle(MouseEvent event) {
+				System.out.println("C: " + lowCounter);
 
 				// Left mouse button and at least one of the add mask buttons
-				if (event.getButton() == MouseButton.PRIMARY
-						&& (isHighBtnSelected || isLowBtnSelected)) {
+				if (event.getButton() == MouseButton.PRIMARY && (isHighBtnSelected || isLowBtnSelected)) {
 
-					restrictLineChart();
+					// Modify chart behaviour
+					lineChart.setAnimated(false);
+					yAxis.setAutoRanging(false);
 
 					// Gets the coordinates
 					Number coordX = getMouseToChartCoords(event).get(0);
@@ -1865,18 +1685,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Disables animation and ranging of y-axis and line-chart so that when selecting areas in the
-	 * line chart, there is no movement.
-	 */
-	private void restrictLineChart() {
-		lineChart.setAnimated(false);
-
-		yAxis.setAutoRanging(false);
-	}
-
-	/**
-	 * Determines if the mask point to be added to the lower mask boundary will not overlap over
-	 * areas of the high mask boundary area.
+	 * Determines if the mask point to be added to the lower mask boundary will not overlap over areas of the high mask
+	 * boundary area.
 	 * 
 	 * @param coordX
 	 *            the x-value of the point to be added.
@@ -1894,8 +1704,7 @@ public class GuiController implements Initializable {
 		Point2D newPoint = new Point2D(tempX, tempY);
 
 		if (lowMaskBoundarySeries.getData().size() > 0) {
-			ArrayList<Float> existingValues = assignExistingXValue(lowMaskBoundarySeries, tempX,
-					counter,
+			ArrayList<Float> existingValues = assignExistingXValue(lowMaskBoundarySeries, tempX, counter,
 					lowMaskBoundarySeries.getData().get(counter - 1).getXValue().floatValue());
 
 			float existingX = existingValues.get(0);
@@ -1903,7 +1712,7 @@ public class GuiController implements Initializable {
 
 			Point2D existingPoint = new Point2D(existingX, existingY);
 
-			System.out.println(highMaskBoundarySeries.getData().toString());
+			// System.out.println(highMaskBoundarySeries.getData().toString());
 
 			return checkLineIntersection(existingPoint, newPoint);
 		} else if (lowMaskBoundarySeries.getData().size() == 0) {
@@ -1915,8 +1724,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'checkOverlap' which determines if the first low mask series
-	 * placed on the chart overlaps with any of the existing mask series (high)
+	 * A private helper function for 'checkOverlap' which determines if the first low mask series placed on the chart
+	 * overlaps with any of the existing mask series (high)
 	 * 
 	 * @param newPoint
 	 *            the point to be added
@@ -1945,8 +1754,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'checkOverlap' which determines if the point to be added would
-	 * cause an overlap if added.
+	 * A private helper function to 'checkOverlap' which determines if the point to be added would cause an overlap if
+	 * added.
 	 * 
 	 * @param existingPoint
 	 *            the start point of a to-be-line segment of the low mask series
@@ -1973,7 +1782,7 @@ public class GuiController implements Initializable {
 
 			// Check if point overlaps
 			if (!determineCollinearness(newPoint, currentPoint, nextPoint)) {
-
+				System.out.println("ILLEAGE MOVE");
 				GuiView.getInstance().illegalMaskPoint();
 				return false;
 			}
@@ -1992,8 +1801,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'checkOverlap' which determines which direction the line will be
-	 * in (right to left, or left to right).
+	 * A private helper function to 'checkOverlap' which determines which direction the line will be in (right to left,
+	 * or left to right).
 	 * 
 	 * @param series
 	 *            the low boundary series
@@ -2005,8 +1814,8 @@ public class GuiController implements Initializable {
 	 *            the x-value of an existing point
 	 * @return a list that has the x and y value that needs to be compared
 	 */
-	private ArrayList<Float> assignExistingXValue(XYChart.Series<Number, Number> series,
-			float tempX, int counter, float compareX) {
+	private ArrayList<Float> assignExistingXValue(XYChart.Series<Number, Number> series, float tempX, int counter,
+			float compareX) {
 		ArrayList<Float> tempList = new ArrayList<>();
 
 		for (int i = 0; i < series.getData().size() - 1; i++) {
@@ -2087,8 +1896,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Orders the specified series data-points by increasing x-axis values. If a first and last
-	 * boundary point (i.e. x = 0, x = 50) haven't been specified, they are created.
+	 * Orders the specified series data-points by increasing x-axis values. If a first and last boundary point (i.e. x =
+	 * 0, x = 50) haven't been specified, they are created.
 	 * 
 	 * @param existingSeries
 	 *            the series to sort.
@@ -2113,17 +1922,16 @@ public class GuiController implements Initializable {
 
 		Data<Number, Number> finalBoundaryPoint = new Data<>();
 		finalBoundaryPoint.setXValue(xAxis.getUpperBound());
-		finalBoundaryPoint.setYValue(
-				existingSeries.getData().get(existingSeries.getData().size() - 1).getYValue());
+		finalBoundaryPoint.setYValue(existingSeries.getData().get(existingSeries.getData().size() - 1).getYValue());
 
 		double lowerXAxisBound = existingSeries.getData().get(0).getXValue().doubleValue();
-		double upperXAxisBound = existingSeries.getData().get(existingSeries.getData().size() - 1)
-				.getXValue().doubleValue();
+		double upperXAxisBound = existingSeries.getData().get(existingSeries.getData().size() - 1).getXValue()
+				.doubleValue();
 		double upperBound = xAxis.getUpperBound();
 
 		// Add initial boundary point
-		if (addingBoundaryPoints(initialBoundaryPoint, lowerXAxisBound, 0.0D, currentSeries,
-				existingSeries, 0, 0, 1, true)) {
+		if (addingBoundaryPoints(initialBoundaryPoint, lowerXAxisBound, 0.0D, currentSeries, existingSeries, 0, 0, 1,
+				true)) {
 
 			initialBoundarySuccess = true;
 
@@ -2132,9 +1940,9 @@ public class GuiController implements Initializable {
 		}
 
 		// Add final boundary point
-		if (addingBoundaryPoints(finalBoundaryPoint, upperXAxisBound, upperBound, currentSeries,
-				existingSeries, existingSeries.getData().size(),
-				existingSeries.getData().size() - 1, existingSeries.getData().size() - 2, false)) {
+		if (addingBoundaryPoints(finalBoundaryPoint, upperXAxisBound, upperBound, currentSeries, existingSeries,
+				existingSeries.getData().size(), existingSeries.getData().size() - 1,
+				existingSeries.getData().size() - 2, false)) {
 
 			finalBoundarySuccess = true;
 
@@ -2154,8 +1962,8 @@ public class GuiController implements Initializable {
 
 	// TODO: ADD COMMENTS, ITS TOO CONFUSING
 	/**
-	 * A private helper function to 'orderAndAddBoundaryPoints' which adds the first and last
-	 * boundary points (x lower and x upper) to the mask series if they do not overlap when set.
+	 * A private helper function to 'orderAndAddBoundaryPoints' which adds the first and last boundary points (x lower
+	 * and x upper) to the mask series if they do not overlap when set.
 	 * 
 	 * @param boundaryPoint
 	 *            the absolute first or last boundary point to be added (0 or x-axis upperbound)
@@ -2169,10 +1977,9 @@ public class GuiController implements Initializable {
 	 * @param whichWay
 	 * @return true if there is no overlap, false if the added point will overlap with existing mask
 	 */
-	private boolean addingBoundaryPoints(XYChart.Data<Number, Number> boundaryPoint, double start,
-			double end, XYChart.Series<Number, Number> currentSeries,
-			XYChart.Series<Number, Number> exisistingSeries, int position, int newPos, int finalPos,
-			boolean whichWay) {
+	private boolean addingBoundaryPoints(XYChart.Data<Number, Number> boundaryPoint, double start, double end,
+			XYChart.Series<Number, Number> currentSeries, XYChart.Series<Number, Number> exisistingSeries, int position,
+			int newPos, int finalPos, boolean whichWay) {
 
 		if (start != end) {
 			// Make sure that you can't add incorrect first elements
@@ -2191,8 +1998,7 @@ public class GuiController implements Initializable {
 				exisistingSeries.getData().get(position).getNode().setVisible(false);
 			}
 		} else {
-			exisistingSeries.getData().get(newPos)
-					.setYValue(exisistingSeries.getData().get(finalPos).getYValue());
+			exisistingSeries.getData().get(newPos).setYValue(exisistingSeries.getData().get(finalPos).getYValue());
 		}
 		return true;
 	}
@@ -2206,8 +2012,8 @@ public class GuiController implements Initializable {
 	 *            the series it's comparing to.
 	 * @return true if there is no 'collision'. false otherwise
 	 */
-	private boolean getMax(XYChart.Data<Number, Number> dataPoint,
-			XYChart.Series<Number, Number> series, boolean whichWay) {
+	private boolean getMax(XYChart.Data<Number, Number> dataPoint, XYChart.Series<Number, Number> series,
+			boolean whichWay) {
 		ArrayList<XYChart.Data<Number, Number>> subList = new ArrayList<>();
 
 		System.out.println(dataPoint.toString());
@@ -2215,8 +2021,7 @@ public class GuiController implements Initializable {
 		// Only deal with points to the left of the first series data point
 		for (int i = 0; i < series.getData().size(); i++) {
 
-			if (dataPoint.getXValue().doubleValue() < series.getData().get(i).getXValue()
-					.doubleValue()) {
+			if (dataPoint.getXValue().doubleValue() < series.getData().get(i).getXValue().doubleValue()) {
 				if (whichWay) {
 					subList.addAll(series.getData().subList(0, i));
 				} else {
@@ -2240,26 +2045,22 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Locks in the current boundary mask (high/low). If both mask boundary areas have been
-	 * selected, then enable the running of the mask test to occur.
+	 * Locks in the current boundary mask (high/low). If both mask boundary areas have been selected, then enable the
+	 * running of the mask test to occur.
 	 */
 	@FXML
 	private void setMaskBoundary() {
-		if (isHighBtnSelected && !isLowBtnSelected
-				&& (highMaskBoundarySeries.getData().size() > 0)) {
+		if (isHighBtnSelected && !isLowBtnSelected && (highMaskBoundarySeries.getData().size() > 0)) {
 			if (orderAndAddBoundaryPoints(highMaskBoundarySeries, lowMaskBoundarySeries)) {
 				event.removeAllListeners(highMaskBoundarySeries);
 
 				setHighBtn.setDisable(true);
 				isHighBtnSelected = false;
 				lineChart.setHighBoundarySelected(false);
-
-				// FIXME: Make sure this happens everywhere else.
 				setLowBtn.setDisable(false);
 			}
 
-		} else if (isLowBtnSelected && !isHighBtnSelected
-				&& (lowMaskBoundarySeries.getData().size() > 0)) {
+		} else if (isLowBtnSelected && !isHighBtnSelected && (lowMaskBoundarySeries.getData().size() > 0)) {
 
 			if (orderAndAddBoundaryPoints(lowMaskBoundarySeries, highMaskBoundarySeries)) {
 				event.removeAllListeners(lowMaskBoundarySeries);
@@ -2327,17 +2128,18 @@ public class GuiController implements Initializable {
 		int counter = 0;
 		int errorCounter = 0;
 
-		if ((highMaskBoundarySeries.getData().size() > 0)
-				&& (lowMaskBoundarySeries.getData().size() > 0)
+		if ((highMaskBoundarySeries.getData().size() > 0) && (lowMaskBoundarySeries.getData().size() > 0)
 				&& (readingSeries.getData().size() > 0)) {
 
 			for (int i = 0; i < readingSeries.getData().size() - 1; i++) {
+
 				// Test lower
-				errorCounter += maskRunOutcome(readingSeries.getData().get(i),
-						readingSeries.getData().get(i + 1), lowMaskBoundarySeries);
+				errorCounter += maskRunOutcome(readingSeries.getData().get(i), readingSeries.getData().get(i + 1),
+						lowMaskBoundarySeries);
+
 				// Test upper
-				errorCounter += maskRunOutcome(readingSeries.getData().get(i),
-						readingSeries.getData().get(i + 1), highMaskBoundarySeries);
+				errorCounter += maskRunOutcome(readingSeries.getData().get(i), readingSeries.getData().get(i + 1),
+						highMaskBoundarySeries);
 			}
 
 			counter = checkForMaskAreaOverlap(counter);
@@ -2361,6 +2163,7 @@ public class GuiController implements Initializable {
 	 * Displays the intervals which failed + total time failed.
 	 */
 	private void displayFailedIntervals() {
+
 		// Remove duplicates
 		overlappedIntervals = overlappedIntervals.stream().distinct().collect(Collectors.toList());
 
@@ -2386,6 +2189,7 @@ public class GuiController implements Initializable {
 				failedRegionStart = (i + 1);
 			}
 		}
+
 		// Display intervals where overlapping occurred (including final region).
 		determineOverlapRegion(overlappedIntervals, failedRegionStart, overlappedIntervals.size());
 
@@ -2396,19 +2200,17 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'displayFailedIntervals' which displays all the regions that are
-	 * invalid.
+	 * A private helper function to 'displayFailedIntervals' which displays all the regions that are invalid.
 	 * 
 	 * @param overlappedIntervals
 	 *            a list of line segments which failed (went into mask region).
 	 * @param start
-	 *            the first element where the sublist should start
-	 * @param interval1
-	 *            displays the first time interval of the failed region
-	 * @param interval2
-	 *            displays the final time interval of the failed region
+	 *            the element where the sublist should start
+	 * @param end
+	 *            the element where the sublist should end
 	 */
 	private void determineOverlapRegion(List<Line2D> overlappedIntervals, int start, int end) {
+
 		// Sublist of the complete list of line segments which failed
 		List<Line2D> subOverlappedIntervals = overlappedIntervals.subList(start, end);
 
@@ -2419,8 +2221,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'displayFailedIntervals' which calculates the total amount of
-	 * time spent in the failed regions.
+	 * A private helper function to 'displayFailedIntervals' which calculates the total amount of time spent in the
+	 * failed regions.
 	 * 
 	 * @param overlappedIntervals
 	 *            a list of line segments which failed (went into mask region).
@@ -2438,21 +2240,17 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'runMaskTest' which determines if any of the loaded points
-	 * overlaps the mask area below the line.
+	 * A private helper function for 'runMaskTest' which determines if any of the loaded points overlaps the mask area
+	 * below the line.
 	 */
 	private int checkForMaskAreaOverlap(int counter) {
 		for (int i = 0; i < readingSeries.getData().size() - 1; i++) {
 			XYChart.Data<Number, Number> currentDataPoint = readingSeries.getData().get(i);
 			XYChart.Data<Number, Number> nextDataPoint = readingSeries.getData().get(i + 1);
 
-			counter += lineChart.maskTestOverlapCheck(
-					lineChart.getPolygonArray(highMaskBoundarySeries), currentDataPoint,
-					nextDataPoint); // high
+			counter += lineChart.maskTestOverlapCheck(true, currentDataPoint, nextDataPoint); // High boundary
 
-			counter += lineChart.maskTestOverlapCheck(
-					lineChart.getPolygonArray(lowMaskBoundarySeries), currentDataPoint,
-					nextDataPoint); // low
+			counter += lineChart.maskTestOverlapCheck(false, currentDataPoint, nextDataPoint); // Low boundary
 		}
 
 		return counter;
@@ -2492,10 +2290,8 @@ public class GuiController implements Initializable {
 
 				// Overlaps
 				if (checkIntersection.intersectsLine(new Line2D(
-						new Point2D(dataPoint.getXValue().floatValue(),
-								dataPoint.getYValue().floatValue()),
-						new Point2D(dataPoint2.getXValue().floatValue(),
-								dataPoint2.getYValue().floatValue())))) {
+						new Point2D(dataPoint.getXValue().floatValue(), dataPoint.getYValue().floatValue()),
+						new Point2D(dataPoint2.getXValue().floatValue(), dataPoint2.getYValue().floatValue())))) {
 					Line2D segment = new Line2D();
 
 					segment.setLine(new com.sun.javafx.geom.Point2D(tempX, tempY),
@@ -2520,8 +2316,7 @@ public class GuiController implements Initializable {
 		loadFileOptions.setTitle("Load Mask Data");
 
 		// Select file
-		loadFileOptions.getExtensionFilters()
-				.add(new ExtensionFilter(FILE_FORMAT_TITLE, FILE_FORMAT_EXTENSION));
+		loadFileOptions.getExtensionFilters().add(new ExtensionFilter(FILE_FORMAT_TITLE, FILE_FORMAT_EXTENSION));
 
 		File selectedFile = loadFileOptions.showOpenDialog(GuiView.getInstance().getStage());
 
@@ -2554,8 +2349,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'importMaskData' which determines if the mask to load in has
-	 * y-unit values which clash.
+	 * A private helper function for 'importMaskData' which determines if the mask to load in has y-unit values which
+	 * clash.
 	 * 
 	 * @param selectedFile
 	 *            the file to grab specific mask data from
@@ -2578,8 +2373,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'determineUnitClash' which checks that the y-unit of the mask
-	 * file correspond to the y-units of the displayed data.
+	 * A private helper function for 'determineUnitClash' which checks that the y-unit of the mask file correspond to
+	 * the y-units of the displayed data.
 	 * 
 	 * @param maskYUnit
 	 *            the mask y-unit values.
@@ -2595,16 +2390,15 @@ public class GuiController implements Initializable {
 		}
 
 		/*
-		 * TODO: incoroporate resistance else if (maskYUnit.contains(OHM_SYMBOL) &&
-		 * dataYUnit.contains(maskYUnit)) { // FIXME: find out which symbol will represent ohms
-		 * return true; }
+		 * TODO: incoroporate resistance else if (maskYUnit.contains(OHM_SYMBOL) && dataYUnit.contains(maskYUnit)) { //
+		 * FIXME: find out which symbol will represent ohms return true; }
 		 */
 		return false;
 	}
 
 	/**
-	 * Displays an error message if the user has tried to load in a mask file with values that do
-	 * not match those of the already loaded data.
+	 * Displays an error message if the user has tried to load in a mask file with values that do not match those of the
+	 * already loaded data.
 	 */
 	private void errorMessageInvalidMask() {
 		String title = "Error! Attempting To Load Mask Incorrectly";
@@ -2628,12 +2422,12 @@ public class GuiController implements Initializable {
 
 		for (String[] column : model.readMaskData(selectedFile.getPath())) {
 			if (column[0].equals("high")) {
-				XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(
-						Double.parseDouble(column[1]), Double.parseDouble(column[2]));
+				XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(Double.parseDouble(column[1]),
+						Double.parseDouble(column[2]));
 				tempHighMaskBoundarySeries.getData().add(dataPoint);
 			} else {
-				XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(
-						Double.parseDouble(column[1]), Double.parseDouble(column[2]));
+				XYChart.Data<Number, Number> dataPoint = new XYChart.Data<>(Double.parseDouble(column[1]),
+						Double.parseDouble(column[2]));
 				tempLowMaskBoundarySeries.getData().add(dataPoint);
 			}
 		}
@@ -2649,8 +2443,6 @@ public class GuiController implements Initializable {
 		}
 	}
 
-	// TODO: what if you want to save the mask without having data there first
-	// need the yunit value.
 	/**
 	 * Exports the current mask data to a file in .csv format.
 	 */
@@ -2660,8 +2452,7 @@ public class GuiController implements Initializable {
 		saveFileOptions.setTitle("Save Mask Data");
 
 		// Set file format
-		saveFileOptions.getExtensionFilters()
-				.add(new ExtensionFilter(FILE_FORMAT_TITLE, FILE_FORMAT_EXTENSION));
+		saveFileOptions.getExtensionFilters().add(new ExtensionFilter(FILE_FORMAT_TITLE, FILE_FORMAT_EXTENSION));
 
 		File selectedFile = saveFileOptions.showSaveDialog(GuiView.getInstance().getStage());
 
@@ -2673,9 +2464,9 @@ public class GuiController implements Initializable {
 
 				// Only need one element from yUnit, as they are all the same
 				if (storedYUnits.size() > 0) { // multimeter readings data file has been loaded
-					savedUnits = modifyMaskUnit(storedYUnits.get(0));
+					savedUnits = modifyMeasurements.modifyMaskUnit(storedYUnits.get(0));
 				} else {
-					savedUnits = modifyMaskUnit();
+					savedUnits = modifyMeasurements.modifyMaskUnit(maskVRBtn, maskARBtn, maskORBtn);
 				}
 
 				model.saveMaskData(bw, highMaskBoundarySeries, savedUnits, "high");
@@ -2689,8 +2480,31 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Determines that only one 'V, A, Ohm' can be executed, and that there has to be at least one
-	 * selected
+	 * Selects Voltage to save out for mask type
+	 */
+	@FXML
+	private void selectSaveV() {
+		selectMaskYUnit(maskARBtn, maskORBtn, maskVRBtn);
+	}
+
+	/**
+	 * Selects Current to save out for mask type
+	 */
+	@FXML
+	private void selectSaveA() {
+		selectMaskYUnit(maskVRBtn, maskORBtn, maskARBtn);
+	}
+
+	/**
+	 * Selects Resistance to save out for mask type
+	 */
+	@FXML
+	private void selectSaveO() {
+		selectMaskYUnit(maskARBtn, maskVRBtn, maskORBtn);
+	}
+
+	/**
+	 * Determines that only 'V', 'A', 'Ohm' options can be selected at any one time for the mask y-unit value.
 	 * 
 	 * @param one
 	 *            other option that's not self or two
@@ -2699,80 +2513,13 @@ public class GuiController implements Initializable {
 	 * @param self
 	 *            the radio button in question
 	 */
-	private void selection(RadioButton one, RadioButton two, RadioButton self) {
+	private void selectMaskYUnit(RadioButton one, RadioButton two, RadioButton self) {
 		one.setSelected(false);
 		two.setSelected(false);
 
 		if (!(one.isSelected() && two.isSelected()) && self.isSelected() == false) {
 			self.setSelected(true);
 		}
-	}
-
-	/**
-	 * Selects Voltage to save out for mask type
-	 */
-	@FXML
-	private void selectSaveV() {
-		selection(maskARBtn, maskORBtn, maskVRBtn);
-	}
-
-	/**
-	 * Selects Current to save out for mask type
-	 */
-	@FXML
-	private void selectSaveA() {
-		selection(maskVRBtn, maskORBtn, maskARBtn);
-	}
-
-	/**
-	 * Selects Resistance to save out for mask type
-	 */
-	@FXML
-	private void selectSaveO() {
-		selection(maskARBtn, maskVRBtn, maskORBtn);
-	}
-
-	/**
-	 * A private helper function for 'exportMaskData' which converts the selected y-unit value to
-	 * the correct mask export file format
-	 * 
-	 * @param unit
-	 *            the chosen y-unit value of the voltage/current/resistance radio buttons
-	 * @return the correctly modified unit to save
-	 */
-	private String modifyMaskUnit() {
-		String modifiedYUnit = "";
-		if (maskVRBtn.isSelected()) { // V
-			modifiedYUnit = "V";
-		} else if (maskARBtn.isSelected()) { // mA
-			modifiedYUnit = "A";
-		} else if (maskORBtn.isSelected()) { // Ohm
-			modifiedYUnit = "Ohm";
-		}
-
-		return modifiedYUnit;
-	}
-
-	// TODO: put in a separate class the y-unit modifiers [model or new]
-	/**
-	 * A private helper function for 'exportMaskData' which converts the stored y-units to the
-	 * correct mask export file format
-	 * 
-	 * @param unit
-	 *            the stored y-unit value of the y-axis value
-	 * @return the correctly modified unit to save
-	 */
-	private String modifyMaskUnit(String unit) {
-		String modifiedYUnit = "";
-		if (unit.contains("V")) { // V
-			modifiedYUnit = unit;
-		} else if (unit.contains("A")) { // mA
-			modifiedYUnit = "A";
-		} else if (unit.contains(OHM_SYMBOL)) { // FIXME: find out which symbol will represent ohms
-			modifiedYUnit = "Ohm";
-		}
-
-		return modifiedYUnit;
 	}
 
 	@Override
@@ -2782,10 +2529,5 @@ public class GuiController implements Initializable {
 		testConnection(connRBtn);
 
 		initialiseSampleRate();
-
-		// CHANGE low and high to something else, more meaningful
-		highMaskBoundarySeries.setName("high boundary");
-		lowMaskBoundarySeries.setName("low boundary");
-		readingSeries.setName("multimeter data");
 	}
 }
