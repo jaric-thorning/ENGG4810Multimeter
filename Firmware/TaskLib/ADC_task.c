@@ -14,6 +14,7 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include "spi_adc.h"
 
 #include "ADC_task.h"
 
@@ -35,7 +36,7 @@
 #define ADC_ITEM_SIZE           sizeof(struct adc_queue_message)
 #define ADC_QUEUE_SIZE          5
 
-#define ADC_REFRESH_TIME 100
+#define ADC_REFRESH_TIME 1000
 
 uint32_t ui32Value;
 
@@ -54,8 +55,73 @@ ADCTask(void *pvParameters)
     struct mswitch_queue_message mswitch_message;
     struct adc_queue_message adc_message;
 
+    uint32_t data;
+    uint8_t status;
+    uint8_t control;
+
+
+
+    uint8_t command = 0b10000001;
+    //send_command(command); //Self Calibrate
+
+    write_byte(0b11000010, 0b00000000);
+
+    //command = 0b10000111;
+    //send_command(command); //Self Calibrate
+
     while(1)
     {
+
+      //send_command(command);
+      //send_command(command); //Self Calibrate
+      /*status = read_byte(0b11000111);
+
+      UARTprintf("   Status: ", status);
+      for(int i = 7; i >= 0; i--){
+        UARTprintf("%d", (status >> i) & 1);
+      }
+      UARTprintf("\n\r");
+
+
+
+      control = read_byte(0b11000011);
+
+      UARTprintf("Control 1: ", control);
+      for(int i = 7; i >= 0; i--){
+        UARTprintf("%d", (control >> i) & 1);
+      }
+      UARTprintf("\n\r");
+
+      control = read_byte(0b11000101);
+
+      UARTprintf("Control 2: ", control);
+      for(int i = 7; i >= 0; i--){
+        UARTprintf("%d", (control >> i) & 1);
+      }
+      UARTprintf("\n\r");
+
+      control = read_byte(0b11000111);
+
+      UARTprintf("Control 3: ", control);
+      for(int i = 7; i >= 0; i--){
+        UARTprintf("%d", (control >> i) & 1);
+      }
+      UARTprintf("\n\r");
+
+      //write_byte(0b11000010, 0b1100100);
+
+      if(status & 1){ //Conversion ready
+        data = read_data();
+        UARTprintf("External ADC read: ");
+        for(int i = 23; i >= 0; i--){
+          UARTprintf("%d", (data >> i) & 1);
+        }
+        UARTprintf("\n\r");
+      } else { //conversion not ready
+        UARTprintf("Data not ready.\n\r");
+      }*/
+
+
 
       ADCProcessorTrigger(ADC0_BASE, 0);
   		while(!ADCIntStatus(ADC0_BASE, 0, false))
@@ -88,7 +154,68 @@ ADCTask(void *pvParameters)
 uint32_t
 ADCTaskInit(void)
 {
+    //SysCtlDelay(10000000);
     g_pADCQueue = xQueueCreate(ADC_QUEUE_SIZE, ADC_ITEM_SIZE);
+    uint8_t status;
+    uint8_t control1;
+
+    spi_adc_init();
+
+
+
+    /*UARTprintf(" ------------ On Load SPI Characteristics ----\n\r");
+
+    status = read_byte(0b11000001);
+
+    UARTprintf("Status: ", status);
+    for(int i = 7; i >= 0; i--){
+      UARTprintf("%d", (status >> i) & 1);
+    }
+    UARTprintf("\n\r");
+
+    control1 = read_byte(0b11000011);
+
+    UARTprintf("Control 1: ", control1);
+    for(int i = 7; i >= 0; i--){
+      UARTprintf("%d", (control1 >> i) & 1);
+    }
+    UARTprintf("\n\r");
+
+    UARTprintf(" ------------ On Load ADC Characteristics ----\n\r");
+
+
+    UARTprintf("Calibrating ADC....\n\r");
+
+    uint8_t command = 0b10010000;
+    send_command(command); //Self Calibrate
+
+
+    command = 0b10000111;
+    send_command(command);
+
+    write_byte(0b11000010, 0b0000000);
+
+
+    UARTprintf(" ------------ Post Calibration ADC Characteristics ----n\r");
+
+    status = read_byte(0b11000001);
+
+    UARTprintf("Status: ", status);
+    for(int i = 7; i >= 0; i--){
+      UARTprintf("%d", (status >> i) & 1);
+    }
+    UARTprintf("\n\r");
+
+    control1 = read_byte(0b11000011);
+
+    UARTprintf("Control 1: ", control1);
+    for(int i = 7; i >= 0; i--){
+      UARTprintf("%d", (control1 >> i) & 1);
+    }
+    UARTprintf("\n\r");
+
+    UARTprintf(" ------------ Post Calibration ADC Characteristics ----\n\r");
+    */
 
   	//
   	// Enable the ADC0 module.

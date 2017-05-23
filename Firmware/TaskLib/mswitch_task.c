@@ -116,13 +116,18 @@ MSWITCHTask(void *pvParameters)
       if(xQueueReceive(g_pMSWITCHQueue, &mswitch_message, 0) == pdPASS)
       {
         if(mswitch_message.type == 'M'){
-          if(mswitch_message.mode == 'C'){
+          if(mswitch_message.mode == 'I'){
             mode = 0;
           } else if(mswitch_message.mode == 'V'){
             mode = 1;
           } else if(mswitch_message.mode == 'R'){
             mode = 2;
-          } else if(mswitch_message.mode == 'I'){
+          } else if(mswitch_message.mode == 'C'){
+            mode = 3;
+          } else if(mswitch_message.mode == 'L'){
+            mode = 4;
+          }
+          else if(mswitch_message.mode == 'U'){
             mode = (mode + 1) % NUM_MODES;
           }
           else if(mswitch_message.mode == 'D'){
@@ -133,14 +138,20 @@ MSWITCHTask(void *pvParameters)
 
           if(mode == 0){ //current mode
             UARTprintf("Switching to mode: Current\n\r");
-            set_mode('C');
+            set_mode('I');
         	} else if(mode == 1){ //voltage mode
             UARTprintf("Switching to mode: Voltage\n\r");
             set_mode('V');
           } else if (mode == 2){ //resistance mode
             UARTprintf("Switching to mode: Resistance\n\r");
             set_mode('R');
-      	   }
+          } else if (mode == 3){ //resistance mode
+             UARTprintf("Switching to mode: Continuity\n\r");
+             set_mode('R');
+       	  } else if (mode == 4){ //resistance mode
+             UARTprintf("Switching to mode: Logic\n\r");
+             set_mode('R');
+       	  }
 
         } else if(mswitch_message.type == 'F'){
           UARTprintf("TODO: IMPLEMENT FREQUENCY CHANGING -> FORWARD TO ADC\n\r");
@@ -163,7 +174,7 @@ MSWITCHTask(void *pvParameters)
             value = mswitch_message.ui32Value/4095.0 * 2 * range_current - range_current;
             //UARTprintf("Recieved uValue = %d", mswitch_message.ui32Value);
             //UARTprintf("    Current range = %d\n\r", range_current);
-            lcd_message.type = 'C';
+            lcd_message.type = 'I';
             lcd_message.range = range_current;
             check_current_range(value);
           } else if(mode == 1){ //voltage
@@ -264,7 +275,7 @@ MSWITCHTaskInit(void)
 
     //Set inital mode
     if(mode == 0){ //current mode
-      set_mode('C');
+      set_mode('I');
   	} else if(mode == 1){ //voltage mode
       set_mode('V');
     } else if (mode == 2){ //resistance mode
@@ -324,7 +335,7 @@ void set_mode(char new_mode){
 
     return;
 
-  } else if (new_mode == 'C'){
+  } else if (new_mode == 'I'){
     mode = 0;
     //write S1 to 000
     set_shift_pin(S1_C_PIN, 0);

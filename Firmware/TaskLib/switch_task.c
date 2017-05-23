@@ -16,6 +16,15 @@
 #include "queue.h"
 #include "semphr.h"
 #include "string.h"
+#include "driverlib/systick.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/gpio.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/systick.h"
+#include "grlib/grlib.h"
+#include "utils/ustdlib.h"
+
 
 #include "LCD_task.h"
 
@@ -28,6 +37,9 @@
 #include "buzzer_task.h"
 
 #include "lcd_task.h"
+
+#include "inc/hw_hibernate.h"
+#include "driverlib/hibernate.h"
 
 #define BUTTON3_PIN GPIO_PIN_2
 #define BUTTON4_PIN GPIO_PIN_3
@@ -80,6 +92,8 @@ SwitchTask(void *pvParameters)
     int freq = 1;
     int brightness = 5;
 
+    int menu_on = 0;
+
     while(1)
     {
         ui8CurButtonState = ButtonsPoll(0, 0);
@@ -92,22 +106,29 @@ SwitchTask(void *pvParameters)
         currentTime = xTaskGetTickCount();
         if((button3 == BUTTON3_PIN) && (button3_time + 200 < currentTime)){
           //UARTprintf("BUTTON3 is HIGH!\n\r");
+
           button3_time = currentTime;
+          if(menu_on){
 
-          mswitch_message.ui32Value = 0; //doesn't matter
-          mswitch_message.type = 'M'; //sending M for mode
-          mswitch_message.mode = 'I'; //sending I to increment mode
+          } else{
+            mswitch_message.ui32Value = 0; //doesn't matter
+            mswitch_message.type = 'M'; //sending M for mode
+            mswitch_message.mode = 'U'; //sending I to increment mode
 
-          if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
-             pdPASS){
-               UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
-             }
+            if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
+               pdPASS){
+                 UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+               }
+          }
 
         }
         else if((button4 == BUTTON4_PIN) && (button4_time + 200 < currentTime)){
           //UARTprintf("BUTTON4 is HIGH!\n\r");
           button4_time = currentTime;
 
+          if(menu_on){
+
+          } else{
           mswitch_message.ui32Value = 0; //doesn't matter
           mswitch_message.type = 'R'; //sending M for mode
 
@@ -115,10 +136,19 @@ SwitchTask(void *pvParameters)
              pdPASS){
                UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
              }
-
+          }
         }
         else if((button5 == BUTTON5_PIN) && (button5_time + 200 < currentTime)){
 
+          if(menu_on){
+          lcd_message.mode = 'M';
+          lcd_message.button = 'N';
+          if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
+             pdPASS){
+               UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+             }
+
+          } else{
           brightness = (brightness - 1);
           if(brightness < 0){
             brightness = 5;
@@ -129,7 +159,7 @@ SwitchTask(void *pvParameters)
              pdPASS){
                UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
              }
-
+          }
 
           /*freq = ((freq + 5) % 50) + 1;
           adc_message.frequency = freq;
@@ -141,11 +171,39 @@ SwitchTask(void *pvParameters)
           button5_time = currentTime;
         }
         else if((button6 == BUTTON6_PIN) && (button6_time + 200 < currentTime)){
-          buzzer_message.frequency = 1000;
-          if(xQueueSend(g_pBuzzerQueue, &buzzer_message, portMAX_DELAY) !=
+
+          menu_on = 1;
+          lcd_message.mode = 'M';
+          lcd_message.button = 'S';
+          if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
              pdPASS){
                UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
              }
+
+
+           //HIBERNATION CODE -> DO NOT REMOVE
+           /*if(HibernateIsActive()){
+             UARTprintf("Hibernation Active.\n\r");
+             uint32_t ui32Status = HibernateIntStatus(0);
+             HibernateIntClear(ui32Status);
+             if(ui32Status & HIBERNATE_INT_PIN_WAKE){
+                 UARTprintf("BUTTON\n\r");
+             } else if(ui32Status & HIBERNATE_INT_RTC_MATCH_0){
+                 UARTprintf("TIMEOUT\n\r");
+             } else
+             {
+                 UARTprintf("RESET\n\r");
+             }
+           }
+           HibernateRTCSet(0);
+           HibernateRTCEnable();
+           HibernateRTCMatchSet(0, 5);
+
+           HibernateWakeSet(HIBERNATE_WAKE_PIN | HIBERNATE_WAKE_RTC);
+
+           HibernateRequest();
+           SysCtlDelay(1000);
+           UARTprintf("Hibernation Failed.\n\r");*/
 
           button6_time = currentTime;
         }
@@ -214,6 +272,24 @@ SwitchTaskInit(void)
 
     ButtonsInit();
 
+    // HIBERNATE SETUP
+
+    //
+    // Set up systick to generate interrupts at 100 Hz.
+    //
+    SysTickPeriodSet(SysCtlClockGet() / 100);
+    SysTickIntEnable();
+    SysTickEnable();
+
+    //
+    // Enable the Hibernation module.
+    //
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_HIBERNATE);
+
+
+
+
+
     //External Button Init
     SysCtlPeripheralEnable(BUTTON3_PERIPH_GPIO);
     while(!SysCtlPeripheralReady(BUTTON3_PERIPH_GPIO))
@@ -238,12 +314,6 @@ SwitchTaskInit(void)
 	  {
 	  }
     GPIOPinTypeGPIOInput(BUTTON6_PORT, BUTTON6_PIN);
-
-
-
-
-
-
 
     if(xTaskCreate(SwitchTask, (signed portCHAR *)"Switch",
                    SWITCHTASKSTACKSIZE, NULL, tskIDLE_PRIORITY +

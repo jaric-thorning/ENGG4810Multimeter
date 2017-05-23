@@ -115,6 +115,30 @@ void defChar(){
 
 }
 
+void defOhm(){
+  uint8_t smiley[8] = {
+		0b00000,	//0b00000
+    0b01110,	//0b00000
+    0b10001,	//0b00100
+    0b10001,	//0b01110
+    0b10001,	//0b00100
+    0b01010,	//0b00000
+    0b11011,	//0b01110
+    0b00000,	//0b00000
+    };
+
+
+    sendByte(0x40 | (0x01 << 3), FALSE); //send set ddram
+
+    int i;
+    for(i = 0; i < 8; i++){
+        //printf("hello");
+        sendByte(smiley[i], TRUE);
+    }
+
+
+}
+
 //
 // For 16 columns, 2 rows LCD
 // Select row / column for next character output
@@ -265,6 +289,7 @@ extern void initLCD(void)
 
 
 	defChar();
+	defOhm();
 
 	sendByte(0x28,FALSE);  // Set two lines
 	cursorOffLCD();       // Cursor invisible

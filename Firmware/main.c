@@ -37,7 +37,7 @@
 #define SWITCHTASK      1
 #define ADCTASK         1
 #define MSWITCHTASK     1
-#define SDTASK          1
+#define SDTASK          0
 #define BUZZERTASK      1
 
 // -----------------------------------------------
@@ -88,6 +88,7 @@ vApplicationStackOverflowHook(xTaskHandle *pxTask, char *pcTaskName)
 int
 main(void)
 {
+    ROM_FPULazyStackingEnable();
 
     //Clock set for LCD
     SysCtlClockSet(SYSCTL_SYSDIV_8|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
