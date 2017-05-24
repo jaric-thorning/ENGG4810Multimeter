@@ -1,5 +1,6 @@
 package main;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -12,10 +13,10 @@ import java.time.format.DateTimeParseException;
  */
 public class ISOTimeInterval {
 	String formattedDate = "";
-	LocalDateTime date;
+	private LocalDateTime date;
 	DateTimeFormatter formatter;
 
-	private static final String ISO_FORMATTER = "yyyy-MM-dd'T'HH:mm:ss.S";
+	private static final String ISO_FORMATTER = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 
 	/**
 	 * Extracts the date and formatter to be used when formatting the date.
@@ -30,6 +31,34 @@ public class ISOTimeInterval {
 		this.formatter = formatter;
 	}
 
+	/**
+	 * Gets the value of the LocalDateTime.
+	 * 
+	 * @return the LocalDateTime belonging to this ISOTimeInterval
+	 */
+	public LocalDateTime getDate() {
+		return date;
+	}
+
+	/**
+	 * Converts the ISO formatted time the data points are received at to seconds. To be used as the x-value
+	 * 
+	 * @param startDate
+	 *            when the first data point is received
+	 * @param endDate
+	 *            when the last data point is received (continuously updates)
+	 * @return the number of seconds between the first point and the latest last point
+	 */
+	public static Double xValue(LocalDateTime startDate, LocalDateTime endDate) {
+		Double seconds = 0D;
+
+		// Convert to seconds
+		Duration duration = Duration.between(startDate, endDate);
+		seconds = duration.toMillis() / 1000D;
+		System.out.println("SECONDS: " + seconds);
+		return seconds;
+	}
+
 	@Override
 	public String toString() {
 		formattedDate = date.format(formatter);
@@ -37,7 +66,7 @@ public class ISOTimeInterval {
 	}
 
 	/**
-	 * Parses a string to be a 'yyyy-MM-dd'T'HH:mm:ss.S' formatted ISO time interval.
+	 * Parses a string to be a 'yyyy-MM-dd'T'HH:mm:ss.SSS' formatted ISO time interval.
 	 * 
 	 * @param s
 	 *            the string to be parsed
