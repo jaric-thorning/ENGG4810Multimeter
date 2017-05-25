@@ -37,7 +37,7 @@ public class GuiView extends Application {
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
 
 	private String fxmlFileName = "/gui_test.fxml";
-	private String GuiTitle = "Digital Multimeter Mark 90001";
+	private String GuiTitle = "Digital Multimeter Mark 9001";
 	private Stage stage = new Stage();
 
 	private static GuiView instance;

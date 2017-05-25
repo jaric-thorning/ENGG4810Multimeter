@@ -95,10 +95,14 @@ public class GuiController implements Initializable {
 	private Button saveBtn;
 	@FXML
 	protected Button discardBtn;
+	@FXML
+	protected ComboBox<String> portsAvailable;
+	@FXML
+	private Button refreshBtn;
 
 	/* Components relating to the 'disconnected' mode */
 	@FXML
-	private RadioButton disconnRBtn;
+	protected RadioButton disconnRBtn;
 	@FXML
 	private Button loadSavedData;
 	@FXML
@@ -370,7 +374,7 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void selectLogicMode() {
-		String code = MultimeterCodes.CONTINUITY.getCode();
+		String code = MultimeterCodes.LOGIC.getCode();
 		SerialFramework.writeCode(code);
 	}
 
@@ -530,8 +534,8 @@ public class GuiController implements Initializable {
 			return;
 		}
 
-		System.out.println("	RS: " + readingSeries.getData().size() + ", " + storedYUnits.size());
-		System.out.println("SS: " + storedISOTimes.size());
+		// System.out.println(" RS: " + readingSeries.getData().size() + ", " + storedYUnits.size());
+		// System.out.println("SS: " + storedISOTimes.size());
 
 		// Modify Plot Parts.
 		if (!modifyMeasurements.validateYAxisUnits(unit)) {
@@ -548,6 +552,7 @@ public class GuiController implements Initializable {
 		dataPlotPosition++;
 	}
 
+	// FIXME: STILL NEED TO STORE THE SAMPLES/TIME SOMEWHERE
 	/**
 	 * A private helper function to 'updateMultimeterDisplay' which dictates how the storage of data occurs and how the
 	 * data looks like displayed within the GUI when it's not paused.
@@ -558,7 +563,6 @@ public class GuiController implements Initializable {
 	 *            the received y-unit value
 	 */
 	private void liveDataMode(Double multimeterDataValue, String unit) {
-		// FIXME: STILL NEED TO STORE THE SAMPLES/TIME SOMEWHERE
 
 		// Change multimeter text display according to ranges and values.
 		modifyMeasurements.updateYAxisLabel(multimeterDataValue, unit, multimeterDisplay, yAxis);
@@ -570,14 +574,24 @@ public class GuiController implements Initializable {
 		pausedStoredYUnitData.add(modifyMeasurements.getUnitToSave(unit));
 
 		// ISO Time Intervals
-		pausedStoredISOTimeData.add(establishISOTime(readingSeries.getData().size()));
+		ISOTimeInterval endTime = establishISOTime(readingSeries.getData().size());
+		pausedStoredISOTimeData.add(endTime);
+
+		System.out.println("START: " + startTime + " END: " + endTime);
 
 		// Normally add received data
-		readingSeries.getData().add(
-				new XYChart.Data<Number, Number>(dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterDataValue));
+		Double xValue = ISOTimeInterval.xValue(startTime.getDate(), endTime.getDate());
+
+		readingSeries.getData().add(new XYChart.Data<Number, Number>(xValue, multimeterDataValue));
+
+		// Add plot behaviour
+		readingSeries.getData().get(dataPlotPosition).getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
+				event.getDataXYValues(readingSeries.getData().get(dataPlotPosition), dataPlotPosition, xDataCoord,
+						yDataCoord, startTime.toString(), endTime.toString(), false));
 
 		// Update chart bounds
-		int dataBoundsRange = (int) Math.ceil(dataPlotPosition / (SAMPLES / PER_TIMEFRAME));
+		// TODO REMOVE dataPlotPosition / (SAMPLES / PER_TIMEFRAME)
+		int dataBoundsRange = (int) Math.ceil(ISOTimeInterval.xValue(startTime.getDate(), endTime.getDate()));
 		if (dataBoundsRange > X_UPPER_BOUND) {
 			xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
 			xAxis.setUpperBound(dataBoundsRange);
@@ -607,10 +621,30 @@ public class GuiController implements Initializable {
 			pausedStoredYUnitData.addAll(storedYUnits);
 			pausedStoredISOTimeData.addAll(storedISOTimes);
 
+			addAcquiredDataWhilePaused(pausedStoredISOTimeData);
+
 			// Reset paused acquired data
 			totalAcquisitionData.clear();
 			storedYUnits.clear();
 			storedISOTimes.clear();
+		}
+	}
+
+	/**
+	 * A private helper function to 'acquiredDataHasBeenPaused' which adds the plot behaviour to the points acquired
+	 * when the application was paused.
+	 * 
+	 * @param pausedStoredISOTimeData2
+	 *            the list of times the data was received when the application was paused.
+	 */
+	private void addAcquiredDataWhilePaused(ArrayList<ISOTimeInterval> pausedStoredISOTimeData2) {
+
+		// Add listener to add aquired data when it was paused.
+		for (int i = 0; i < readingSeries.getData().size(); i++) {
+
+			readingSeries.getData().get(i).getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
+					event.getDataXYValues(readingSeries.getData().get(i), i, xDataCoord, yDataCoord,
+							startTime.toString(), pausedStoredISOTimeData.get(i).toString(), false));
 		}
 	}
 
@@ -624,16 +658,17 @@ public class GuiController implements Initializable {
 	 *            the received y-unit value
 	 */
 	private void pausedDataMode(Double multimeterDataValue, String unit) {
-
-		// Modify Plot Parts.
-		totalAcquisitionData.add(
-				new XYChart.Data<Number, Number>(dataPlotPosition / (SAMPLES / PER_TIMEFRAME), multimeterDataValue));
-
 		// Store total y-units
 		storedYUnits.add(modifyMeasurements.getUnitToSave(unit));
 
+		ISOTimeInterval endTime = establishISOTime(totalAcquisitionData.size());
+
 		// Store total ISO time intervals
-		storedISOTimes.add(establishISOTime(totalAcquisitionData.size()));
+		storedISOTimes.add(endTime);
+
+		// Modify Plot Parts.
+		totalAcquisitionData.add(new XYChart.Data<Number, Number>(
+				ISOTimeInterval.xValue(startTime.getDate(), endTime.getDate()), multimeterDataValue));
 	}
 
 	/**
@@ -671,8 +706,8 @@ public class GuiController implements Initializable {
 			startTime = new ISOTimeInterval(local, DateTimeFormatter.ofPattern(ISO_FORMATTER));
 			endTime = startTime;
 		} else { // Get the end time
-			LocalDateTime local = LocalDateTime.now();
-			endTime = new ISOTimeInterval(local, DateTimeFormatter.ofPattern(ISO_FORMATTER));
+			LocalDateTime local2 = LocalDateTime.now();
+			endTime = new ISOTimeInterval(local2, DateTimeFormatter.ofPattern(ISO_FORMATTER));
 		}
 
 		// Display ISO time if the data is not paused.
@@ -705,6 +740,7 @@ public class GuiController implements Initializable {
 		}
 	}
 
+	// FIXME
 	/**
 	 * Selects the connected mode of the GUI if there is a connection, otherwise it's disabled.
 	 */
@@ -712,20 +748,17 @@ public class GuiController implements Initializable {
 	private void selectConnected() {
 
 		// If there a connection and the radio button is selected
-		if (connRBtn.isSelected()) {// && testConnection(connRBtn)) {
+		if (connRBtn.isSelected()) {
 			System.out.println("CONNECTED MODE INITIATED");
 			System.out.println("//-------------------//");
 
 			yAxis.setAutoRanging(true);
 			setupConnectedComponents();
-		} else if (!testConnection(connRBtn)) {
-			System.out.println("There is no test connection");
-
-			disconnRBtn.setDisable(false);
 		} else { // Assuming 'else' just covers when radio button is not selected. TODO: check.
 
 			if (notifyUserConnected()) {
 				SerialFramework.closeOpenPort();
+
 				yAxis.setAutoRanging(false);
 				disconnRBtn.setDisable(false);
 
@@ -738,30 +771,6 @@ public class GuiController implements Initializable {
 				connRBtn.setSelected(true);
 			}
 		}
-	}
-
-	// TODO: setup connection test.
-	// TODO: make sure we can tell if there is a oneway/twoway connection
-	/**
-	 * A private helper function to selectConnected. This function is called to determine if there is a connection
-	 * (optical link).
-	 * 
-	 * @param connRBtn
-	 *            the radio button which controls the
-	 * @return true if the connection was successful, false otherwise
-	 */
-	private boolean testConnection(RadioButton connRBtn) {
-
-		boolean connectionTestSuccess = true;
-
-		// Enable the button.
-		if (connectionTestSuccess) {
-			System.out.println("CONNECTION ESTABLISHED");
-			connRBtn.setDisable(false);
-		} else {
-			connRBtn.setDisable(true); // Leave the button disabled if no connection
-		}
-		return connectionTestSuccess;
 	}
 
 	// FIXME: make sure that the closed/reset stuff is done properly.
@@ -796,7 +805,7 @@ public class GuiController implements Initializable {
 		// FIXME: SET UP SAMPLES/TIME
 		// TODO: SPLIT UP INTO CHECK PORT + NOT CHECKING PORT
 		// Receive data
-		SerialFramework.selectPort();
+		// SerialFramework.selectPort();
 		// refreshSelectablePortsList();
 	}
 
@@ -1240,7 +1249,7 @@ public class GuiController implements Initializable {
 					event.clearDataXYValues(xDataCoord, yDataCoord));
 
 			// Update chart bounds if line chart exceeds them.
-			int dataBoundsRange = (int) Math.ceil(i / SAMPLES);
+			int dataBoundsRange = (int) Math.ceil(i / SAMPLES); // FIXME
 			if (dataBoundsRange > X_UPPER_BOUND) {
 				xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
 				xAxis.setUpperBound(dataBoundsRange);
@@ -2522,11 +2531,26 @@ public class GuiController implements Initializable {
 		}
 	}
 
+	/**
+	 * Re-populates the ports combo-box with all available ports.
+	 */
+	@FXML
+	public void refreshPorts() {
+		SerialFramework.refreshSelectablePortsList();
+	}
+
+	/**
+	 * Binds to the selected port and begins listening for data.
+	 */
+	@FXML
+	private void changePorts() {
+		SerialFramework.selectPort();
+		// testConnection();
+	}
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-
-		// TODO: DO A PING TEST TO SEE IF THERE'S A CONNECTION.
-		testConnection(connRBtn);
+		SerialFramework.refreshSelectablePortsList();
 
 		initialiseSampleRate();
 	}

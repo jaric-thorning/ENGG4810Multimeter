@@ -3,6 +3,7 @@ package main;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.concurrent.TimeUnit;
 import java.io.InputStreamReader;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -27,9 +28,12 @@ import javafx.collections.ObservableList;
 public class SerialFramework {
 
 	private static ObservableList<String> portNames = FXCollections.observableArrayList();
+	private final static String INIT_PORT_SELECTION = "Ports"; // Default first element
 	private static SerialPort openSerialPort = null;
 	private static BufferedReader readFromSerial = null;
 	private static PrintWriter writeToSerial = null;
+
+	private static boolean isChecked = false; // Two-way connection has been checked
 
 	public static SerialPort getOpenSerialPort() {
 		return openSerialPort;
@@ -70,12 +74,19 @@ public class SerialFramework {
 		}
 
 		portNames.clear();
+		portNames.add(INIT_PORT_SELECTION);
 
 		SerialPort[] ports = SerialPort.getCommPorts();
 
+		int portCounter = 0;
 		for (SerialPort serialPort : ports) {
 			portNames.add(serialPort.getDescriptivePortName());
+			portCounter++;
 		}
+
+		GuiController.instance.portsAvailable.setItems(portNames);
+		GuiController.instance.portsAvailable.setValue(portNames.get(0));
+		GuiController.instance.portsAvailable.setVisibleRowCount(portCounter + 1);
 	}
 
 	/**
@@ -95,65 +106,74 @@ public class SerialFramework {
 
 		if (openSerialPort != null) {
 			openSerialPort.closePort();
+			System.out.println("closing openSerialport");
 			openSerialPort = null;
 		}
 
-		// FIXME:
+		// Close buffered reader
 		if (readFromSerial != null) {
 			try {
 				readFromSerial.close();
+				System.out.println("closing readFromSerialReader");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
 			readFromSerial = null;
 		}
 
+		// Close write port
 		if (writeToSerial != null) {
 			writeToSerial.close();
+			System.out.println("closing writeToSerial");
 			writeToSerial = null;
 		}
 
 	}
 
+	// FIXME: TEST FOR TWO-WAY
 	/**
 	 * Handles the changing of the serial port selection. If there are ports (with valid names) it binds the serial port
 	 * (refreshes the port list if it didn't bind); otherwise is closes the open port.
 	 */
 	public static void selectPort() {
-		// if (GuiController.getInstance().portsAvailable.getValue() != null
-		// && !GuiController.getInstance().portsAvailable.getValue().equalsIgnoreCase("")
-		// && !GuiController.getInstance().portsAvailable.getValue().equals(INIT_PORT_SELECTION)) {
-		// System.out.println("Changed to this port: " +
-		// GuiController.getInstance().portsAvailable.getValue());
+		if (GuiController.instance.portsAvailable.getValue() != null
+				&& !GuiController.instance.portsAvailable.getValue().equalsIgnoreCase("")
+				&& !GuiController.instance.portsAvailable.getValue().equals(INIT_PORT_SELECTION)) {
+			System.out.println("Changed to this port: " + GuiController.instance.portsAvailable.getValue());
 
-		SerialPort[] ports = SerialPort.getCommPorts();
-		for (SerialPort serialPort : ports) {
-			System.out.println("PORTS: " + serialPort);
-			if (serialPort.getSystemPortName().contains("tty.usbmodem")) {// serialPort.getDescriptivePortName()equals(GuiController.getInstance().portsAvailable.getValue()))
-																			// {
-				System.out.println("Binding to Serial Port " + serialPort.getSystemPortName() + "...");
-				if (bindListen(serialPort)) {
-					System.out.println("Success.");
-				} else {
-					System.out.println("Failed to bind to Serial.");
-					refreshSelectablePortsList();
+			SerialPort[] ports = SerialPort.getCommPorts();
+			for (SerialPort serialPort : ports) {
+				if (serialPort.getDescriptivePortName().equals(GuiController.instance.portsAvailable.getValue())) {
+					System.out.println("Binding to Serial Port " + serialPort.getSystemPortName() + "...");
+					if (bindListen(serialPort)) {
+						System.out.println("Success.");
+
+						if (checkTwoWays()) {
+							System.out.println("Two-way connection");
+						} else {
+							System.out.println("No two-way connection");
+						}
+						GuiController.instance.connRBtn.setDisable(false);
+					} else {
+						GuiController.instance.connRBtn.setDisable(true);
+						System.out.println("Failed to bind to Serial.");
+						refreshSelectablePortsList();
+					}
+					return;
 				}
-				return;
 			}
+			System.out.println("Invalid Serial!");
+			refreshSelectablePortsList();
+		} else {
+			GuiController.instance.connRBtn.setDisable(true);
+			closeOpenPort();
+			System.out.println("Not a port - close any open ports");
 		}
-		System.out.println("Invalid Serial!");
-		refreshSelectablePortsList();
-
-		// else {
-		// closeOpenPort();
-		// System.out.println("Not a port - close any open ports");
-		// }
 	}
 
 	/**
-	 * A private helper function for changePorts(), which binds to the serial port.
+	 * A private helper function to 'selectPort', which binds to the serial port.
 	 * 
 	 * @param serialPort
 	 *            the port that needs to be binded to.
@@ -161,9 +181,13 @@ public class SerialFramework {
 	 */
 	static boolean bindListen(SerialPort serialPort) {
 		closeOpenPort();
+
 		if (!serialPort.openPort()) {
 			return false;
 		}
+
+		serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
+		serialPort.setBaudRate(9600);
 
 		// Add the data listener to the data. [also loads in the data]
 		if (!serialPort.addDataListener(new SerialFramework.SerialDataListener())) {
@@ -172,11 +196,35 @@ public class SerialFramework {
 		}
 
 		openSerialPort = serialPort;
-		// Ensure that a read call always returns at least 1 byte of valid data
-		openSerialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-		openSerialPort.setBaudRate(9600);
 
 		return true;
+	}
+
+	/**
+	 * A private helper function to 'selectPort' that determines whether or not there is a two-way connection
+	 * 
+	 * @return true if there is, false otherwise
+	 */
+	private static boolean checkTwoWays() {
+		writeCode("[C]");
+
+		long initialTime = System.currentTimeMillis(); // current time
+
+		while (true) {
+			long time = System.currentTimeMillis() - initialTime;
+			double elapsedSeconds = time / 1000.0; // elapsed seconds
+
+			if (isChecked) {
+				return true;
+			}
+
+			if (elapsedSeconds >= 0.5 && !isChecked) {
+				// System.out.println("T: " + elapsedSeconds);
+				return false;
+			}
+
+			// System.out.println(" SC: " + elapsedSeconds);
+		}
 	}
 
 	/**
@@ -199,8 +247,9 @@ public class SerialFramework {
 		 */
 		@Override
 		public void serialEvent(SerialPortEvent sEvent) {
-			if (this.errored)
+			if (this.errored) {
 				return;
+			}
 
 			// Reading data
 			if (sEvent.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {
@@ -208,19 +257,26 @@ public class SerialFramework {
 					this.errored = true;
 					System.err.println("Error 3. reading from port");
 					closeOpenPort();
-					// GuiController.getInstance().refreshPorts();
+
 					return;
 				}
 
 				// Read by line
 				try {
 					readFromSerial = new BufferedReader(new InputStreamReader(sEvent.getSerialPort().getInputStream()));
-					getData(readFromSerial.readLine());
+
+					if (GuiController.instance.connRBtn.isSelected()) {
+						getData(readFromSerial.readLine());
+					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					// e.printStackTrace();
 					System.err.println("IO Exception, no bytes");
 				}
+			}
+
+			if (sEvent.getEventType() == SerialPort.LISTENING_EVENT_DATA_WRITTEN) {
+				System.out.println("All bytes were successfully transmitted!");
 			}
 		}
 
@@ -237,6 +293,7 @@ public class SerialFramework {
 		}
 
 		private boolean getData(String text) {
+
 			// System.out.println("T: |" + text + "|");
 			int openPacket = text.indexOf(PACKET_OPEN);
 			int closePacket = text.indexOf(PACKET_CLOSE);
@@ -251,15 +308,88 @@ public class SerialFramework {
 
 			String data = text.substring(openPacket + 1, closePacket);
 
+			if (data.charAt(0) == 'C') { // Check that it's two-way
+				// TODO: Check completed, it's two-way
+				isChecked = true;
+			} else if (data.charAt(0) == 'F') {// Change displayed frequency settings
+
+				// FIXME:
+				// sortSampleFrequency(data, openPacket, closePacket);
+			}
 			if (data.charAt(0) == 'S') { // Change multimeter settings
+				System.out.println("SWEET");
 				sortMultimeterCommand(data, openPacket, closePacket);
 			} else if (data.charAt(0) == 'V' || data.charAt(0) == 'I' || data.charAt(0) == 'R') {
+
 				// Change values received
 				sortMultimeterMeasurements(data, openPacket, closePacket);
+			} else {
+				// stuff
 			}
 
 			text = text.substring(closePacket + 1); // not sure about this
+
 			return true;
+		}
+
+		private void sortSampleFrequency(String data, int openPacket, int closePacket) {
+			boolean failedToDecode = false;
+
+			// Check for frequency
+			String trimmedData = data.substring(2, data.length());
+
+			System.out.println("trimmedData: " + trimmedData);
+			if (!isValidText(trimmedData)) {
+				failedToDecode = true;
+			}
+
+			char frequencyType = 0;
+
+			// If the next bits of data were not matching to any frequency types
+			if (!(trimmedData.charAt(0) == 'A' || trimmedData.charAt(0) == 'B' || trimmedData.charAt(0) == 'C'
+					|| trimmedData.charAt(0) == 'D' || trimmedData.charAt(0) == 'E' || trimmedData.charAt(0) == 'F'
+					|| trimmedData.charAt(0) == 'G' || trimmedData.charAt(0) == 'H')) {
+				failedToDecode = true;
+			} else {
+				frequencyType = trimmedData.charAt(0);
+			}
+
+			// Change the mode to either resistance, current, voltage, logic or continuity
+			if (!failedToDecode) {
+				switch (frequencyType) {
+				case 'A':
+					// GuiController.instance.driveCurrent();
+					break;
+				case 'B':
+					// GuiController.instance.driveVoltage();
+					break;
+				case 'C':
+					// GuiController.instance.driveResistance();
+					break;
+				case 'D':
+					// GuiController.instance.driveContinuity();
+					break;
+				case 'E':
+					// GuiController.instance.driveLogic();
+					break;
+				case 'F':
+					// GuiController.instance.driveResistance();
+					break;
+				case 'G':
+					// GuiController.instance.driveContinuity();
+					break;
+				case 'H':
+					// GuiController.instance.driveLogic();
+					break;
+				default:
+					// FIXME: INVALID THING HERE
+					failedToDecode = true;
+					break;
+				}
+			} else {
+				System.out.println(
+						"______Failed to decode data:\"" + serialBuffer.substring(openPacket, closePacket + 1) + "\"");
+			}
 		}
 
 		/**
@@ -285,7 +415,7 @@ public class SerialFramework {
 			char modeType = 0;
 
 			// If data received from the serial connection was not the right type
-			if (trimmedData.charAt(0) != MODE) // M, F
+			if (trimmedData.charAt(0) != MODE)
 				failedToDecode = true;
 
 			// If the next bits of data were not matching to any mode type
@@ -316,7 +446,7 @@ public class SerialFramework {
 					break;
 				default:
 					// FIXME: INVALID THING HERE
-					// failedToDecode = true;
+					failedToDecode = true;
 					break;
 				}
 			} else {
@@ -346,6 +476,7 @@ public class SerialFramework {
 			if (!failedToDecode) {
 				// RECORD AND DISPLAY NEW RESULTS OF TIME/ETC, ETC
 				String unit = Character.toString(data.charAt(0));
+
 				GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
 			} else {
 				System.out.println("Failed to decode data.");

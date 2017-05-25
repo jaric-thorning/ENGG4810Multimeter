@@ -1,5 +1,7 @@
 package main;
 
+import java.text.DecimalFormat;
+
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.RadioButton;
 
@@ -16,6 +18,7 @@ import javafx.scene.control.TextArea;
 public class ModifyMultimeterMeasurements {
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
+	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 
 	public ModifyMultimeterMeasurements() {
 
@@ -99,34 +102,56 @@ public class ModifyMultimeterMeasurements {
 	 *            the y-axis value.
 	 */
 	public String getResistanceRange(double dataValue) {
-		if (dataValue >= 0 && dataValue <= 1000) { // 0 - 1 kOhm range (1 Ohm = 0.001 kOhm)
+		if (dataValue >= 0 && dataValue <= 1) { // 0 - 1 kOhm range (1 Ohm = 0.001 kOhm)
 			return "0 - 1k" + OHM_SYMBOL;
-		} else if (dataValue > 1000 && dataValue <= 1000000) { // 0 - 1 MOhm range (1 kOhm = 0.001
-																// MOhm)
-			return "0 - 1M" + OHM_SYMBOL;
-		} else if (dataValue > 1000000) { // FIXME: MAKE WHOLE MULTIMETER SET-TEXT
+		} else if (dataValue > 1 && dataValue <= 10) {
+			return "1k" + OHM_SYMBOL + " - 10k" + OHM_SYMBOL;
+		} else if (dataValue > 10 && dataValue <= 100) {
+			return "10k" + OHM_SYMBOL + " - 100k" + OHM_SYMBOL;
+		} else if (dataValue > 100 && dataValue <= 1000) { // 0 - 1 MOhm range (1 kOhm = 0.001 MOhm)
+			return "100k" + OHM_SYMBOL + " - 1M" + OHM_SYMBOL;
+		} else if (dataValue > 1000) { // FIXME: MAKE WHOLE MULTIMETER SET-TEXT
 			return "OL";
+		} else {
+			return "";
+		}
+		// if (dataValue >= 0 && dataValue <= 1000) { // 0 - 1 kOhm range (1 Ohm = 0.001 kOhm)
+		// return "0 - 1k" + OHM_SYMBOL;
+		// } else if (dataValue > 1000 && dataValue <= 1000000) { // 0 - 1 MOhm range (1 kOhm = 0.001
+		// // MOhm)
+		// return "0 - 1M" + OHM_SYMBOL;
+		// } else if (dataValue > 1000000) { // FIXME: MAKE WHOLE MULTIMETER SET-TEXT
+		// return "OL";
+		// } else {
+		// return "";
+		// }
+	}
+
+	public String convertRange(Double dataValue) {
+		if (dataValue >= 0 && dataValue < 1000) {
+			return "k" + OHM_SYMBOL;
+		} else if (dataValue == 1000) {
+			return "M" + OHM_SYMBOL;
 		} else {
 			return "";
 		}
 	}
 
-	public String convertRange(Double dataValue) {
-		if (dataValue < 1000) {
-			String kOhm = "k" + OHM_SYMBOL;
-			// yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
-			return kOhm + ": " + (dataValue /= 1000).toString() + kOhm;
-			// } else if (dataValue >= 1000 && dataValue <= 1000000) {
-			// yAxis.setLabel("Measurements [" + "k" + OHM_SYMBOL + "]");
-			// return (dataValue /= 1000);
-		} else if (dataValue >= 1000 && dataValue <= 1000000) {
-			String MOhm = "M" + OHM_SYMBOL;
-			// yAxis.setLabel("Measurements [" + "M" + OHM_SYMBOL + "]");
-			return MOhm + ": " + (dataValue /= 1000000).toString() + MOhm;
-		} else {
-			return "";
-		}
-	}
+	// if (dataValue < 1000) {
+	// String kOhm = "k" + OHM_SYMBOL;
+	// // yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
+	// return kOhm + ": " + (dataValue /= 1000).toString() + kOhm;
+	// // } else if (dataValue >= 1000 && dataValue <= 1000000) {
+	// // yAxis.setLabel("Measurements [" + "k" + OHM_SYMBOL + "]");
+	// // return (dataValue /= 1000);
+	// } else if (dataValue >= 1000 && dataValue <= 1000000) {
+	// String MOhm = "M" + OHM_SYMBOL;
+	// // yAxis.setLabel("Measurements [" + "M" + OHM_SYMBOL + "]");
+	// return MOhm + ": " + (dataValue /= 1000000).toString() + MOhm;
+	// } else {
+	// return "";
+	// }
+	// }
 
 	/**
 	 * Determines if the y-value unit has changed upon acquisition.
@@ -172,7 +197,7 @@ public class ModifyMultimeterMeasurements {
 	 * @return true if there has been no change, false otherwise
 	 */
 	private boolean checkYUnitChangesCurrent(String unit) {
-		if (unit.equals("C") && !GuiController.instance.current) {
+		if (unit.equals("I") && !GuiController.instance.current) {
 			GuiController.instance.voltage = false;
 			GuiController.instance.current = true;
 			GuiController.instance.resistance = false;
@@ -207,7 +232,7 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * A private helper function to 'xx' which modifies text for displaying the multimeter values.
+	 * A private helper function to 'updateYAxisLabel' which modifies text for displaying the multimeter values.
 	 * 
 	 * @param unit
 	 *            the abbreviated forms of voltage, current and resistance.
@@ -216,10 +241,10 @@ public class ModifyMultimeterMeasurements {
 	private String getUnit(String unit) {
 		if (unit.equals("V")) {
 			return "Voltage";
-		} else if (unit.equals("C")) { // need to convert to milliamps
-			return "milliAmp";
+		} else if (unit.equals("I")) {
+			return "Current";
 		} else if (unit.equals("R")) {
-			return "Ohm";
+			return "Res";
 		} else {
 			return "";
 		}
@@ -250,22 +275,26 @@ public class ModifyMultimeterMeasurements {
 			NumberAxis yAxis) {
 		if (GuiController.instance.voltage) {
 			multimeterDisplay.setText(getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getVoltageRange(multimeterReading)
-					+ " )" + "\nV: " + multimeterReading.toString() + unit);
+					+ " )\nV: " + multimeterReading + unit);
 
 			yAxis.setLabel("Measurements [V]");
 		} else if (GuiController.instance.current) {
 			multimeterDisplay.setText(getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getCurrentRange(multimeterReading)
-					+ " )" + "\nmA: " + multimeterReading.toString() + "mA");
+					+ " )\nmA: " + multimeterReading);// + "mA");
 
 			yAxis.setLabel("Measurements [mA]");
-		} else if (GuiController.instance.resistance) {
-			multimeterDisplay.setText(getUnit(unit) + " ( " + getResistanceRange(multimeterReading) + " )" + "\n"
-					+ convertRange(multimeterReading));
+		} else if (GuiController.instance.resistance || GuiController.instance.continuity) { // TODO CHECK THIS WORKS
+			multimeterDisplay.setText(
+					getUnit(unit) + " ( " + getResistanceRange(multimeterReading) + " )\nR: " + multimeterReading + convertRange(multimeterReading));
+			// multimeterDisplay.setText(getUnit(unit) + " ( " + getResistanceRange(multimeterReading) + " )" + "\n"
+			// + convertRange(multimeterReading));
 
 			yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
+		} else {
+			// TODO: NOT SURE WHAT TO PUT HERE.
 		}
 	}
-	
+
 	/**
 	 * Sets the y-axis label
 	 * 

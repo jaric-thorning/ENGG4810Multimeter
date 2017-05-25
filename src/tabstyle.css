@@ -1,3 +1,4 @@
+/* Styling of an assortment of components (panes, labels, text areas, combo-boxes) */
 #anchorPane
 {
 	-fx-background-color: linear-gradient(#000033, #666699); 
@@ -59,6 +60,10 @@
 	-fx-text-fill: white;
 	
 	-fx-cursor:hand;
+}
+
+.combo-box-popup > .list-view {
+    -fx-pref-width: 300;
 }
 
 .combo-box-popup  > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
