@@ -154,7 +154,7 @@ uint8_t read_byte(uint8_t address){
 uint32_t read_data(void){
 	uint32_t data = 0;
 	uint8_t address = 0b11001001;
-	UARTprintf("Reading Command\n\r");
+	//UARTprintf("Reading Command\n\r");
 
 	set_cs(LOW);
 	//send command + address
