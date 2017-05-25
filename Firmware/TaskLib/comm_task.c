@@ -232,7 +232,7 @@ CommTaskInit(void)
         return(1);
     }
 
-    UARTprintf("Comms initiated...\n\r");
+    UARTprintf("    Comms initiated.\n\r");
     //
     // Success.
     //

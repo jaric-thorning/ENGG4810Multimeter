@@ -213,8 +213,8 @@ LEDTaskInit(void)
     //
     // Print the current loggling LED and frequency.
     //
-    UARTprintf("\nLed %d is blinking. [R, G, B]\n", g_ui8ColorsIndx);
-    UARTprintf("Led blinking frequency is %d ms.\n", (LED_TOGGLE_DELAY * 2));
+    //UARTprintf("\nLed %d is blinking. [R, G, B]\n", g_ui8ColorsIndx);
+    //UARTprintf("Led blinking frequency is %d ms.\n", (LED_TOGGLE_DELAY * 2));
 
     //
     // Create a queue for sending messages to the LED task.
@@ -229,7 +229,7 @@ LEDTaskInit(void)
     {
         return(1);
     }
-    UARTprintf("LEDs initiated...\n\r");
+    UARTprintf("    LEDs initiated.\n\r");
     //
     // Success.
     //

@@ -62,16 +62,6 @@ void init_menu(Menu menu){
 	menu->scroll_item = 0;
 	menu->item_count = 0;
 
-	menu->items = bgetz(8 * 16 * NUM_MENUS * NUM_ITEMS);
-
-	for(int i = 0; i < NUM_MENUS; i++){
-		UARTprintf("i: %d\n\r", i);
-		menu->items[i] = bgetz(8 * 16 * NUM_ITEMS);
-		for(int j = 0; j < NUM_ITEMS; j++){
-			menu->items[i][j] = bgetz(8 * 16);
-			//menu->items[i][j] = "                ";
-		}
-	}
 }
 
 int menu_active(Menu menu){
@@ -158,24 +148,59 @@ void update_item(Menu menu){
 
 char * get_text(int selection, int item){
 	char* temp = bgetz(16 * 8);
+	UARTprintf("2: Selection : %d, Item: %d\n\r", selection, item);
 	if(selection == 0){
 		if(item == 0){
+			temp = "Main Menu       ";
+		} else if(item == 1){
 			temp = "Frequency       ";
-		} else if (item == 1){
+		} else if (item == 2){
 			temp = "Brightness      ";
+		}
+		else{
+			temp = "UNKNOWN         ";
 		}
 	} else if (selection == 1){
 		if(item == 0){
-			temp = "10              ";
+			temp = "2 Samples/1 Sec ";
 		} else if(item == 1){
-			temp = "100             ";
+			temp = "1 Sample/1 Sec  ";
+		} else if(item == 2){
+			temp = "1 Sample/2 Secs ";
+		} else if(item == 3){
+			temp = "1 Sample/5 Secs ";
+		} else if(item == 4){
+			temp = "1 Sample/10 Secs";
+		} else if(item == 5){
+			temp = "1 Sample/1 Min  ";
+		} else if(item == 6){
+			temp = "1 Sample/2 Mins ";
+		} else if(item == 7){
+			temp = "1 Sample/5 Mins ";
+		} else if(item == 8){
+			temp = "1 Sample/10 Mins";
+		}
+		else{
+			temp = "UNKNOWN         ";
 		}
 	} else if (selection == 2){
 		if(item == 0){
-			temp = "5               ";
+			temp = "100 Percent     ";
 		} else if(item == 1){
-			temp = "10              ";
+			temp = "75 Percent      ";
+		} else if(item == 2){
+			temp = "50 Percent      ";
+		} else if(item == 3){
+			temp = "25 Percent      ";
+		} else if(item == 4){
+			temp = "Off             ";
 		}
+		else{
+			temp = "UNKNOWN         ";
+		}
+	}
+	else{
+		temp = "UNKNOWN           ";
 	}
 	return temp;
 }

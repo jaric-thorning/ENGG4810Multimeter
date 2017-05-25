@@ -62,9 +62,9 @@ ADCTask(void *pvParameters)
 
 
     uint8_t command = 0b10000001;
-    //send_command(command); //Self Calibrate
+    send_command(command); //Self Calibrate
 
-    write_byte(0b11000010, 0b00000000);
+    //write_byte(0b11000010, 0b00000000);
 
     //command = 0b10000111;
     //send_command(command); //Self Calibrate
@@ -72,9 +72,11 @@ ADCTask(void *pvParameters)
     while(1)
     {
 
+      send_command(command); //Self Calibrate
+      SysCtlDelay(10);
       //send_command(command);
       //send_command(command); //Self Calibrate
-      /*status = read_byte(0b11000111);
+      status = read_byte(0b11000001);
 
       UARTprintf("   Status: ", status);
       for(int i = 7; i >= 0; i--){
@@ -110,8 +112,17 @@ ADCTask(void *pvParameters)
 
       //write_byte(0b11000010, 0b1100100);
 
-      if(status & 1){ //Conversion ready
+      if(1){ //Conversion ready
         data = read_data();
+        float converted = data/5756991.0 * 3.3;
+
+        int integer = (int)converted;
+        int decimal = ((int)(converted*100000))%100000;
+        if(decimal < 0){
+          decimal *= -1;
+        }
+        UARTprintf("External ADC read: %d.%d\n\r", integer, decimal);
+
         UARTprintf("External ADC read: ");
         for(int i = 23; i >= 0; i--){
           UARTprintf("%d", (data >> i) & 1);
@@ -119,7 +130,7 @@ ADCTask(void *pvParameters)
         UARTprintf("\n\r");
       } else { //conversion not ready
         UARTprintf("Data not ready.\n\r");
-      }*/
+      }
 
 
 
@@ -256,7 +267,7 @@ ADCTaskInit(void)
         return(1);
     }
 
-    UARTprintf("ADC initiated...\n\r");
+    UARTprintf("    ADC initiated.\n\r");
 
     //
     // Success.

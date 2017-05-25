@@ -45,6 +45,7 @@
 #define LCD_QUEUE_SIZE          5
 
 #define LCD_REFRESH_TIME 10
+#define DISPLAY_RATE 1000
 
 extern xSemaphoreHandle g_pUARTSemaphore;
 
@@ -97,8 +98,8 @@ void format_read_value(char type, int range, int value, int decimal, char ** lin
   char value_buf[10];
   char range_buf[10];
   char decimal_buf[10];
-  static char build1[16];
-  static char build2[16];
+  static char build1[17];
+  static char build2[17];
   //UARTprintf("Attempting to convert: %d\n", value);
   //char buffer[10];
   int set_negative = 0;
@@ -155,7 +156,14 @@ void format_read_value(char type, int range, int value, int decimal, char ** lin
     strcat(build2, "U");
   }
 
-
+  for(int i = 0; i < 16; i++){
+    if(build1[i] == '\0'){
+      build1[i] = ' ';
+    }
+    if(build2[i] == '\0'){
+      build2[i] = ' ';
+    }
+  }
 
   strcat(build1, "\0");
   strcat(build2, "\0");
@@ -169,13 +177,15 @@ void format_read_value(char type, int range, int value, int decimal, char ** lin
 static void
 LCDTask(void *pvParameters)
 {
-    portTickType ui32WakeTime;
+    portTickType ui32WakeTime, last_display;
     uint32_t ui32LCDRefreshTime;
     struct lcd_queue_message lcd_message;
 
     ui32LCDRefreshTime = LCD_REFRESH_TIME;
 
     ui32WakeTime = xTaskGetTickCount();
+
+    last_display = 0;
 
     //top_line = (char*)bgetz(16 * sizeof(char));
     //bottom_line = (char*)bgetz(16 * sizeof(char));
@@ -200,8 +210,9 @@ LCDTask(void *pvParameters)
 
     init_menu(&menu);
 
-    int item = 0;
-    int selection = 0;
+    //{Main menu, }
+    static int items[4] = { 1, 0, 0, 0};
+    int max_items[4] = { 3, 9, 0, 0};
     while(1)
     {
       //
@@ -231,40 +242,57 @@ LCDTask(void *pvParameters)
                 // if at main menu, select sub menu
 
                 // if at sub menu, select option
-              menu.selection = (menu.selection + 1) % 2;
+
               UARTprintf("Changing Menu\n\r");
               menu.scroll_title = 1;
-              menu.new_title = "Frequency       ";
-              menu.scroll_item = 1;
-              menu.new_item = get_text(menu.selection, item);
+
+              menu.selection = items[menu.selection];
+              menu.new_title = get_text(0, menu.selection);
+              menu.scroll_item = 0;
+              UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+              menu.new_item = get_text(menu.selection, items[menu.selection]);
 
             } else{
               UARTprintf("Launching Menu\n\r");
               launch_menu(&menu);
               menu.new_title = "Main Menu       ";
               menu.new_item =  "Frequency       ";
+              menu.selection = 0;
             }
           } else if(lcd_message.button == 'N'){
             UARTprintf("Next.\n\r");
             menu.scroll_item = 1;
             menu.scroll_item = 1;
-            menu.new_item = menu.items[0][0];
+
+            //UARTprintf("A: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+            items[menu.selection] = (items[menu.selection] + 1) % max_items[menu.selection];
+            if(menu.selection == 0 && items[menu.selection] == 0){
+              items[menu.selection] = 1;
+            }
+            //UARTprintf("B: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+            menu.new_item = get_text(menu.selection,items[menu.selection]);
+
           } else if(lcd_message.button == 'B'){
             UARTprintf("Back.\n\r");
+            UARTprintf("Changing Menu\n\r");
+            menu.scroll_title = 1;
+
+            menu.selection = 0;
+            menu.new_title = get_text(0, menu.selection);
+            menu.scroll_item = 0;
+            UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+            menu.new_item = get_text(menu.selection, items[menu.selection]);
           }
         }
 
         if(mode == 'D'){
-          UARTprintf("[%c: %d.%d]\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
+          UARTprintf("|%c: %d.%d|\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
           //displayOffLCD();
 
           format_read_value(lcd_message.type, lcd_message.range, lcd_message.value, lcd_message.decimal, &lcd_line_1, &lcd_line_2);
 
           //UARTprintf("A1: %s\n\r", lcd_line_1);
           //UARTprintf("A2: %s\n\r", lcd_line_2);
-
-          UARTprintf("[D1 %s]\n\r", lcd_line_1);
-          UARTprintf("[D2 %s]\n\r", lcd_line_2);
         }
         xSemaphoreGive(g_pUARTSemaphore);
       }
@@ -278,6 +306,17 @@ LCDTask(void *pvParameters)
           format_menu(&menu, &lcd_line_1, &lcd_line_2);
         }
       }
+
+
+      if(xTaskGetTickCount()  > last_display + DISPLAY_RATE){
+
+      UARTprintf("\n\r ------------------ \n\r");
+      UARTprintf("|D1 %s|\n\r", lcd_line_1);
+      UARTprintf("|D2 %s|\n\r", lcd_line_2);
+      UARTprintf(" ------------------ \n\r\n\r");
+      last_display = xTaskGetTickCount();
+      };
+
       update_display(0, lcd_line_1);
       update_display(1, lcd_line_2);
 
@@ -345,7 +384,7 @@ LCDTaskInit(void)
         return(1);
     }
 
-    UARTprintf("LCD initiated...\n\r");
+    UARTprintf("    LCD initiated.\n\r");
 
     //
     // Success.

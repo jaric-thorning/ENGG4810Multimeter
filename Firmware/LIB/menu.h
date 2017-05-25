@@ -39,4 +39,5 @@ void launch_menu(struct Menu *menu);
 void format_menu(struct Menu *menu, char** line1, char** line2);
 int update_title(struct Menu *menu);
 void update_item(struct Menu *menu);
+char * get_text(int selection, int item);
 #endif // __LED_TASK_H__

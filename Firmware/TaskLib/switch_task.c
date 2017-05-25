@@ -127,7 +127,12 @@ SwitchTask(void *pvParameters)
           button4_time = currentTime;
 
           if(menu_on){
-
+            lcd_message.mode = 'M';
+            lcd_message.button = 'B';
+            if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
+               pdPASS){
+                 UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+               }
           } else{
           mswitch_message.ui32Value = 0; //doesn't matter
           mswitch_message.type = 'R'; //sending M for mode
@@ -139,6 +144,13 @@ SwitchTask(void *pvParameters)
           }
         }
         else if((button5 == BUTTON5_PIN) && (button5_time + 200 < currentTime)){
+
+          //BUZZER TEST CODE
+          /*buzzer_message.frequency = 1000;
+          if(xQueueSend(g_pBuzzerQueue, &buzzer_message, portMAX_DELAY) !=
+             pdPASS){
+               UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+             }*/
 
           if(menu_on){
           lcd_message.mode = 'M';
@@ -321,7 +333,7 @@ SwitchTaskInit(void)
     {
         return(1);
     }
-    UARTprintf("Switch initiated...\n\r");
+    UARTprintf("    Switch initiated.\n\r");
     //
     // Success.
     //

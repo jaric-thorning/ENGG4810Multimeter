@@ -212,6 +212,6 @@ void spi_adc_init(void){
 	}
 	GPIOPinTypeGPIOInput(GPIO1_PORT_BASE, GPIO1_PIN);*/
 
-	UARTprintf("SPI ADC Initiated...\n\r");
+	UARTprintf("    SPI ADC initiated.\n\r");
 
 }

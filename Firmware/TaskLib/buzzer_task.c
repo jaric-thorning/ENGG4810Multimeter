@@ -136,7 +136,7 @@ BuzzerTaskInit(void)
       return(1);
     }
 
-  UARTprintf("Buzzer initiated...\n\r");
+  UARTprintf("    Buzzer initiated.\n\r");
 
   //
   // Success.

@@ -40,7 +40,7 @@
 #define MSWITCH_ITEM_SIZE           sizeof(struct mswitch_queue_message)
 #define MSWITCH_QUEUE_SIZE          5
 
-#define MSWITCH_REFRESH_TIME 100
+#define MSWITCH_REFRESH_TIME 10
 
 #define S1_A_PIN 0
 #define S1_B_PIN 1
@@ -289,7 +289,7 @@ MSWITCHTaskInit(void)
         return(1);
     }
 
-    UARTprintf("MSWITCH initiated...\n\r");
+    UARTprintf("    MSwitch initiated.\n\r");
 
     //
     // Success.
