@@ -37,6 +37,7 @@
 #include "general_functions.h"
 
 #include "menu.h"
+#include "switch_task.h"
 
 
 #define LCDTASKSTACKSIZE        128
@@ -180,6 +181,7 @@ LCDTask(void *pvParameters)
     portTickType ui32WakeTime, last_display;
     uint32_t ui32LCDRefreshTime;
     struct lcd_queue_message lcd_message;
+    struct switch_queue_message switch_message;
 
     ui32LCDRefreshTime = LCD_REFRESH_TIME;
 
@@ -212,7 +214,7 @@ LCDTask(void *pvParameters)
 
     //{Main menu, }
     static int items[4] = { 1, 0, 0, 0};
-    int max_items[4] = { 3, 9, 0, 0};
+    int max_items[4] = { 3, 9, 5, 0};
     while(1)
     {
       //
@@ -221,7 +223,7 @@ LCDTask(void *pvParameters)
       if(xQueueReceive(g_pLCDQueue, &lcd_message, 0) == pdPASS){
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         if(lcd_message.setting == 1){
-          PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, period * lcd_message.brightness/5);;
+          PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, period * lcd_message.brightness/4);;
           PWMOutputState(PWM0_BASE, PWM_OUT_3_BIT, lcd_message.brightness);
           if(lcd_message.brightness == 0){
             GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);
@@ -243,6 +245,8 @@ LCDTask(void *pvParameters)
 
                 // if at sub menu, select option
 
+              if(menu.selection == 0){
+              //At Main menu
               UARTprintf("Changing Menu\n\r");
               menu.scroll_title = 1;
 
@@ -251,6 +255,12 @@ LCDTask(void *pvParameters)
               menu.scroll_item = 0;
               UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
               menu.new_item = get_text(menu.selection, items[menu.selection]);
+            } else{
+              //At sub menu
+              if(do_action(menu.selection, items[menu.selection]) != 1){
+                UARTprintf("Action Failed.\n\r");
+              }
+            }
 
             } else{
               UARTprintf("Launching Menu\n\r");
@@ -274,14 +284,34 @@ LCDTask(void *pvParameters)
 
           } else if(lcd_message.button == 'B'){
             UARTprintf("Back.\n\r");
-            UARTprintf("Changing Menu\n\r");
-            menu.scroll_title = 1;
 
-            menu.selection = 0;
-            menu.new_title = get_text(0, menu.selection);
-            menu.scroll_item = 0;
-            UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
-            menu.new_item = get_text(menu.selection, items[menu.selection]);
+            if(menu.selection == 0){
+              //at main menu
+              switch_message.setting = 'M';
+              switch_message.menu_on = 0;
+              //TURNING OFF MENU
+
+              mode = 'D'; //Setting back to display mode
+              lcd_line_1 = "                ";
+              lcd_line_2 = "                ";
+              clearLCD();
+              if(xQueueSend(g_pSWITCHQueue, &switch_message, portMAX_DELAY) !=
+                 pdPASS){
+                   UARTprintf("FAILED TO SEND TO SWITCH QUEUE\n\r");
+                 }
+
+            } else {
+              //at sub menu
+              UARTprintf("Changing Menu\n\r");
+              menu.scroll_title = 1;
+
+              menu.selection = 0;
+              menu.new_title = get_text(0, menu.selection);
+              menu.scroll_item = 0;
+              UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+              menu.new_item = get_text(menu.selection, items[menu.selection]);
+            }
+
           }
         }
 

@@ -8,7 +8,6 @@
 #include "driverlib/rom.h"
 #include "drivers/buttons.h"
 #include "utils/uartstdio.h"
-#include "switch_task.h"
 #include "led_task.h"
 #include "priorities.h"
 #include "FreeRTOS.h"
@@ -25,21 +24,15 @@
 #include "grlib/grlib.h"
 #include "utils/ustdlib.h"
 
-
 #include "LCD_task.h"
-
 #include "stdlib.h"
-
 #include "mswitch_task.h"
-
 #include "ADC_task.h"
-
 #include "buzzer_task.h"
-
 #include "lcd_task.h"
-
 #include "inc/hw_hibernate.h"
 #include "driverlib/hibernate.h"
+#include "switch_task.h"
 
 #define BUTTON3_PIN GPIO_PIN_2
 #define BUTTON4_PIN GPIO_PIN_3
@@ -56,7 +49,8 @@
 #define BUTTON5_PERIPH_GPIO SYSCTL_PERIPH_GPIOB
 #define BUTTON6_PERIPH_GPIO SYSCTL_PERIPH_GPIOB
 
-
+#define SWITCH_ITEM_SIZE           sizeof(struct switch_queue_message)
+#define SWITCH_QUEUE_SIZE          5
 
 #define SWITCHTASKSTACKSIZE        128         // Stack size in words
 
@@ -78,6 +72,7 @@ SwitchTask(void *pvParameters)
     struct adc_queue_message adc_message;
     struct buzzer_queue_message buzzer_message;
     struct lcd_queue_message lcd_message;
+    struct switch_queue_message switch_message;
 
     uint32_t button3 = 0;
     uint32_t button4 = 0;
@@ -96,6 +91,17 @@ SwitchTask(void *pvParameters)
 
     while(1)
     {
+
+      if(xQueueReceive(g_pSWITCHQueue, &switch_message, 0) == pdPASS)
+      {
+        if(switch_message.setting = 'M'){
+          if(switch_message.menu_on == 1){
+            menu_on == 1;
+          } else{
+            menu_on == 0;
+          }
+        }
+      }
         ui8CurButtonState = ButtonsPoll(0, 0);
 
         button3 = GPIOPinRead(BUTTON3_PORT,BUTTON3_PIN);
@@ -279,8 +285,13 @@ uint32_t
 SwitchTaskInit(void)
 {
 
+    g_pSWITCHQueue = xQueueCreate(SWITCH_QUEUE_SIZE, SWITCH_ITEM_SIZE);
+
+
     HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
     HWREG(GPIO_PORTF_BASE + GPIO_O_CR) = 0xFF;
+
+
 
     ButtonsInit();
 
@@ -297,9 +308,6 @@ SwitchTaskInit(void)
     // Enable the Hibernation module.
     //
     SysCtlPeripheralEnable(SYSCTL_PERIPH_HIBERNATE);
-
-
-
 
 
     //External Button Init

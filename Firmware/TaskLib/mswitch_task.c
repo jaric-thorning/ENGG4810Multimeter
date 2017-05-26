@@ -115,6 +115,7 @@ MSWITCHTask(void *pvParameters)
       //
       if(xQueueReceive(g_pMSWITCHQueue, &mswitch_message, 0) == pdPASS)
       {
+        //UARTprintf("MSWITCH RECIEVED TYPE: %c\n\r", mswitch_message.type);
         if(mswitch_message.type == 'M'){
           if(mswitch_message.mode == 'I'){
             mode = 0;
@@ -153,20 +154,14 @@ MSWITCHTask(void *pvParameters)
              set_mode('R');
        	  }
 
-        } else if(mswitch_message.type == 'F'){
-          UARTprintf("TODO: IMPLEMENT FREQUENCY CHANGING -> FORWARD TO ADC\n\r");
-
-        } else if(mswitch_message.type == 'X'){
-          UARTprintf("TODO: ENTER MENU MODE\n\r");
-
         } else if(mswitch_message.type == 'R'){
-          if(logging == 0){
+          /*if(logging == 0){
             UARTprintf("Recording to SD....\n\r");
             logging = 1;
           } else{
             UARTprintf("Recording done.\n\r");
             logging = 0;
-          }
+          }*/
 
         } else if(mswitch_message.type == 'V'){
           //UARTprintf("ADC 1 : %d\n\r", mswitch_message.ui32Value);
@@ -192,7 +187,7 @@ MSWITCHTask(void *pvParameters)
             lcd_message.range = range_resistance;
             check_resistance_range(value);
       		}
-        }
+
         integer = (int)value;
         decimal = ((int)(value*1000))%1000;
         if(decimal < 0){
@@ -214,9 +209,9 @@ MSWITCHTask(void *pvParameters)
 
         if(lcd_message.type == 'V'){
           strcpy(buffer2, "[V: ");
-        } else if (lcd_message.type == "C"){
+        } else if (lcd_message.type == 'C'){
           strcpy(buffer2, "C: ");
-        } else if (lcd_message.type == "R"){
+        } else if (lcd_message.type == 'R'){
           strcpy(buffer2, "R: ");
         } else{
           strcpy(buffer2, "U: ");
@@ -249,7 +244,7 @@ MSWITCHTask(void *pvParameters)
                UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
              }
         }
-
+      }
       //
       // Wait for the required amount of time.
       //
