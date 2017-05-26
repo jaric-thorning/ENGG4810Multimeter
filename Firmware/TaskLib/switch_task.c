@@ -85,7 +85,7 @@ SwitchTask(void *pvParameters)
     int button6_time = 0;
 
     int freq = 1;
-    int brightness = 5;
+    int brightness = 4;
 
     int menu_on = 0;
 
@@ -96,9 +96,9 @@ SwitchTask(void *pvParameters)
       {
         if(switch_message.setting = 'M'){
           if(switch_message.menu_on == 1){
-            menu_on == 1;
+            menu_on = 1;
           } else{
-            menu_on == 0;
+            menu_on = 0;
           }
         }
       }
@@ -161,16 +161,19 @@ SwitchTask(void *pvParameters)
           if(menu_on){
           lcd_message.mode = 'M';
           lcd_message.button = 'N';
+          lcd_message.setting = 0;
           if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
              pdPASS){
                UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
              }
 
           } else{
+          //UARTprintf("Changing brightness\n\r");
           brightness = (brightness - 1);
           if(brightness < 0){
-            brightness = 5;
+            brightness = 4;
           }
+          lcd_message.mode = 'X'; //don't care avoid value
           lcd_message.setting = 1;
           lcd_message.brightness = brightness;
           if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
@@ -193,6 +196,7 @@ SwitchTask(void *pvParameters)
           menu_on = 1;
           lcd_message.mode = 'M';
           lcd_message.button = 'S';
+          lcd_message.setting = 0;
           if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
              pdPASS){
                UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");

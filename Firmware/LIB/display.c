@@ -135,8 +135,79 @@ void defOhm(){
         //printf("hello");
         sendByte(smiley[i], TRUE);
     }
+}
+
+void defBrightnessChars(){
+  uint8_t twentyfive[8] = {
+		0b00000,	//0b00000
+    0b00000,	//0b00000
+    0b00000,	//0b00100
+    0b00000,	//0b01110
+    0b00000,	//0b00100
+    0b00000,	//0b00000
+    0b11111,	//0b01110
+    0b11111,	//0b00000
+    };
+
+		uint8_t fifty[8] = {
+		0b00000,	//0b00000
+		0b00000,	//0b00000
+		0b00000,	//0b00100
+		0b00000,	//0b01110
+		0b11111,	//0b00100
+		0b11111,	//0b00000
+		0b11111,	//0b01110
+		0b11111,	//0b00000
+		};
+		uint8_t seventyfive[8] = {
+		0b00000,	//0b00000
+		0b00000,	//0b00000
+		0b11111,	//0b00100
+		0b11111,	//0b01110
+		0b11111,	//0b00100
+		0b11111,	//0b00000
+		0b11111,	//0b01110
+		0b11111,	//0b00000
+		};
+		uint8_t onehundred[8] = {
+		0b11111,	//0b00000
+		0b11111,	//0b00000
+		0b11111,	//0b00100
+		0b11111,	//0b01110
+		0b11111,	//0b00100
+		0b11111,	//0b00000
+		0b11111,	//0b01110
+		0b11111,	//0b00000
+		};
+
+    sendByte(0x40 | (0x02 << 3), FALSE); //send set ddram
+
+    for(int i = 0; i < 8; i++){
+        //printf("hello");
+        sendByte(twentyfive[i], TRUE);
+    }
+
+		sendByte(0x40 | (0x03 << 3), FALSE); //send set ddram
 
 
+    for(int i = 0; i < 8; i++){
+        //printf("hello");
+        sendByte(fifty[i], TRUE);
+    }
+
+		sendByte(0x40 | (0x04 << 3), FALSE); //send set ddram
+
+    for(int i = 0; i < 8; i++){
+        //printf("hello");
+        sendByte(seventyfive[i], TRUE);
+    }
+
+		sendByte(0x40 | (0x05 << 3), FALSE); //send set ddram
+
+    for(int i = 0; i < 8; i++){
+        //printf("hello");
+        sendByte(onehundred[i], TRUE);
+    }
 }
 
 //
@@ -290,6 +361,7 @@ extern void initLCD(void)
 
 	defChar();
 	defOhm();
+	defBrightnessChars();
 
 	sendByte(0x28,FALSE);  // Set two lines
 	cursorOffLCD();       // Cursor invisible

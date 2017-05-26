@@ -289,7 +289,7 @@ ADCTask(void *pvParameters)
             ui32ADCRefreshTime = 1000;
           } else if(adc_message.mode == 'F'){
             if( adc_message.frequency > 0){
-              ui32ADCRefreshTime = adc_message.frequency;
+              ui32ADCRefreshTime = adc_message.frequency/2;
             }
           }
       }

@@ -61,11 +61,19 @@
 #define SHIFT_REG_PINS SHIFT_IN_PIN | SHIFT_CLK_PIN
 #define SHIFT_REG_BASE GPIO_PORTC_BASE
 
-#define NUM_MODES 3
+#define DC_VOLTAGE 0
+#define AC_VOLTAGE 1
+#define DC_CURRENT 2
+#define AC_CURRENT 3
+#define RESISTANCE 4
+#define LOGIC      5
+#define CONTINUITY 6
+
+#define NUM_MODES 7
 
 uint8_t shift_reg = 0x00;
 
-int mode = 1; //0 -> Current, 1 -> Voltage, 2 -> Resistance
+int mode = DC_VOLTAGE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13; //V
 int range_current = 200; //mA
 int range_resistance = 1000; //kOhm
@@ -77,7 +85,7 @@ extern xSemaphoreHandle g_pUARTSemaphore;
 
 void check_voltage_range(float value);
 void set_shift_pin(int pin, int value);
-void set_mode(char new_mode);
+void set_mode(int new_mode);
 void change_voltage(int voltage);
 void check_current_range(float value);
 void check_resistance_range(float value);
@@ -117,18 +125,21 @@ MSWITCHTask(void *pvParameters)
       {
         //UARTprintf("MSWITCH RECIEVED TYPE: %c\n\r", mswitch_message.type);
         if(mswitch_message.type == 'M'){
-          if(mswitch_message.mode == 'I'){
-            mode = 0;
-          } else if(mswitch_message.mode == 'V'){
-            mode = 1;
+          if(mswitch_message.mode == 'V'){
+            mode = DC_VOLTAGE;
+          } else if(mswitch_message.mode == 'W'){
+            mode = AC_VOLTAGE;
+          } else if(mswitch_message.mode == 'I'){
+            mode = DC_CURRENT;
+          } else if(mswitch_message.mode == 'J'){
+            mode = AC_CURRENT;
           } else if(mswitch_message.mode == 'R'){
-            mode = 2;
+            mode = RESISTANCE;
           } else if(mswitch_message.mode == 'C'){
-            mode = 3;
+            mode = CONTINUITY;
           } else if(mswitch_message.mode == 'L'){
-            mode = 4;
-          }
-          else if(mswitch_message.mode == 'U'){
+            mode = LOGIC;
+          } else if(mswitch_message.mode == 'U'){
             mode = (mode + 1) % NUM_MODES;
           }
           else if(mswitch_message.mode == 'D'){
@@ -137,22 +148,9 @@ MSWITCHTask(void *pvParameters)
             UARTprintf("WARNING - ATTEMPTED TO SWITCH TO UNKNOWN MODE\n\r");
           }
 
-          if(mode == 0){ //current mode
-            UARTprintf("Switching to mode: Current\n\r");
-            set_mode('I');
-        	} else if(mode == 1){ //voltage mode
-            UARTprintf("Switching to mode: Voltage\n\r");
-            set_mode('V');
-          } else if (mode == 2){ //resistance mode
-            UARTprintf("Switching to mode: Resistance\n\r");
-            set_mode('R');
-          } else if (mode == 3){ //resistance mode
-             UARTprintf("Switching to mode: Continuity\n\r");
-             set_mode('R');
-       	  } else if (mode == 4){ //resistance mode
-             UARTprintf("Switching to mode: Logic\n\r");
-             set_mode('R');
-       	  }
+          set_mode(mode);
+          UARTprintf("Switching to mode: %d\n\r", mode);
+
 
         } else if(mswitch_message.type == 'R'){
           /*if(logging == 0){
@@ -165,28 +163,41 @@ MSWITCHTask(void *pvParameters)
 
         } else if(mswitch_message.type == 'V'){
           //UARTprintf("ADC 1 : %d\n\r", mswitch_message.ui32Value);
-          if(mode == 0){ //current
+          if(mode == DC_VOLTAGE){ //voltage
+            value = mswitch_message.ui32Value/4095.0 * 2 * range - range;
+
+            lcd_message.type = 'V';
+            lcd_message.range = range;
+            check_voltage_range(value);
+          } else if (mode == AC_VOLTAGE){
+            //TODO CHANGE THIS
+            lcd_message.type = 'W';
+            lcd_message.range = 12;
+            check_voltage_range(value);
+          } else if(mode == DC_CURRENT){ //current
             value = mswitch_message.ui32Value/4095.0 * 2 * range_current - range_current;
             //UARTprintf("Recieved uValue = %d", mswitch_message.ui32Value);
             //UARTprintf("    Current range = %d\n\r", range_current);
             lcd_message.type = 'I';
             lcd_message.range = range_current;
             check_current_range(value);
-          } else if(mode == 1){ //voltage
+          } else if (mode == AC_CURRENT){
+            //TODO CHANGE THIS
+            lcd_message.type = 'J';
 
-            value = mswitch_message.ui32Value/4095.0 * 2 * range - range;
-
-            lcd_message.type = 'V';
-            lcd_message.range = range;
-            check_voltage_range(value);
-
-      		} else if(mode == 2){ //resistance
+      		} else if(mode == RESISTANCE){ //resistance
 
             value = mswitch_message.ui32Value/4095.0 * range_resistance;
             lcd_message.type = 'R';
             lcd_message.range = range_resistance;
             check_resistance_range(value);
-      		}
+      		} else if (mode == CONTINUITY){
+            lcd_message.type = 'C';
+            lcd_message.range = 1;
+          } else if (mode == LOGIC){
+            lcd_message.type = 'L';
+            lcd_message.range = 1;
+          }
 
         integer = (int)value;
         decimal = ((int)(value*1000))%1000;
@@ -269,13 +280,8 @@ MSWITCHTaskInit(void)
 
 
     //Set inital mode
-    if(mode == 0){ //current mode
-      set_mode('I');
-  	} else if(mode == 1){ //voltage mode
-      set_mode('V');
-    } else if (mode == 2){ //resistance mode
-      set_mode('R');
-	   }
+    set_mode(mode);
+
 
     if(xTaskCreate(MSWITCHTask, (signed portCHAR *)"MSWITCH",
           MSWITCHTASKSTACKSIZE, NULL, tskIDLE_PRIORITY + PRIORITY_MSWITCH_TASK,
@@ -311,9 +317,9 @@ void set_shift_pin(int pin, int value){
   //UARTprintf("\n\r");
 }
 
-void set_mode(char new_mode){
-  if(new_mode == 'V'){
-    mode = 1;
+void set_mode(int new_mode){
+  //mode = new_mode;
+  if((new_mode == DC_VOLTAGE) || (new_mode == AC_VOLTAGE)){
     //write S1 to 12V mode (010)
     set_shift_pin(S1_C_PIN, 0);
     set_shift_pin(S1_B_PIN, 1);
@@ -327,11 +333,7 @@ void set_mode(char new_mode){
     //write S3 to voltage mode (01)
     set_shift_pin(S3_B_PIN, 0);
     set_shift_pin(S3_A_PIN, 1);
-
-    return;
-
-  } else if (new_mode == 'I'){
-    mode = 0;
+  } else if ((new_mode == DC_CURRENT)|| (new_mode == AC_CURRENT)){
     //write S1 to 000
     set_shift_pin(S1_C_PIN, 0);
     set_shift_pin(S1_B_PIN, 0);
@@ -346,8 +348,7 @@ void set_mode(char new_mode){
     set_shift_pin(S3_B_PIN, 0);
     set_shift_pin(S3_A_PIN, 0);
 
-  } else if (new_mode == 'R'){
-    mode = 2;
+  } else if (new_mode == RESISTANCE){
     //write S1 to (000)
     set_shift_pin(S1_C_PIN, 0);
     set_shift_pin(S1_B_PIN, 0);
@@ -362,6 +363,7 @@ void set_mode(char new_mode){
     set_shift_pin(S3_B_PIN, 1);
     set_shift_pin(S3_A_PIN, 0);
   }
+  return;
 }
 
 void change_voltage(int voltage){
