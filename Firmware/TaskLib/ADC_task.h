@@ -11,6 +11,7 @@
 
 extern struct adc_queue_message {
   int frequency;
+  char mode;
 };
 
 xQueueHandle g_pADCQueue;

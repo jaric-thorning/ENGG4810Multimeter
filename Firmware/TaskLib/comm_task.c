@@ -116,7 +116,7 @@ CommTask(void *pvParameters)
       memset(buffer, 0, sizeof(buffer));
       UARTgets(buffer, sizeof(buffer));
 
-      xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
+      /*xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
       UARTprintf("{%s}\n\r", buffer);
       UARTprintf("RECIEVED CHARACTERS: ");
       for(int i = 0; i < sizeof(buffer); i++){
@@ -129,7 +129,7 @@ CommTask(void *pvParameters)
         UARTprintf("%d ", buffer[i]);
       }
       UARTprintf("\n\r");
-      xSemaphoreGive(g_pUARTSemaphore);
+      xSemaphoreGive(g_pUARTSemaphore);*/
 
 
       mswitch_message.ui32Value = 0; //doesn't matter
@@ -142,13 +142,48 @@ CommTask(void *pvParameters)
             if(buffer[5] == 'V'){
               mswitch_message.mode = 'V'; //sending V to for voltage
               received_valid = 1;
-            } else if(buffer[5] == 'C'){
-              mswitch_message.mode = 'C'; //sending C to for current
+            } else if(buffer[5] == 'I'){
+              mswitch_message.mode = 'I'; //sending I to for current
               received_valid = 1;
             } else if(buffer[5] == 'R'){
               mswitch_message.mode = 'R'; //sending R to for resistance
               received_valid = 1;
+            } else if(buffer[5] == 'C'){
+              mswitch_message.mode = 'C'; //sending C to for resistance
+              received_valid = 1;
+            } else if(buffer[5] == 'L'){
+              mswitch_message.mode = 'L'; //sending L to for resistance
+              received_valid = 1;
             } else {
+              UARTprintf("{UNKNOWN MODE RECEIVED}\n\r");
+            }
+          } else if (buffer[3] == 'F'){ //Recieved Frequency
+            if(buffer[5] == 'A'){
+              mswitch_message.mode = 'A'; //sending V to for voltage
+              received_valid = 1;
+            } else if(buffer[5] == 'B'){
+              mswitch_message.mode = 'B'; //sending I to for current
+              received_valid = 1;
+            } else if(buffer[5] == 'C'){
+              mswitch_message.mode = 'C'; //sending R to for resistance
+              received_valid = 1;
+            } else if(buffer[5] == 'D'){
+              mswitch_message.mode = 'D'; //sending C to for resistance
+              received_valid = 1;
+            } else if(buffer[5] == 'E'){
+              mswitch_message.mode = 'E'; //sending L to for resistance
+              received_valid = 1;
+            } else if(buffer[5] == 'F'){
+              mswitch_message.mode = 'F'; //sending C to for resistance
+              received_valid = 1;
+            } else if(buffer[5] == 'G'){
+              mswitch_message.mode = 'G'; //sending L to for resistance
+              received_valid = 1;
+            } else if(buffer[5] == 'H'){
+              mswitch_message.mode = 'H'; //sending L to for resistance
+              received_valid = 1;
+            }
+            else {
               UARTprintf("{UNKNOWN MODE RECEIVED}\n\r");
             }
           } else{
@@ -197,7 +232,7 @@ CommTaskInit(void)
         return(1);
     }
 
-    UARTprintf("Comms initiated...\n\r");
+    UARTprintf("    Comms initiated.\n\r");
     //
     // Success.
     //

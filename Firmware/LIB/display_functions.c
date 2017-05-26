@@ -25,6 +25,7 @@ void display(char type, int range, int value, int decimal){
     int2str(decimal, decimal_buf, 10);
     int2str(range, range_buf, 10);
 
+    UARTprintf("Voltage ( ");
     //UARTprintf("Converted to: %s", buf);
     if(type == 'V'){
       //UARTprintf("dec: %s\n", decimal_buf);//same type, outputting to display\n");

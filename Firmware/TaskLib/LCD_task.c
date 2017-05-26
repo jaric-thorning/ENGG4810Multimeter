@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
@@ -26,10 +27,16 @@
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/systick.h"
 
 #include "display.h"
 
 #include "driverlib/pwm.h"
+
+#include "general_functions.h"
+
+#include "menu.h"
 
 
 #define LCDTASKSTACKSIZE        128
@@ -38,55 +45,280 @@
 #define LCD_QUEUE_SIZE          5
 
 #define LCD_REFRESH_TIME 10
+#define DISPLAY_RATE 1000
 
 extern xSemaphoreHandle g_pUARTSemaphore;
+
+//void format_read_value(char type, int range, int value, int decimal, char * line1, char * line2);
+
+
+void update_display(int line, char * text){
+
+  setCursorPositionLCD(line,0);
+  int num_chars = 0;
+
+  char *c;
+	c = text;
+	while ((c != 0) && (*c != 0))
+	{
+		c++;
+    num_chars++;
+	}
+
+  //UARTprintf("%d : %s\n\r", num_chars, text);
+
+  if(num_chars > 16){
+    num_chars = 16;
+  }
+  for(int i = 0; i < num_chars; i++){
+    if(text[i] == '='){
+      sendByte(0x00, TRUE);
+    } else if(text[i] == ';'){
+      sendByte(0x01, TRUE);
+    }
+    else{
+      sendByte(text[i], TRUE);
+    }
+  }
+  for(int i = num_chars; i < 16; i++){
+    sendByte(' ', TRUE);
+  }
+}
+
+/*void shift_left(char * screen, int row){
+  char prev_char;
+  for(int i = 0; i < (sizeof(screen) - 1); i++){
+    prev_char = screen[i];
+    screen[i] = screen[i + 1];
+  }
+  screen[sizeof(screen)] =
+}*/
+
+void format_read_value(char type, int range, int value, int decimal, char ** line1, char ** line2){
+  char value_buf[10];
+  char range_buf[10];
+  char decimal_buf[10];
+  static char build1[17];
+  static char build2[17];
+  //UARTprintf("Attempting to convert: %d\n", value);
+  //char buffer[10];
+  int set_negative = 0;
+
+  if(value < 0){
+      value = -1 * value;
+      set_negative = 1;
+  }
+  int2str(value, value_buf, 10);
+  int2str(decimal, decimal_buf, 10);
+  int2str(range, range_buf, 10);
+
+  if(type == 'V'){
+    strcpy(build1, "Voltage (");
+    strcpy(build2, "V: ");
+  } else if(type == 'I'){
+    strcpy(build1, "Current (");
+    strcpy(build2, "I: ");
+  } else if(type == 'R'){
+    strcpy(build1, "Res (");
+    strcpy(build2, "R: ");
+  } else if(type == 'C'){
+    strcpy(build1, "Cont (");
+    strcpy(build2, "C: ");
+  } else if (type == 'L'){
+    strcpy(build1, "Logic (");
+    strcpy(build2, "L: ");
+  } else {
+    strcpy(build1, "Unknown");
+    strcpy(build2, "U: ");
+  }
+  strcat(build1, "=");
+  strcat(build1, range_buf);
+  strcat(build1, ")");
+
+  if(set_negative){
+    strcat(build2, "-");
+  }
+  strcat(build2, value_buf);
+  strcat(build2, ".");
+  strcat(build2, decimal_buf);
+
+  if(type == 'V'){
+    strcat(build2, "V");
+  } else if(type == 'I'){
+    strcat(build2, "mA");
+  } else if(type == 'R'){
+    strcat(build2, ";");
+  } else if(type == 'C'){
+    strcat(build2, "C");
+  } else if (type == 'L'){
+    strcat(build2, "L");
+  } else {
+    strcat(build2, "U");
+  }
+
+  for(int i = 0; i < 16; i++){
+    if(build1[i] == '\0'){
+      build1[i] = ' ';
+    }
+    if(build2[i] == '\0'){
+      build2[i] = ' ';
+    }
+  }
+
+  strcat(build1, "\0");
+  strcat(build2, "\0");
+
+  *line1 = build1;
+  *line2 = build2;
+
+  return;
+}
 
 static void
 LCDTask(void *pvParameters)
 {
-    portTickType ui32WakeTime;
+    portTickType ui32WakeTime, last_display;
     uint32_t ui32LCDRefreshTime;
-    struct lcd_queue_message lcd_message2;
+    struct lcd_queue_message lcd_message;
 
     ui32LCDRefreshTime = LCD_REFRESH_TIME;
 
     ui32WakeTime = xTaskGetTickCount();
 
+    last_display = 0;
+
     //top_line = (char*)bgetz(16 * sizeof(char));
     //bottom_line = (char*)bgetz(16 * sizeof(char));
     unsigned long period = 5000;
 
-    int brightness_setting = 10;
+    char* lcd_line_1 = bgetz(16 * sizeof(char));
+    char* lcd_line_2 = bgetz(16 * sizeof(char));
 
+    /*
+    char current_title[] = "Main Menu       ";
+    char next_title[] = "Frequency       ";
+
+
+    char current_item[] = "Frequency       ";
+    char next_item[] = "                ";*/
+
+    clearLCD();
+
+    char mode = 'D'; //D -> display, M -> Menu
+
+    struct Menu menu;
+
+    init_menu(&menu);
+
+    //{Main menu, }
+    static int items[4] = { 1, 0, 0, 0};
+    int max_items[4] = { 3, 9, 0, 0};
     while(1)
     {
       //
       // Read the next message, if available on queue.
       //
-      if(xQueueReceive(g_pLCDQueue, &lcd_message2, 0) == pdPASS)
-      {
+      if(xQueueReceive(g_pLCDQueue, &lcd_message, 0) == pdPASS){
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-
-        if(lcd_message2.setting == 1){
-          PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, period * lcd_message2.brightness/5);;
-          PWMOutputState(PWM0_BASE, PWM_OUT_3_BIT, lcd_message2.brightness);
-          if(lcd_message2.brightness == 0){
+        if(lcd_message.setting == 1){
+          PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, period * lcd_message.brightness/5);;
+          PWMOutputState(PWM0_BASE, PWM_OUT_3_BIT, lcd_message.brightness);
+          if(lcd_message.brightness == 0){
             GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);
           }
           else{
             GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, 0);
           }
         }
-        UARTprintf("[%c: %d.%d]\n\r", lcd_message2.type, lcd_message2.value, lcd_message2.decimal);
 
-        display(lcd_message2.type, lcd_message2.range, lcd_message2.value, lcd_message2.decimal);
+        if(lcd_message.mode == 'M'){
+          //Change to menu mode, can only return to display mode from menu
+          mode = 'M';
+          if(lcd_message.button == 'S'){
+            UARTprintf("Selection.\n\r");
+
+            if(menu.active){
+              //do selections
+                // if at main menu, select sub menu
+
+                // if at sub menu, select option
+
+              UARTprintf("Changing Menu\n\r");
+              menu.scroll_title = 1;
+
+              menu.selection = items[menu.selection];
+              menu.new_title = get_text(0, menu.selection);
+              menu.scroll_item = 0;
+              UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+              menu.new_item = get_text(menu.selection, items[menu.selection]);
+
+            } else{
+              UARTprintf("Launching Menu\n\r");
+              launch_menu(&menu);
+              menu.new_title = "Main Menu       ";
+              menu.new_item =  "Frequency       ";
+              menu.selection = 0;
+            }
+          } else if(lcd_message.button == 'N'){
+            UARTprintf("Next.\n\r");
+            menu.scroll_item = 1;
+            menu.scroll_item = 1;
+
+            //UARTprintf("A: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+            items[menu.selection] = (items[menu.selection] + 1) % max_items[menu.selection];
+            if(menu.selection == 0 && items[menu.selection] == 0){
+              items[menu.selection] = 1;
+            }
+            //UARTprintf("B: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+            menu.new_item = get_text(menu.selection,items[menu.selection]);
+
+          } else if(lcd_message.button == 'B'){
+            UARTprintf("Back.\n\r");
+            UARTprintf("Changing Menu\n\r");
+            menu.scroll_title = 1;
+
+            menu.selection = 0;
+            menu.new_title = get_text(0, menu.selection);
+            menu.scroll_item = 0;
+            UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+            menu.new_item = get_text(menu.selection, items[menu.selection]);
+          }
+        }
+
+        if(mode == 'D'){
+          UARTprintf("|%c: %d.%d|\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
+          //displayOffLCD();
+
+          format_read_value(lcd_message.type, lcd_message.range, lcd_message.value, lcd_message.decimal, &lcd_line_1, &lcd_line_2);
+
+          //UARTprintf("A1: %s\n\r", lcd_line_1);
+          //UARTprintf("A2: %s\n\r", lcd_line_2);
+        }
         xSemaphoreGive(g_pUARTSemaphore);
       }
 
+      if(mode == 'M'){
+        if(menu.active){
+          if(update_title(&menu)){
+            update_item(&menu);
+          };
+
+          format_menu(&menu, &lcd_line_1, &lcd_line_2);
+        }
+      }
 
 
+      if(xTaskGetTickCount()  > last_display + DISPLAY_RATE){
 
+      /*UARTprintf("\n\r ------------------ \n\r");
+      UARTprintf("|D1 %s|\n\r", lcd_line_1);
+      UARTprintf("|D2 %s|\n\r", lcd_line_2);
+      UARTprintf(" ------------------ \n\r\n\r");*/
+      last_display = xTaskGetTickCount();
+      };
 
+      update_display(0, lcd_line_1);
+      update_display(1, lcd_line_2);
 
       //
       // Wait for the required amount of time.
@@ -94,7 +326,6 @@ LCDTask(void *pvParameters)
       vTaskDelayUntil(&ui32WakeTime, ui32LCDRefreshTime / portTICK_RATE_MS);
     }
 }
-
 uint32_t
 LCDTaskInit(void)
 {
@@ -153,7 +384,7 @@ LCDTaskInit(void)
         return(1);
     }
 
-    UARTprintf("LCD initiated...\n\r");
+    UARTprintf("    LCD initiated.\n\r");
 
     //
     // Success.

@@ -37,7 +37,7 @@
 #define SWITCHTASK      1
 #define ADCTASK         1
 #define MSWITCHTASK     1
-#define SDTASK          1
+#define SDTASK          0
 #define BUZZERTASK      1
 
 // -----------------------------------------------
@@ -88,13 +88,25 @@ vApplicationStackOverflowHook(xTaskHandle *pxTask, char *pcTaskName)
 int
 main(void)
 {
+    ROM_FPULazyStackingEnable();
 
     //Clock set for LCD
     SysCtlClockSet(SYSCTL_SYSDIV_8|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
 
     ConfigureUART();
-
-    UARTprintf("\n\nWelcome to the EK-TM4C123GXL FreeRTOS Demo!\n");
+    UARTprintf("===============================================================\n\r");
+    UARTprintf("     ____________\n\r");
+    UARTprintf("     |   \\XX/   |\n\r");
+    UARTprintf("     | T. \\/ .T |      University of Queensland\n\r");
+    UARTprintf("     | XX:  :XX |          Faculty of EAIT\n\r");
+    UARTprintf("     T L' /\\ 'J T\n\r");
+    UARTprintf("      \\  /XX\\  /       ENGG4810 Team Project 2017\n\r");
+    UARTprintf("   @\\_ '______' _/@       Jaric Thorning\n\r");
+    UARTprintf("   \\_X\\_ ____ _/X_/       Yin Wu\n\r");
+    UARTprintf("     \\=/\\----/\\=/         Daya Kern\n\r");
+    UARTprintf("\n\r===============================================================\n\r");
+    UARTprintf("\n\r---------------------------------------------------------------\n\r");
+    UARTprintf("Initialising Components...\n\r");
 
     g_pUARTSemaphore = xSemaphoreCreateMutex();
 
@@ -178,6 +190,8 @@ main(void)
       }
     }
 
+    UARTprintf("Starting Scheduler...\n\r");
+    UARTprintf("---------------------------------------------------------------\n\r");
 
 
     // Start the scheduler.  This should not return.

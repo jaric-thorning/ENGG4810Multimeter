@@ -10,13 +10,15 @@
 #define __LCD_TASK_H__
 
 extern struct lcd_queue_message {
+  char mode;
+  char button;
   int setting;
   int brightness;
   char type;
   int range;
   int value;
   int decimal;
-};
+} lcd_queue_message;
 
 xQueueHandle g_pLCDQueue;
 

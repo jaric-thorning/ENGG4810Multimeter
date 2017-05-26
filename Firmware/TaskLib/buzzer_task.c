@@ -54,7 +54,7 @@ BuzzerTask(void *pvParameters)
     //top_line = (char*)bgetz(16 * sizeof(char));
     //bottom_line = (char*)bgetz(16 * sizeof(char));
 
-    bool state = true;
+    bool state = false;
 
     unsigned long period = 5000;
     unsigned long pwmNow = period/10;
@@ -128,7 +128,7 @@ BuzzerTaskInit(void)
 
   // Turn on the Output pins
   //PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_2_BIT | PWM_OUT_4_BIT | PWM_OUT_5_BIT | PWM_OUT_6_BIT | PWM_OUT_7_BIT, true);
-  PWMOutputState(PWM0_BASE, PWM_OUT_2_BIT, true);
+  PWMOutputState(PWM0_BASE, PWM_OUT_2_BIT, false);
 
   if(xTaskCreate(BuzzerTask, (signed portCHAR *)"BUZZER", BUZZERTASKSTACKSIZE, NULL,
                tskIDLE_PRIORITY + PRIORITY_BUZZER_TASK, NULL) != pdTRUE)
@@ -136,7 +136,7 @@ BuzzerTaskInit(void)
       return(1);
     }
 
-  UARTprintf("Buzzer initiated...\n\r");
+  UARTprintf("    Buzzer initiated.\n\r");
 
   //
   // Success.
