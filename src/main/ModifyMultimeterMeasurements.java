@@ -273,26 +273,27 @@ public class ModifyMultimeterMeasurements {
 	 */
 	protected void updateYAxisLabel(Double multimeterReading, String unit, TextArea multimeterDisplay,
 			NumberAxis yAxis) {
-		if (GuiController.instance.voltage) {
-			multimeterDisplay.setText(getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getVoltageRange(multimeterReading)
-					+ " )\nV: " + multimeterReading + unit);
 
-			yAxis.setLabel("Measurements [V]");
-		} else if (GuiController.instance.current) {
-			multimeterDisplay.setText(getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getCurrentRange(multimeterReading)
-					+ " )\nmA: " + multimeterReading);// + "mA");
-
-			yAxis.setLabel("Measurements [mA]");
-		} else if (GuiController.instance.resistance || GuiController.instance.continuity) { // TODO CHECK THIS WORKS
-			multimeterDisplay.setText(
-					getUnit(unit) + " ( " + getResistanceRange(multimeterReading) + " )\nR: " + multimeterReading + convertRange(multimeterReading));
-			// multimeterDisplay.setText(getUnit(unit) + " ( " + getResistanceRange(multimeterReading) + " )" + "\n"
-			// + convertRange(multimeterReading));
-
-			yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
-		} else {
-			// TODO: NOT SURE WHAT TO PUT HERE.
-		}
+//		if (GuiController.instance.voltage) {
+//			multimeterDisplay.setText(getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getVoltageRange(multimeterReading)
+//					+ " )\nV: " + multimeterReading + unit);
+//
+//			yAxis.setLabel("Measurements [V]");
+//		} else if (GuiController.instance.current) {
+//			multimeterDisplay.setText(getUnit(unit) + " ( " + PLUS_MINUS_SYMBOL + getCurrentRange(multimeterReading)
+//					+ " )\nmA: " + multimeterReading);// + "mA");
+//
+//			yAxis.setLabel("Measurements [mA]");
+//		} else if (GuiController.instance.resistance || GuiController.instance.continuity) { // TODO CHECK THIS WORKS
+//			multimeterDisplay.setText(
+//					getUnit(unit) + " ( " + getResistanceRange(multimeterReading) + " )\nR: " + multimeterReading + convertRange(multimeterReading));
+//			// multimeterDisplay.setText(getUnit(unit) + " ( " + getResistanceRange(multimeterReading) + " )" + "\n"
+//			// + convertRange(multimeterReading));
+//
+//			yAxis.setLabel("Measurements [" + OHM_SYMBOL + "]");
+//		} else {
+//			// TODO: NOT SURE WHAT TO PUT HERE.
+//		}
 	}
 
 	/**

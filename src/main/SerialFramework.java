@@ -74,7 +74,7 @@ public class SerialFramework {
 		}
 
 		portNames.clear();
-		portNames.add(INIT_PORT_SELECTION);
+		//portNames.add(INIT_PORT_SELECTION);
 
 		SerialPort[] ports = SerialPort.getCommPorts();
 
@@ -85,7 +85,7 @@ public class SerialFramework {
 		}
 
 		GuiController.instance.portsAvailable.setItems(portNames);
-		GuiController.instance.portsAvailable.setValue(portNames.get(0));
+		//GuiController.instance.portsAvailable.setValue(portNames.get(0));
 		GuiController.instance.portsAvailable.setVisibleRowCount(portCounter + 1);
 	}
 
@@ -149,14 +149,14 @@ public class SerialFramework {
 					if (bindListen(serialPort)) {
 						System.out.println("Success.");
 
-						if (checkTwoWays()) {
-							System.out.println("Two-way connection");
-						} else {
-							System.out.println("No two-way connection");
-						}
-						GuiController.instance.connRBtn.setDisable(false);
+//						if (checkTwoWays()) {
+//							System.out.println("Two-way connection");
+//						} else {
+//							System.out.println("No two-way connection");
+//						}
+//						GuiController.instance.connRBtn.setDisable(false);
 					} else {
-						GuiController.instance.connRBtn.setDisable(true);
+//						GuiController.instance.connRBtn.setDisable(true);
 						System.out.println("Failed to bind to Serial.");
 						refreshSelectablePortsList();
 					}
@@ -166,7 +166,7 @@ public class SerialFramework {
 			System.out.println("Invalid Serial!");
 			refreshSelectablePortsList();
 		} else {
-			GuiController.instance.connRBtn.setDisable(true);
+//			GuiController.instance.connRBtn.setDisable(true);
 			closeOpenPort();
 			System.out.println("Not a port - close any open ports");
 		}
@@ -212,6 +212,7 @@ public class SerialFramework {
 
 		while (true) {
 			long time = System.currentTimeMillis() - initialTime;
+			System.out.println("T: " + time);
 			double elapsedSeconds = time / 1000.0; // elapsed seconds
 
 			if (isChecked) {
@@ -262,17 +263,17 @@ public class SerialFramework {
 				}
 
 				// Read by line
-				try {
-					readFromSerial = new BufferedReader(new InputStreamReader(sEvent.getSerialPort().getInputStream()));
-
-					if (GuiController.instance.connRBtn.isSelected()) {
-						getData(readFromSerial.readLine());
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					// e.printStackTrace();
-					System.err.println("IO Exception, no bytes");
-				}
+//				try {
+//					readFromSerial = new BufferedReader(new InputStreamReader(sEvent.getSerialPort().getInputStream()));
+//
+////					if (GuiController.instance.connRBtn.isSelected()) {
+////						getData(readFromSerial.readLine());
+////					}
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					// e.printStackTrace();
+//					System.err.println("IO Exception, no bytes");
+//				}
 			}
 
 			if (sEvent.getEventType() == SerialPort.LISTENING_EVENT_DATA_WRITTEN) {
@@ -294,40 +295,40 @@ public class SerialFramework {
 
 		private boolean getData(String text) {
 
-			// System.out.println("T: |" + text + "|");
-			int openPacket = text.indexOf(PACKET_OPEN);
-			int closePacket = text.indexOf(PACKET_CLOSE);
-
-			if (openPacket < 0 || closePacket < 0) {
-				return false;
-			}
-			if (closePacket < openPacket) {
-				text = text.substring(openPacket);
-				return true;
-			}
-
-			String data = text.substring(openPacket + 1, closePacket);
-
-			if (data.charAt(0) == 'C') { // Check that it's two-way
-				// TODO: Check completed, it's two-way
-				isChecked = true;
-			} else if (data.charAt(0) == 'F') {// Change displayed frequency settings
-
-				// FIXME:
-				// sortSampleFrequency(data, openPacket, closePacket);
-			}
-			if (data.charAt(0) == 'S') { // Change multimeter settings
-				System.out.println("SWEET");
-				sortMultimeterCommand(data, openPacket, closePacket);
-			} else if (data.charAt(0) == 'V' || data.charAt(0) == 'I' || data.charAt(0) == 'R') {
-
-				// Change values received
-				sortMultimeterMeasurements(data, openPacket, closePacket);
-			} else {
-				// stuff
-			}
-
-			text = text.substring(closePacket + 1); // not sure about this
+			System.out.println("T: |" + text + "|");
+//			int openPacket = text.indexOf(PACKET_OPEN);
+//			int closePacket = text.indexOf(PACKET_CLOSE);
+//
+//			if (openPacket < 0 || closePacket < 0) {
+//				return false;
+//			}
+//			if (closePacket < openPacket) {
+//				text = text.substring(openPacket);
+//				return true;
+//			}
+//
+//			String data = text.substring(openPacket + 1, closePacket);
+//
+//			if (data.charAt(0) == 'C') { // Check that it's two-way
+//				// TODO: Check completed, it's two-way
+//				isChecked = true;
+//			} else if (data.charAt(0) == 'F') {// Change displayed frequency settings
+//
+//				// FIXME:
+//				// sortSampleFrequency(data, openPacket, closePacket);
+//			}
+//			if (data.charAt(0) == 'S') { // Change multimeter settings
+//				System.out.println("SWEET");
+//				sortMultimeterCommand(data, openPacket, closePacket);
+//			} else if (data.charAt(0) == 'V' || data.charAt(0) == 'I' || data.charAt(0) == 'R') {
+//
+//				// Change values received
+//				sortMultimeterMeasurements(data, openPacket, closePacket);
+//			} else {
+//				// stuff
+//			}
+//
+//			text = text.substring(closePacket + 1); // not sure about this
 
 			return true;
 		}

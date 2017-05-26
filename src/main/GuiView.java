@@ -35,8 +35,10 @@ public class GuiView extends Application {
 
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
+	private static final Double STAGE_WIDTH = 1097D;
+	private static final Double STAGE_HEIGHT = 625D;//602D;
 
-	private String fxmlFileName = "/gui_test.fxml";
+	private String fxmlFileName = "/redesigned_gui.fxml"; // "/gui_test.fxml";
 	private String GuiTitle = "Digital Multimeter Mark 9001";
 	private Stage stage = new Stage();
 
@@ -69,7 +71,8 @@ public class GuiView extends Application {
 	public void stop() throws Exception {
 
 		// Close any open ports
-		SerialFramework.closeOpenPort();
+		// SerialFramework.closeOpenPort();
+		SerialTest.closeOpenPort();
 
 		// Shuts down any threads
 		super.stop();
@@ -91,8 +94,8 @@ public class GuiView extends Application {
 		primaryStage.setResizable(true); // Enable maximisation of screen
 
 		// Set stage to original dimensions of stage
-		primaryStage.setMinWidth(1096D);
-		primaryStage.setMinHeight(622D);
+		primaryStage.setMinWidth(STAGE_WIDTH);
+		primaryStage.setMinHeight(STAGE_HEIGHT);
 
 		// Get access to the GUI controller
 		GuiController controller = loader.getController();
@@ -108,11 +111,41 @@ public class GuiView extends Application {
 		// Display coordinates on the screen
 		displayPlotCoordinates(controller);
 
+		// Default to disconnected mode tab
+		controller.modeOptions.getSelectionModel().select(1);
+		setupTabChange(controller);
+
 		// Set window title
 		primaryStage.setTitle(GuiTitle);
 
 		// Display the GUI
 		primaryStage.show();
+	}
+
+	/**
+	 * Determines which tab is the newly selected tab.
+	 * 
+	 * @param controller
+	 *            the GUI Controller with components to access/modify
+	 */
+	private void setupTabChange(GuiController controller) {
+		controller.modeOptions.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				if (newValue.intValue() == 0) {
+					// FIXME: have the whole things about do you wanna switch?
+					 System.out.println("CONNECTED MODE INITIATED");
+					 System.out.println("//-------------------//");
+					 controller.yAxis.setAutoRanging(true);
+				} else {
+					// FIXME: have the whole things about do you wanna switch?
+					 System.out.println("DISCONNECTED MODE INITIATED");
+					 System.out.println("//-------------------//");
+					 controller.yAxis.setAutoRanging(false);
+				}
+			}
+		});
 	}
 
 	/**
@@ -162,7 +195,7 @@ public class GuiView extends Application {
 		controller.getHighSeries().setName("high boundary");
 		controller.lineChart.getData().add(controller.getDataSeries());
 		controller.getDataSeries().setName("multimeter data");
-		
+
 		// Setup chart plot background
 		controller.chartBackground = controller.lineChart.lookup(".chart-plot-background");
 		controller.chartBackground.setCursor(Cursor.CROSSHAIR);
@@ -216,11 +249,11 @@ public class GuiView extends Application {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneWidth,
 					Number newSceneWidth) {
-				double rightAnchorWidth = ((double) newSceneWidth) - 451D;
-
-				controller.appPane.setMinWidth((double) newSceneWidth);
-				controller.rightAnchor.setMinWidth(rightAnchorWidth);
-				controller.graphLabelAnchor.setMinWidth(rightAnchorWidth);
+				 double rightAnchorWidth = ((double) newSceneWidth) - 335D;
+				//
+				 controller.appPane.setMinWidth((double) newSceneWidth);
+				 controller.rightAnchor.setMinWidth(rightAnchorWidth);
+				 controller.graphLabelAnchor.setMinWidth(rightAnchorWidth);
 			}
 
 		});
@@ -241,12 +274,11 @@ public class GuiView extends Application {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneHeight,
 					Number newSceneHeight) {
-				double anchorPaneHeight = ((double) newSceneHeight - 8D);
-
-				controller.appPane.setMinHeight((double) newSceneHeight);
-				controller.rightAnchor.setMinHeight(anchorPaneHeight - 35D);
-				controller.leftAnchor.setMinHeight(anchorPaneHeight);
-				controller.midAnchor.setMinHeight(anchorPaneHeight);
+				// double anchorPaneHeight = ((double) newSceneHeight) - 8D;
+				//
+				 controller.appPane.setMinHeight((double) newSceneHeight);
+				 controller.rightAnchor.setMinHeight(((double) newSceneHeight) - 45);
+				 controller.modeOptions.setMinHeight(((double) newSceneHeight) - 10);
 			}
 
 		});

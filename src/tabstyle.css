@@ -72,3 +72,43 @@
     
     -fx-cursor:hand;
 }
+
+.tab
+{
+	-fx-bar-fill: #000033;
+    -fx-background-color: linear-gradient(derive(-fx-bar-fill,-30%), derive(-fx-bar-fill,-40%)),
+                          linear-gradient(derive(-fx-bar-fill,80%), derive(-fx-bar-fill, 0%)),
+                          linear-gradient(derive(-fx-bar-fill,30%), derive(-fx-bar-fill,-10%));
+    -fx-background-insets: 0,1,2;	
+    
+	-fx-cursor:hand;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+	-fx-font-size: 14px;
+}
+
+.tab-label {
+	-fx-text-fill: white;
+}
+
+.tab-pane:top > .tab-header-area >.tab-header-background {
+	-fx-color: #666699;
+   	-fx-background-color: -fx-outer-border, -fx-inner-border, derive(-fx-color, -20%);
+    -fx-effect: innershadow(two-pass-box, rgb(0, 0, 0, 0.4), 4, 0.0, 0, 0); 
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+	-fx-border-radius: 2 2 0 0;
+    -fx-border-width: 1 1 1 1;
+    -fx-border-color: white white transparent white;
+}
+   
+.tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+	-fx-border-color: transparent;
+}
+
+#options 
+{
+	-fx-background-color: linear-gradient(#000033, #666699); 
+}
