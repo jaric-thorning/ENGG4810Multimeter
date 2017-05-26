@@ -37,7 +37,7 @@
 #define ADC_ITEM_SIZE           sizeof(struct adc_queue_message)
 #define ADC_QUEUE_SIZE          5
 
-#define ADC_REFRESH_TIME 50
+#define ADC_REFRESH_TIME 1000
 
 uint32_t ui32Value;
 
@@ -60,7 +60,7 @@ ADCTask(void *pvParameters)
     uint8_t status;
     uint8_t control;
 
-    char adc_mode = 'R';
+    char adc_mode = 'N';
 
     uint8_t command = 0b10000111;
     send_command(command); //Self Calibrate
@@ -269,7 +269,9 @@ ADCTask(void *pvParameters)
     		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);
 
         //UARTprintf("ADC : %dw")
+        //
         mswitch_message.ui32Value = ui32Value;
+        //mswitch_message.ui32Value = data;
         mswitch_message.type = 'V'; //sending V for value
 
         if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
@@ -279,13 +281,16 @@ ADCTask(void *pvParameters)
       }
       if(xQueueReceive(g_pADCQueue, &adc_message, 0) == pdPASS)
       {
-          if( adc_message.frequency > 0){
-            ui32ADCRefreshTime = adc_message.frequency * 100;
-          }
           if(adc_message.mode == 'R'){
             adc_mode = 'R';
+            ui32ADCRefreshTime = 50;
           } else if ( adc_message.mode == 'N'){
             adc_mode = 'N';
+            ui32ADCRefreshTime = 1000;
+          } else if(adc_message.mode == 'F'){
+            if( adc_message.frequency > 0){
+              ui32ADCRefreshTime = adc_message.frequency/2;
+            }
           }
       }
       //

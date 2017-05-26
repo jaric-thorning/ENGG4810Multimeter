@@ -37,6 +37,7 @@
 #include "general_functions.h"
 
 #include "menu.h"
+#include "switch_task.h"
 
 
 #define LCDTASKSTACKSIZE        128
@@ -112,28 +113,36 @@ void format_read_value(char type, int range, int value, int decimal, char ** lin
   int2str(decimal, decimal_buf, 10);
   int2str(range, range_buf, 10);
 
+  memset(build1, 0, 17);
+  memset(build2, 0, 17);
+
   if(type == 'V'){
-    strcpy(build1, "Voltage (");
-    strcpy(build2, "V: ");
+    strcpy(build1, "DC Volt.");
+  } else if(type == 'W'){
+    strcpy(build1, "AC Volt.");
   } else if(type == 'I'){
-    strcpy(build1, "Current (");
-    strcpy(build2, "I: ");
+    strcpy(build1, "DC Curr.");
+  } else if(type == 'J'){
+    strcpy(build1, "AC Curr.");
   } else if(type == 'R'){
-    strcpy(build1, "Res (");
-    strcpy(build2, "R: ");
+    strcpy(build1, "Resist.");
   } else if(type == 'C'){
-    strcpy(build1, "Cont (");
-    strcpy(build2, "C: ");
-  } else if (type == 'L'){
-    strcpy(build1, "Logic (");
-    strcpy(build2, "L: ");
+    strcpy(build1, "Continuity");
+  } else if(type == 'L'){
+    strcpy(build1, "Logic");
   } else {
     strcpy(build1, "Unknown");
-    strcpy(build2, "U: ");
   }
-  strcat(build1, "=");
-  strcat(build1, range_buf);
-  strcat(build1, ")");
+
+  if((type == 'V') || (type == 'W') || (type == 'I') || (type == 'J')){
+    strcat(build1, " (=");
+    strcat(build1, range_buf);
+    strcat(build1, ")");
+  } else if (type == 'R'){
+    strcat(build1, " (");
+    strcat(build1, range_buf);
+    strcat(build1, ")");
+  }
 
   if(set_negative){
     strcat(build2, "-");
@@ -144,8 +153,12 @@ void format_read_value(char type, int range, int value, int decimal, char ** lin
 
   if(type == 'V'){
     strcat(build2, "V");
+  } else if(type == 'W'){
+    strcat(build2, "V (RMS)");
   } else if(type == 'I'){
     strcat(build2, "mA");
+  } else if(type == 'J'){
+    strcat(build2, "mA (RMS)");
   } else if(type == 'R'){
     strcat(build2, ";");
   } else if(type == 'C'){
@@ -154,15 +167,6 @@ void format_read_value(char type, int range, int value, int decimal, char ** lin
     strcat(build2, "L");
   } else {
     strcat(build2, "U");
-  }
-
-  for(int i = 0; i < 16; i++){
-    if(build1[i] == '\0'){
-      build1[i] = ' ';
-    }
-    if(build2[i] == '\0'){
-      build2[i] = ' ';
-    }
   }
 
   strcat(build1, "\0");
@@ -180,6 +184,7 @@ LCDTask(void *pvParameters)
     portTickType ui32WakeTime, last_display;
     uint32_t ui32LCDRefreshTime;
     struct lcd_queue_message lcd_message;
+    struct switch_queue_message switch_message;
 
     ui32LCDRefreshTime = LCD_REFRESH_TIME;
 
@@ -202,6 +207,7 @@ LCDTask(void *pvParameters)
     char current_item[] = "Frequency       ";
     char next_item[] = "                ";*/
 
+    int brightness = 4;
     clearLCD();
 
     char mode = 'D'; //D -> display, M -> Menu
@@ -212,7 +218,8 @@ LCDTask(void *pvParameters)
 
     //{Main menu, }
     static int items[4] = { 1, 0, 0, 0};
-    int max_items[4] = { 3, 9, 0, 0};
+    int max_items[4] = { 3, 9, 5, 0};
+
     while(1)
     {
       //
@@ -221,7 +228,8 @@ LCDTask(void *pvParameters)
       if(xQueueReceive(g_pLCDQueue, &lcd_message, 0) == pdPASS){
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         if(lcd_message.setting == 1){
-          PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, period * lcd_message.brightness/5);;
+          brightness = lcd_message.brightness;
+          PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, period * lcd_message.brightness/4);;
           PWMOutputState(PWM0_BASE, PWM_OUT_3_BIT, lcd_message.brightness);
           if(lcd_message.brightness == 0){
             GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);
@@ -243,6 +251,8 @@ LCDTask(void *pvParameters)
 
                 // if at sub menu, select option
 
+              if(menu.selection == 0){
+              //At Main menu
               UARTprintf("Changing Menu\n\r");
               menu.scroll_title = 1;
 
@@ -251,6 +261,12 @@ LCDTask(void *pvParameters)
               menu.scroll_item = 0;
               UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
               menu.new_item = get_text(menu.selection, items[menu.selection]);
+            } else{
+              //At sub menu
+              if(do_action(menu.selection, items[menu.selection]) != 1){
+                UARTprintf("Action Failed.\n\r");
+              }
+            }
 
             } else{
               UARTprintf("Launching Menu\n\r");
@@ -274,19 +290,37 @@ LCDTask(void *pvParameters)
 
           } else if(lcd_message.button == 'B'){
             UARTprintf("Back.\n\r");
-            UARTprintf("Changing Menu\n\r");
-            menu.scroll_title = 1;
 
-            menu.selection = 0;
-            menu.new_title = get_text(0, menu.selection);
-            menu.scroll_item = 0;
-            UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
-            menu.new_item = get_text(menu.selection, items[menu.selection]);
+            if(menu.selection == 0){
+              //at main menu
+              switch_message.setting = 'M';
+              switch_message.menu_on = 0;
+              //TURNING OFF MENU
+
+              mode = 'D'; //Setting back to display mode
+              lcd_line_1 = "                ";
+              lcd_line_2 = "                ";
+              clearLCD();
+              if(xQueueSend(g_pSWITCHQueue, &switch_message, portMAX_DELAY) !=
+                 pdPASS){
+                   UARTprintf("FAILED TO SEND TO SWITCH QUEUE\n\r");
+                 }
+
+            } else {
+              //at sub menu
+              UARTprintf("Changing Menu\n\r");
+              menu.scroll_title = 1;
+
+              menu.selection = 0;
+              menu.new_title = get_text(0, menu.selection);
+              menu.scroll_item = 0;
+              UARTprintf("1: Selection : %d, Item: %d\n\r", menu.selection, items[menu.selection]);
+              menu.new_item = get_text(menu.selection, items[menu.selection]);
+            }
+
           }
-        }
-
-        if(mode == 'D'){
-          UARTprintf("|%c: %d.%d|\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
+        } else if(mode == 'D'){
+          UARTprintf("|%c: %d.%d| > %d\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal, xTaskGetTickCount());
           //displayOffLCD();
 
           format_read_value(lcd_message.type, lcd_message.range, lcd_message.value, lcd_message.decimal, &lcd_line_1, &lcd_line_2);
@@ -307,18 +341,24 @@ LCDTask(void *pvParameters)
         }
       }
 
+      update_display(0, lcd_line_1);
+      update_display(1, lcd_line_2);
+
+      setCursorPositionLCD(0,15);
+
+      if(brightness != 0){
+        sendByte(brightness + 1, TRUE);
+      }
+      last_display = xTaskGetTickCount();
 
       if(xTaskGetTickCount()  > last_display + DISPLAY_RATE){
 
-      /*UARTprintf("\n\r ------------------ \n\r");
-      UARTprintf("|D1 %s|\n\r", lcd_line_1);
-      UARTprintf("|D2 %s|\n\r", lcd_line_2);
-      UARTprintf(" ------------------ \n\r\n\r");*/
-      last_display = xTaskGetTickCount();
+        /*UARTprintf("\n\r ------------------ \n\r");
+        UARTprintf("|D1 %s|\n\r", lcd_line_1);
+        UARTprintf("|D2 %s|\n\r", lcd_line_2);
+        UARTprintf(" ------------------ \n\r\n\r");*/
       };
 
-      update_display(0, lcd_line_1);
-      update_display(1, lcd_line_2);
 
       //
       // Wait for the required amount of time.

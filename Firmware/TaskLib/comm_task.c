@@ -135,7 +135,9 @@ CommTask(void *pvParameters)
       mswitch_message.ui32Value = 0; //doesn't matter
       received_valid = 0;
 
-      if((buffer[0] == '[') && (buffer[6] == ']')){
+      if((buffer[0] == '[') && (buffer[1] == 'C') && (buffer[2] == ']')){
+        UARTprintf("[C]\n\r");
+      } else if((buffer[0] == '[') && (buffer[6] == ']')){
         if(buffer[1] == 'S'){
           if(buffer[3] == 'M'){
             mswitch_message.type = 'M'; //sending M for mode

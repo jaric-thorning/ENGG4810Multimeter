@@ -34,6 +34,9 @@
 
 #include "menu.h"
 
+#include "ADC_task.h"
+#include "LCD_task.h"
+
 #define TITLESIZE 16
 #define ITEMSIZE 16
 
@@ -144,6 +147,77 @@ void update_item(Menu menu){
 	else{
 		menu->item = menu->new_item;
 	}
+}
+
+int do_action(int selection, int item){
+
+	if(selection == 0){
+		//Goes to sub menu -> disregard
+	} else if (selection == 1){
+		//Select frequency
+		struct adc_queue_message adc_message;
+
+		adc_message.mode = 'F'; //Set frequency mode
+
+		if(item == 0){
+			adc_message.frequency = 500;
+		} else if (item == 1){
+			adc_message.frequency = 1000;
+		} else if (item == 2){
+			adc_message.frequency = 2000;
+		} else if (item == 3){
+			adc_message.frequency = 5000;
+		} else if (item == 4){
+			adc_message.frequency = 10000;
+		} else if (item == 5){
+			adc_message.frequency = 60000;
+		} else if (item == 6){
+			adc_message.frequency = 120000;
+		} else if (item == 7){
+			adc_message.frequency = 300000;
+		} else if (item == 8){
+			adc_message.frequency = 600000;
+		} else{
+			UARTprintf("No action found\n\r");
+			//Set to default frequency
+			adc_message.frequency = 600000;
+		}
+
+		if(xQueueSend(g_pADCQueue, &adc_message, portMAX_DELAY) !=
+			 pdPASS){
+				 UARTprintf("FAILED TO SEND TO ADC QUEUE\n\r");
+			 }
+
+	} else if (selection == 2){
+		struct lcd_queue_message lcd_message;
+		lcd_message.setting = 1;
+		
+		if(item == 0){ //100 % brightness
+			lcd_message.brightness = 4;
+		} else if (item == 1 ){ //75 % brightness
+			lcd_message.brightness = 3;
+		} else if (item == 2){ //50 % brightness
+			lcd_message.brightness = 2;
+		} else if (item == 3){ //25 % brightness
+			lcd_message.brightness = 1;
+		} else if (item == 4 ){ //0 % brightness
+			lcd_message.brightness = 0;
+		} else{
+			//set default
+			lcd_message.brightness = 4;
+		}
+
+		//Send to LCD Queue
+		if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
+			 pdPASS){
+				 UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+			 }
+
+	} else {
+		UARTprintf("UNKNOWN SELECTION\n\r");
+	}
+
+return 1;
 }
 
 char * get_text(int selection, int item){
