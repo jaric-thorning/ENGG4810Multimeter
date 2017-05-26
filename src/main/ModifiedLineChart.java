@@ -23,6 +23,8 @@ import javafx.scene.shape.Polygon;
  * PARTS MODIFIED FROM: http://stackoverflow.com/questions/38871202/how-to-add-shapes-on-javafx-linechart (the idea of
  * refreshing the chart background) & http://stackoverflow.com/questions/32601082/javafx-linechart-color-differences
  * (the idea of adding polygons to the background of the chart to fake area between the line and a boundary).
+ * 
+ * @modifier/@author dayakern
  */
 public class ModifiedLineChart extends LineChart<Number, Number> {
 
@@ -31,8 +33,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	private boolean isLowBoundary = false;
 
 	// Stores the boundary mask polygons
-	private ArrayList<Polygon> polygonsLowerBoundary = new ArrayList<>();
-	private ArrayList<Polygon> polygonsHigherBoundary = new ArrayList<>();
+	private ArrayList<Polygon> polygonsLowerBoundary;
+	private ArrayList<Polygon> polygonsHigherBoundary;
 
 	private NumberAxis yAxis;
 	private NumberAxis xAxis;
@@ -46,6 +48,9 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 		super(xAxis, yAxis);
 
 		setupLineChart(yAxis, xAxis);
+
+		polygonsLowerBoundary = new ArrayList<>();
+		polygonsHigherBoundary = new ArrayList<>();
 	}
 
 	/**
@@ -90,7 +95,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * A setter value for if the setting of the low mask boundary option is currently selected.
+	 * Sets the low mask boundary option if it is currently selected or not.
 	 * 
 	 * @param newValue
 	 *            the new value of the isLowBoundary boolean.
@@ -100,7 +105,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * A setter value for if the setting of the high mask boundary option is currently selected.
+	 * Sets the high mask boundary option if it is currently selected or not.
 	 * 
 	 * @param newValue
 	 *            the new value of the isHighBoundary boolean.
@@ -296,10 +301,12 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * Sets the upper and lower x-axis boundaries of high/low 
+	 * Sets the upper and lower x-axis boundaries of the high/low mask areas.
 	 * 
 	 * @param newAxisUpperValue
+	 *            the new upper bound of the mask area
 	 * @param newAxisLowerValue
+	 *            the new lower bound of the mask area
 	 */
 	protected void updateMaskBoundaries(double newAxisUpperValue, double newAxisLowerValue) {
 		updateMaskBoundary(GuiController.instance.getHighSeries(), newAxisUpperValue);

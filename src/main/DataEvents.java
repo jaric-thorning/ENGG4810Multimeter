@@ -25,7 +25,6 @@ public class DataEvents {
 	public DataEvents() {
 	}
 
-	// TODO: ADD FOR CONNECTED MODE
 	/**
 	 * An event handler for displaying the x/y values of the plotted data point when the mouse enters the data point
 	 * 
@@ -134,7 +133,6 @@ public class DataEvents {
 				if (event.getButton() == MouseButton.SECONDARY) {
 					series.getData().remove(dataPoint);
 
-					// FIXME: find out what this actually does
 					// Modify the 'book-mark' of the low mask series
 					if (series.getName().contains("low")) {
 						GuiController.instance.lowCounter--;
