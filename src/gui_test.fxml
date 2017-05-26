@@ -12,18 +12,18 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<Pane id="mainWholePane" fx:id="appPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1096.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.GuiController">
+<Pane id="mainWholePane" fx:id="appPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="804.0" prefWidth="1096.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.GuiController">
    <children>
-      <AnchorPane id="anchorPane" fx:id="leftAnchor" layoutX="4.0" layoutY="4.0" minHeight="271.0" prefHeight="592.0" prefWidth="276.0" SplitPane.resizableWithParent="false">
+      <AnchorPane id="anchorPane" fx:id="leftAnchor" layoutX="4.0" layoutY="208.0" minHeight="271.0" prefHeight="592.0" prefWidth="321.0" SplitPane.resizableWithParent="false">
          <children>
             <Label id="anchorPaneHeadings" fx:id="dataSource" focusTraversable="false" prefHeight="35.0" prefWidth="223.0" stylesheets="@tabstyle.css" text="  Data Source" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <font>
                   <Font size="14.0" />
                </font>
             </Label>
-            <GridPane layoutY="1.0" prefHeight="592.0" prefWidth="277.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <GridPane layoutY="1.0" prefHeight="592.0" prefWidth="321.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
               <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="275.0" minWidth="151.0" prefWidth="151.48019409179688" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="275.0" minWidth="321.0" prefWidth="151.48019409179688" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints maxHeight="41.0" minHeight="0.0" prefHeight="32.0" vgrow="SOMETIMES" />
@@ -49,22 +49,22 @@
                         <Insets left="25.0" top="10.0" />
                      </GridPane.margin>
                   </RadioButton>
-                  <Button fx:id="pauseBtn" alignment="TOP_CENTER" disable="true" focusTraversable="false" minWidth="106.0" mnemonicParsing="false" onAction="#pauseDataAcquisition" stylesheets="@buttonstyle.css" text="Pause" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                  <Button fx:id="pauseBtn" alignment="TOP_CENTER" disable="true" focusTraversable="false" minWidth="106.0" mnemonicParsing="false" onAction="#pauseDataAcquisition" stylesheets="@buttonstyle.css" text="Pause" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
                      <GridPane.margin>
-                        <Insets left="150.0" top="10.0" />
+                        <Insets right="10.0" top="10.0" />
                      </GridPane.margin>
                   </Button>
-                  <Button fx:id="saveBtn" alignment="TOP_CENTER" disable="true" focusTraversable="false" minWidth="106.0" mnemonicParsing="false" onAction="#saveDataAcquisition" stylesheets="@buttonstyle.css" text="Save Data" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                  <Button fx:id="saveBtn" alignment="TOP_CENTER" disable="true" focusTraversable="false" minWidth="106.0" mnemonicParsing="false" onAction="#saveDataAcquisition" stylesheets="@buttonstyle.css" text="Save Data" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
                      <GridPane.margin>
-                        <Insets left="150.0" top="50.0" />
+                        <Insets right="10.0" top="50.0" />
                      </GridPane.margin>
                   </Button>
-                  <Button fx:id="discardBtn" alignment="TOP_CENTER" contentDisplay="CENTER" disable="true" focusTraversable="false" minWidth="106.0" mnemonicParsing="false" onAction="#discardData" text="Discard Data" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                  <Button fx:id="discardBtn" alignment="TOP_CENTER" contentDisplay="CENTER" disable="true" focusTraversable="false" minWidth="106.0" mnemonicParsing="false" onAction="#discardData" text="Discard Data" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
                      <GridPane.margin>
-                        <Insets left="150.0" top="90.0" />
+                        <Insets right="10.0" top="90.0" />
                      </GridPane.margin>
                   </Button>
-                  <Group GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP">
+                  <Group GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="TOP">
                      <children>
                         <Label fx:id="loadFileLabel" disable="true" focusTraversable="false" text="Load:" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                            <GridPane.margin>
@@ -78,12 +78,12 @@
                         </Button>
                      </children>
                      <GridPane.margin>
-                        <Insets left="150.0" top="10.0" />
+                        <Insets right="10.0" top="10.0" />
                      </GridPane.margin>
                   </Group>
-                  <Button fx:id="maskTestingBtn" disable="true" focusTraversable="false" minWidth="106.0" mnemonicParsing="false" onAction="#editMask" text="Mask-Test" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP">
+                  <Button fx:id="maskTestingBtn" disable="true" focusTraversable="false" minWidth="106.0" mnemonicParsing="false" onAction="#editMask" text="Mask-Test" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="TOP">
                      <GridPane.margin>
-                        <Insets left="150.0" top="65.0" />
+                        <Insets right="10.0" top="65.0" />
                      </GridPane.margin>
                   </Button>
                   <Line fx:id="separatorLine" endX="274.0" startX="1.0" stroke="#666699" strokeWidth="2.0" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="TOP">
@@ -175,34 +175,44 @@
             <URL value="@buttonstyle.css" />
          </stylesheets>
       </AnchorPane>
-      <AnchorPane id="anchorPane" fx:id="midAnchor" layoutX="284.0" layoutY="4.0" minWidth="159.0" prefHeight="592.0" prefWidth="159.0">
+      <AnchorPane id="anchorPane" fx:id="midAnchor" layoutX="4.0" layoutY="4.0" minWidth="159.0" prefHeight="200.0" prefWidth="1088.0">
          <children>
             <Label id="anchorPaneHeadings" fx:id="multimeter" focusTraversable="false" prefHeight="35.0" prefWidth="159.0" text=" Multimeter" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <font>
                   <Font size="14.0" />
                </font>
             </Label>
-            <GridPane prefHeight="515.0" prefWidth="300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
+            <GridPane layoutY="35.0" prefHeight="200.0" prefWidth="1088.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
               <columnConstraints>
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints />
-                <RowConstraints maxHeight="93.83504486083984" minHeight="5.4135589599609375" prefHeight="93.83504486083984" />
-                <RowConstraints maxHeight="181.8497314453125" minHeight="10.0" prefHeight="106.75198364257812" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="282.91017150878906" minHeight="10.0" prefHeight="34.211151123046875" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="325.643310546875" minHeight="10.0" prefHeight="321.7888488769531" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="102.84131622314453" minHeight="5.4135589599609375" prefHeight="102.84131622314453" />
+                <RowConstraints maxHeight="106.0" minHeight="10.0" prefHeight="62.15868377685547" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureVoltage" text="V [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP" />
-                  <Button fx:id="currentBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureCurrent" text="mA [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
-                  <Button fx:id="resistanceBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureResistance" text="Ω" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="BOTTOM" />
-                  <Button fx:id="continuityBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#selectContinuityMode" text="Continuity" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                  <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureVoltage" text="V [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP">
                      <GridPane.margin>
-                        <Insets top="70.0" />
+                        <Insets left="25.0" right="405.0" top="25.0" />
                      </GridPane.margin>
                   </Button>
-                  <Group GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                  <Button fx:id="currentBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureCurrent" text="mA [AC]" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP">
+                     <GridPane.margin>
+                        <Insets right="100.0" top="25.0" />
+                     </GridPane.margin>
+                  </Button>
+                  <Button fx:id="resistanceBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#measureResistance" text="Ω" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP">
+                     <GridPane.margin>
+                        <Insets left="170.0" top="25.0" />
+                     </GridPane.margin>
+                  </Button>
+                  <Button fx:id="continuityBtn" disable="true" focusTraversable="false" minWidth="96.0" mnemonicParsing="false" onAction="#selectContinuityMode" text="Continuity" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                     <GridPane.margin>
+                        <Insets right="150.0" top="70.0" />
+                     </GridPane.margin>
+                  </Button>
+                  <Group GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
                      <children>
                         <Button fx:id="logicBtn" disable="true" focusTraversable="false" layoutY="30.0" minWidth="96.0" mnemonicParsing="false" onAction="#selectLogicMode" text="Logic Level" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="BOTTOM">
                            <GridPane.margin>
@@ -212,19 +222,20 @@
                         <Label fx:id="modeLabel" disable="true" focusTraversable="false" layoutX="5.0" layoutY="10.0" text="Modes:" GridPane.rowIndex="4" GridPane.valignment="CENTER" />
                      </children>
                      <GridPane.margin>
-                        <Insets top="10.0" />
+                        <Insets right="150.0" top="5.0" />
                      </GridPane.margin>
                   </Group>
-                  <TextArea fx:id="multimeterDisplay" disable="true" editable="false" focusTraversable="false" prefHeight="200.0" prefWidth="200.0" stylesheets="@tabstyle.css" GridPane.rowIndex="1">
+                  <TextArea fx:id="multimeterDisplay" disable="true" editable="false" focusTraversable="false" maxWidth="500.0" stylesheets="@tabstyle.css" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
                      <GridPane.margin>
-                        <Insets bottom="10.0" left="5.0" right="5.0" top="25.0" />
+                        <Insets left="25.0" top="25.0" />
                      </GridPane.margin>
                      <font>
                         <Font size="12.0" />
-                     </font></TextArea>
-                  <RadioButton fx:id="dcRBtn" disable="true" mnemonicParsing="false" onAction="#switchACDC" text="DC" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                     </font>
+                  </TextArea>
+                  <RadioButton fx:id="dcRBtn" disable="true" mnemonicParsing="false" onAction="#switchACDC" text="DC" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP">
                      <GridPane.margin>
-                        <Insets left="28.0" />
+                        <Insets right="70.0" top="70.0" />
                      </GridPane.margin>
                   </RadioButton>
                </children>
@@ -235,9 +246,9 @@
             <URL value="@buttonstyle.css" />
          </stylesheets>
       </AnchorPane>
-      <AnchorPane id="anchorPane" fx:id="rightAnchor" layoutX="447.0" layoutY="39.0" prefHeight="557.0" prefWidth="645.0" SplitPane.resizableWithParent="false">
+      <AnchorPane id="anchorPane" fx:id="rightAnchor" layoutX="329.0" layoutY="243.0" prefHeight="557.0" prefWidth="763.0" SplitPane.resizableWithParent="false">
          <children>
-            <GridPane fx:id="chartGrid" alignment="CENTER" prefHeight="557.0" prefWidth="645.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <GridPane fx:id="chartGrid" alignment="CENTER" prefHeight="557.0" prefWidth="763.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <columnConstraints>
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
                </columnConstraints>
@@ -255,7 +266,8 @@
                   <Button fx:id="leftBtn" focusTraversable="false" mnemonicParsing="false" onAction="#moveXAxisLeft" text="&lt;" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                      <GridPane.margin>
                         <Insets left="20.0" />
-                     </GridPane.margin></Button>
+                     </GridPane.margin>
+                  </Button>
                   <Group GridPane.halignment="LEFT" GridPane.valignment="TOP">
                      <children>
                         <Label fx:id="recordTimeLabel" focusTraversable="false" layoutX="100.0" minHeight="15.0" minWidth="400.0" prefHeight="15.0" prefWidth="400.0" textFill="WHITE" />
@@ -279,7 +291,7 @@
             <URL value="@buttonstyle.css" />
          </stylesheets>
       </AnchorPane>
-      <AnchorPane fx:id="graphLabelAnchor" layoutX="447.0" layoutY="4.0" maxWidth="645.0" minWidth="645.0" stylesheets="@tabstyle.css">
+      <AnchorPane fx:id="graphLabelAnchor" layoutX="329.0" layoutY="208.0" maxWidth="763.0" minWidth="645.0" prefHeight="35.0" prefWidth="763.0" stylesheets="@tabstyle.css">
          <children>
             <Label id="anchorPaneHeadings" focusTraversable="false" prefHeight="35.0" prefWidth="642.0" text="Graphing Results" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <font>

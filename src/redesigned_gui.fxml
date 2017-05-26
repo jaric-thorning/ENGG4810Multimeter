@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import java.net.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.canvas.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<Pane id="mainWholePane" fx:id="appPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="602.0" minWidth="1097.0" prefHeight="602.0" prefWidth="1097.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.GuiController">
+   <children>
+      <TabPane id="options" fx:id="modeOptions" layoutX="5.0" layoutY="5.0" prefHeight="592.0" prefWidth="319.0" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+          <Tab text="Connected">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <GridPane layoutX="104.0" layoutY="-18.0" prefHeight="557.0" prefWidth="319.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="-Infinity" prefHeight="40.0" vgrow="SOMETIMES" />
+                            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="-Infinity" prefHeight="100.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="-Infinity" prefHeight="10.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="-Infinity" prefHeight="10.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="-Infinity" prefHeight="20.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="35.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="-Infinity" prefHeight="20.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Label text="Ports:" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Label>
+                              <ComboBox fx:id="portsAvailable" minHeight="-Infinity" minWidth="-Infinity" onAction="#changePorts" prefHeight="28.0" prefWidth="190.0" promptText="Ports" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor>
+                                 <GridPane.margin>
+                                    <Insets bottom="5.0" left="10.0" top="35.0" />
+                                 </GridPane.margin>
+                              </ComboBox>
+                              <Label id="anchorPaneHeadings" fx:id="dataSource11" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Connection Options" GridPane.valignment="TOP">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <Button fx:id="refreshBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#refreshPorts" prefHeight="28.0" prefWidth="80.0" stylesheets="@../../TP1/Weather%20App/src/buttonstyle.css" text="Refresh" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor>
+                                 <GridPane.margin>
+                                    <Insets left="210.0" top="35.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <ComboBox fx:id="sampleRate" disable="true" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectSampleRate" prefHeight="28.0" prefWidth="190.0" promptText="Sample Rate" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </ComboBox>
+                              <Label id="anchorPaneHeadings" fx:id="multimeter" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" text="  Multimeter" GridPane.rowIndex="2" GridPane.valignment="TOP">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <TextArea fx:id="multimeterDisplay" disable="true" editable="false" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="239.0" stylesheets="@tabstyle.css" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets bottom="10.0" left="40.0" right="40.0" top="50.0" />
+                                 </GridPane.margin>
+                                 <font>
+                                    <Font size="20.0" />
+                                 </font>
+                              </TextArea>
+                              <Button fx:id="resistanceBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureResistance" prefHeight="28.0" prefWidth="96.0" text="Ω" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="210.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="currentBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureCurrent" prefHeight="28.0" prefWidth="96.0" text="mA [AC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="110.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureVoltage" prefHeight="28.0" prefWidth="96.0" text="V [AC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <RadioButton fx:id="dcRBtn" disable="true" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#switchACDC" prefHeight="18.0" prefWidth="43.0" text="DC" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="81.0" top="15.0" />
+                                 </GridPane.margin>
+                              </RadioButton>
+                              <Label fx:id="switchDCLabel" disable="true" focusTraversable="false" text="Switch to:" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" />
+                                 </GridPane.margin>
+                              </Label>
+                              <Label fx:id="modeLabel" disable="true" focusTraversable="false" text="Modes:" GridPane.rowIndex="6" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" />
+                                 </GridPane.margin>
+                              </Label>
+                              <Button fx:id="logicBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectLogicMode" prefHeight="28.0" prefWidth="96.0" text="Logic Level" GridPane.rowIndex="6" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="170.0" top="15.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="continuityBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#selectContinuityMode" prefHeight="28.0" prefWidth="96.0" text="Continuity" GridPane.rowIndex="6" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="65.0" top="15.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Label id="anchorPaneHeadings" fx:id="dataSource1" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Data Options" GridPane.rowIndex="7" GridPane.valignment="TOP">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <Button fx:id="pauseBtn" alignment="TOP_CENTER" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#pauseDataAcquisition" prefHeight="28.0" prefWidth="98.0" stylesheets="@buttonstyle.css" text="Pause" GridPane.rowIndex="8" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="saveBtn" alignment="TOP_CENTER" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#saveDataAcquisition" prefHeight="28.0" prefWidth="98.0" stylesheets="@buttonstyle.css" text="Save Data" GridPane.rowIndex="8" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="110.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="discardBtn" alignment="TOP_CENTER" contentDisplay="CENTER" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#discardData" prefHeight="28.0" prefWidth="98.0" text="Discard Data" GridPane.rowIndex="8" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="210.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                           </children>
+                        </GridPane>
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+          <Tab text="Disconnected">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <GridPane layoutX="60.0" layoutY="-27.0" prefHeight="557.0" prefWidth="319.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints maxHeight="-Infinity" minHeight="35.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                            <RowConstraints maxHeight="-Infinity" minHeight="35.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="105.0" prefHeight="105.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="35.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="50.0" prefHeight="50.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Group GridPane.rowIndex="5" GridPane.valignment="TOP">
+                                 <children>
+                                    <RadioButton fx:id="maskVRBtn" disable="true" mnemonicParsing="false" onAction="#selectSaveV" selected="true" text="V" GridPane.rowIndex="4" />
+                                    <RadioButton fx:id="maskARBtn" disable="true" layoutX="37.0" mnemonicParsing="false" onAction="#selectSaveA" text="A" GridPane.rowIndex="4" />
+                                    <RadioButton fx:id="maskORBtn" disable="true" layoutX="74.0" mnemonicParsing="false" onAction="#selectSaveO" text="Ω" GridPane.rowIndex="4" />
+                                 </children>
+                                 <GridPane.margin>
+                                    <Insets left="150.0" top="5.0" />
+                                 </GridPane.margin>
+                              </Group>
+                              <Button fx:id="exportMaskBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#exportMaskData" prefHeight="28.0" prefWidth="110.0" text="Export Mask" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Label id="anchorPaneHeadings" fx:id="dataSource" focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Data Options" GridPane.valignment="TOP">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <Button fx:id="loadSavedData" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#loadFile" prefHeight="28.0" prefWidth="106.0" text="Input Data" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="54.0" top="25.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Label fx:id="loadFileLabel" focusTraversable="false" text="Load:" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Label>
+                              <Label id="anchorPaneHeadings" fx:id="dataSource2" focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Mask Options" GridPane.rowIndex="2" GridPane.valignment="TOP">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="createMaskLabel" focusTraversable="false" text="Create Mask:" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Label>
+                              <Button fx:id="setHighBtn" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#setHighBoundary" prefHeight="28.0" prefWidth="106.0" text="High Mask" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="101.0" top="25.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="setLowBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#setLowBoundary" prefHeight="28.0" prefWidth="106.0" text="Low Mask" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="101.0" top="60.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="setMaskBtn" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#setMaskBoundary" prefHeight="28.0" prefWidth="106.0" text="Set" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="101.0" top="95.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button fx:id="importMaskBtn" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#importMaskData" prefHeight="28.0" prefWidth="110.0" text="Import Mask" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="28.0" prefWidth="110.0" text="Discard All" GridPane.rowIndex="6" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <Label id="anchorPaneHeadings" fx:id="dataSource21" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Mask Test Results" GridPane.rowIndex="7" GridPane.valignment="TOP">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <TextArea fx:id="maskTestResults" editable="false" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="71.0" prefWidth="309.0" GridPane.rowIndex="9" GridPane.valignment="TOP">
+                                 <font>
+                                    <Font size="10.0" />
+                                 </font>
+                                 <GridPane.margin>
+                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                 </GridPane.margin>
+                              </TextArea>
+                              <Button fx:id="runMaskBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#runMaskTest" prefHeight="28.0" prefWidth="112.0" text="Run Mask-Test" GridPane.rowIndex="8" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Button>
+                           </children>
+                        </GridPane>
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+        </tabs>
+         <stylesheets>
+            <URL value="@tabstyle.css" />
+            <URL value="@buttonstyle.css" />
+         </stylesheets>
+      </TabPane>
+      <AnchorPane id="anchorPane" fx:id="rightAnchor" layoutX="329.0" layoutY="40.0" prefHeight="557.0" prefWidth="763.0" SplitPane.resizableWithParent="false">
+         <children>
+            <GridPane fx:id="chartGrid" alignment="CENTER" prefHeight="557.0" prefWidth="763.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="33.87810516357422" vgrow="NEVER" />
+                  <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="488.1218948364258" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="48.10247802734375" minHeight="33.40997314453125" prefHeight="34.63433837890625" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <Button fx:id="rightBtn" focusTraversable="false" mnemonicParsing="false" onAction="#moveXAxisRight" text="&gt;" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                     <GridPane.margin>
+                        <Insets left="90.0" />
+                     </GridPane.margin>
+                  </Button>
+                  <Button fx:id="leftBtn" focusTraversable="false" mnemonicParsing="false" onAction="#moveXAxisLeft" text="&lt;" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                     <GridPane.margin>
+                        <Insets left="20.0" />
+                     </GridPane.margin>
+                  </Button>
+                  <Group GridPane.halignment="LEFT" GridPane.valignment="TOP">
+                     <children>
+                        <Label fx:id="recordTimeLabel" focusTraversable="false" layoutX="100.0" minHeight="15.0" minWidth="400.0" prefHeight="15.0" prefWidth="400.0" textFill="WHITE" />
+                        <Label fx:id="recordedTimeLabel" focusTraversable="false" layoutX="9.0" minWidth="90.0" prefWidth="90.0" text="Date-stamp:" />
+                     </children>
+                     <GridPane.margin>
+                        <Insets left="5.0" top="5.0" />
+                     </GridPane.margin>
+                  </Group>
+                  <Group GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                     <children>
+                        <Label focusTraversable="false" layoutX="445.0" minHeight="15.0" minWidth="80.0" prefHeight="15.0" prefWidth="35.0" text="X:" textFill="WHITE" fx:id="xCoordValues" />
+                        <Label fx:id="yCoordValues" focusTraversable="false" layoutX="445.0" layoutY="15.0" minHeight="15.0" minWidth="80.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE" />
+                     </children>
+                  </Group>
+               </children>
+            </GridPane>
+         </children>
+         <stylesheets>
+            <URL value="@tabstyle.css" />
+            <URL value="@buttonstyle.css" />
+         </stylesheets>
+      </AnchorPane>
+      <AnchorPane fx:id="graphLabelAnchor" layoutX="329.0" layoutY="5.0" maxWidth="763.0" minWidth="645.0" prefHeight="35.0" prefWidth="763.0" stylesheets="@tabstyle.css">
+         <children>
+            <Label id="anchorPaneHeadings" focusTraversable="false" prefHeight="35.0" prefWidth="642.0" text="Graphing Results" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <font>
+                  <Font size="14.0" />
+               </font>
+               <padding>
+                  <Insets left="5.0" />
+               </padding>
+            </Label>
+            <Group layoutX="266.0" AnchorPane.leftAnchor="266.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <Label focusTraversable="false" layoutY="15.0" minHeight="15.0" minWidth="250.0" prefHeight="15.0" prefWidth="374.0" text="X:" textFill="WHITE" fx:id="xDataCoord">
+                     <font>
+                        <Font size="12.0" />
+                     </font></Label>
+                  <Label fx:id="yDataCoord" focusTraversable="false" layoutY="30.0" minHeight="15.0" minWidth="100.0" prefHeight="15.0" prefWidth="35.0" text="Y:" textFill="WHITE">
+                     <font>
+                        <Font size="12.0" />
+                     </font></Label>
+               </children>
+            </Group>
+            <Label fx:id="plotCoordLabel" focusTraversable="false" layoutX="157.0" layoutY="9.0" text="Plot Coordinates" />
+         </children>
+      </AnchorPane>
+   </children>
+</Pane>

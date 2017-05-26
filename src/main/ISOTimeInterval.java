@@ -55,7 +55,7 @@ public class ISOTimeInterval {
 		// Convert to seconds
 		Duration duration = Duration.between(startDate, endDate);
 		seconds = duration.toMillis() / 1000D;
-		System.out.println("SECONDS: " + seconds);
+		//System.out.println("SECONDS: " + seconds);
 		return seconds;
 	}
 

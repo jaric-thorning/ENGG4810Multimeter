@@ -35,6 +35,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -66,13 +68,14 @@ public class GuiController implements Initializable {
 	@FXML
 	AnchorPane rightAnchor;
 	@FXML
-	AnchorPane midAnchor;
-	@FXML
-	AnchorPane leftAnchor;
-	@FXML
 	AnchorPane graphLabelAnchor;
 	@FXML
 	GridPane chartGrid;
+	@FXML
+	protected TabPane modeOptions;
+
+	// @FXML
+	// protected TabPane isDisconnMode;
 
 	/* Components relating to which data to display */
 	private int dataPlotPosition = 0;
@@ -85,8 +88,8 @@ public class GuiController implements Initializable {
 	private volatile boolean isChanged = false;
 
 	/* Components relating to the 'connected' mode */
-	@FXML
-	protected RadioButton connRBtn;
+	// @FXML
+	// protected RadioButton connRBtn;
 	@FXML
 	private Button pauseBtn;
 	private volatile boolean isPaused = false; // Flag for if pauseBtn has been clicked
@@ -101,8 +104,8 @@ public class GuiController implements Initializable {
 	private Button refreshBtn;
 
 	/* Components relating to the 'disconnected' mode */
-	@FXML
-	protected RadioButton disconnRBtn;
+	// @FXML
+	// protected RadioButton disconnRBtn;
 	@FXML
 	private Button loadSavedData;
 	@FXML
@@ -200,6 +203,8 @@ public class GuiController implements Initializable {
 	@FXML
 	private RadioButton dcRBtn;
 	private boolean isDC = false;
+	@FXML
+	private Label switchDCLabel;
 
 	@FXML
 	private ComboBox<String> sampleRate;
@@ -294,6 +299,32 @@ public class GuiController implements Initializable {
 		double newAxisLowerValue = xAxis.getLowerBound() + 1;
 
 		lineChart.updateMaskBoundaries(newAxisUpperValue, newAxisLowerValue);
+	}
+
+	/**
+	 * Enables or disables the connected mode components depending on whether or there is a valid connection
+	 * 
+	 * @param status
+	 *            whether or not the components should be disabled (true) or enabled (false)
+	 */
+	protected void setConnectedModeStatus(boolean status) {
+		sampleRate.setDisable(status);
+		multimeterDisplay.setDisable(status);
+
+		voltageBtn.setDisable(status);
+		currentBtn.setDisable(status);
+		resistanceBtn.setDisable(status);
+
+		switchDCLabel.setDisable(status);
+		dcRBtn.setDisable(status);
+
+		modeLabel.setDisable(status);
+		continuityBtn.setDisable(status);
+		logicBtn.setDisable(status);
+
+		pauseBtn.setDisable(status);
+		saveBtn.setDisable(status);
+		discardBtn.setDisable(status);
 	}
 
 	/**
@@ -455,7 +486,6 @@ public class GuiController implements Initializable {
 		sampleRates.add("1 meas. every 10 mins");
 
 		sampleRate.setItems(sampleRates);
-		sampleRate.setStyle("-fx-font: 11px \"System\";");
 	}
 
 	@FXML
@@ -565,7 +595,7 @@ public class GuiController implements Initializable {
 	private void liveDataMode(Double multimeterDataValue, String unit) {
 
 		// Change multimeter text display according to ranges and values.
-		modifyMeasurements.updateYAxisLabel(multimeterDataValue, unit, multimeterDisplay, yAxis);
+		// modifyMeasurements.updateYAxisLabel(multimeterDataValue, unit, multimeterDisplay, yAxis);
 
 		// Has been paused as some point
 		acquiredDataHasBeenPaused();
@@ -577,7 +607,7 @@ public class GuiController implements Initializable {
 		ISOTimeInterval endTime = establishISOTime(readingSeries.getData().size());
 		pausedStoredISOTimeData.add(endTime);
 
-		System.out.println("START: " + startTime + " END: " + endTime);
+		// System.out.println("START: " + startTime + " END: " + endTime);
 
 		// Normally add received data
 		Double xValue = ISOTimeInterval.xValue(startTime.getDate(), endTime.getDate());
@@ -740,74 +770,77 @@ public class GuiController implements Initializable {
 		}
 	}
 
-	// FIXME
-	/**
-	 * Selects the connected mode of the GUI if there is a connection, otherwise it's disabled.
-	 */
-	@FXML
-	private void selectConnected() {
+	// // FIXME
+	// /**
+	// * Selects the connected mode of the GUI if there is a connection, otherwise it's disabled.
+	// */
+	// @FXML
+	// private void selectConnected() {
+	//
+	// // If there a connection and the radio button is selected
+	// if (connRBtn.isSelected()) {
+	// System.out.println("CONNECTED MODE INITIATED");
+	// System.out.println("//-------------------//");
+	//
+	// yAxis.setAutoRanging(true);
+	// setupConnectedComponents();
+	//
+	// SerialTest.testing();
+	// } else { // Assuming 'else' just covers when radio button is not selected. TODO: check.
+	//
+	// if (notifyUserConnected()) {
+	// //SerialFramework.closeOpenPort();
+	// SerialTest.closeOpenPort();
+	//
+	// yAxis.setAutoRanging(false);
+	// disconnRBtn.setDisable(false);
+	//
+	// revertConnectedComponents();
+	//
+	// System.out.println("CONNECTED MODE EXITED");
+	// } else {
+	// System.out.println("CONNECTED MODE STAYING");
+	//
+	// connRBtn.setSelected(true);
+	// }
+	// }
+	// }
 
-		// If there a connection and the radio button is selected
-		if (connRBtn.isSelected()) {
-			System.out.println("CONNECTED MODE INITIATED");
-			System.out.println("//-------------------//");
-
-			yAxis.setAutoRanging(true);
-			setupConnectedComponents();
-		} else { // Assuming 'else' just covers when radio button is not selected. TODO: check.
-
-			if (notifyUserConnected()) {
-				SerialFramework.closeOpenPort();
-
-				yAxis.setAutoRanging(false);
-				disconnRBtn.setDisable(false);
-
-				revertConnectedComponents();
-
-				System.out.println("CONNECTED MODE EXITED");
-			} else {
-				System.out.println("CONNECTED MODE STAYING");
-
-				connRBtn.setSelected(true);
-			}
-		}
-	}
-
-	// FIXME: make sure that the closed/reset stuff is done properly.
-	/**
-	 * A private helper function to 'selectConnected' which modifies the status of related components.
-	 */
-	private void setupConnectedComponents() {
-
-		// Disable the disconnected mode from being editable during
-		// connected mode
-		disconnRBtn.setDisable(true);
-		startTime = null;
-
-		// Enable connected components
-		sampleRate.setDisable(false);
-		pauseBtn.setDisable(false);
-		saveBtn.setDisable(false);
-		discardBtn.setDisable(false);
-
-		// Enable digital multimeter components
-		// FIXME: enable only if there is a two way connection
-		multimeterDisplay.setDisable(false);
-		voltageBtn.setDisable(false);
-		currentBtn.setDisable(false);
-		resistanceBtn.setDisable(false);
-		dcRBtn.setDisable(false);
-		multimeterDisplay.setDisable(false);
-		modeLabel.setDisable(false);
-		logicBtn.setDisable(false);
-		continuityBtn.setDisable(false);
-
-		// FIXME: SET UP SAMPLES/TIME
-		// TODO: SPLIT UP INTO CHECK PORT + NOT CHECKING PORT
-		// Receive data
-		// SerialFramework.selectPort();
-		// refreshSelectablePortsList();
-	}
+	// // FIXME: make sure that the closed/reset stuff is done properly.
+	// /**
+	// * A private helper function to 'selectConnected' which modifies the status of related components.
+	// */
+	// private void setupConnectedComponents() {
+	//
+	// // Disable the disconnected mode from being editable during
+	// // connected mode
+	// disconnRBtn.setDisable(true);
+	// startTime = null;
+	//
+	// // Enable connected components
+	// sampleRate.setDisable(false);
+	// pauseBtn.setDisable(false);
+	// saveBtn.setDisable(false);
+	// discardBtn.setDisable(false);
+	//
+	// // Enable digital multimeter components
+	// // FIXME: enable only if there is a two way connection
+	// multimeterDisplay.setDisable(false);
+	// voltageBtn.setDisable(false);
+	// currentBtn.setDisable(false);
+	// resistanceBtn.setDisable(false);
+	// dcRBtn.setDisable(false);
+	// multimeterDisplay.setDisable(false);
+	// modeLabel.setDisable(false);
+	// logicBtn.setDisable(false);
+	// continuityBtn.setDisable(false);
+	//
+	// // FIXME: SET UP SAMPLES/TIME
+	// // TODO: SPLIT UP INTO CHECK PORT + NOT CHECKING PORT
+	// // Receive data
+	// // SerialFramework.selectPort();
+	// // refreshSelectablePortsList();
+	// }
 
 	/**
 	 * A private helper function to 'selectConnected'. Displays a pop-up message asking the user if they wish to exit
@@ -900,59 +933,59 @@ public class GuiController implements Initializable {
 		recordTimeLabel.setText("");
 	}
 
-	/**
-	 * Selects the disconnected mode of the GUI.
-	 */
-	@FXML
-	private void selectDisconnected() {
-		if (disconnRBtn.isSelected()) {
-			System.out.println("DISCONNECTED MODE INITIATED");
-			System.out.println("//-------------------//");
-
-			// Disable the connected mode from being editable during disconnected mode
-			connRBtn.setDisable(true);
-
-			// Enable components
-			loadSavedData.setDisable(false);
-			loadFileLabel.setDisable(false);
-			maskTestingBtn.setDisable(false);
-
-			importMaskBtn.setDisable(false);
-			setHighBtn.setDisable(false);
-			setMaskBtn.setDisable(false);
-		} else {
-			if (notifyUserDisconnected()) {
-				System.out.println("DISCONNECTED MODE EXITED");
-
-				resetAxes(); // Reset the x and y axis bounds
-				recordTimeLabel.setText("");
-
-				connRBtn.setDisable(false); // Enable other radio button
-
-				loadSavedData.setDisable(true);
-				loadFileLabel.setDisable(true);
-				maskTestingBtn.setDisable(true);
-
-				// Hide mask testing components
-				separatorLine.setVisible(false);
-				importMaskBtn.setVisible(false);
-				exportMaskBtn.setVisible(false);
-				runMaskBtn.setVisible(false);
-				maskTestResults.setVisible(false);
-				setHighBtn.setVisible(false);
-				setLowBtn.setVisible(false);
-				setMaskBtn.setVisible(false);
-				createMaskLabel.setVisible(false);
-
-				// Disable what needs to be disabled & reset
-				revertMaskTestingComponents();
-			} else {
-				System.out.println("DISCONNECTED MODE STAYING");
-
-				disconnRBtn.setSelected(true);
-			}
-		}
-	}
+	// /**
+	// * Selects the disconnected mode of the GUI.
+	// */
+	// @FXML
+	// private void selectDisconnected() {
+	// if (disconnRBtn.isSelected()) {
+	// System.out.println("DISCONNECTED MODE INITIATED");
+	// System.out.println("//-------------------//");
+	//
+	// // Disable the connected mode from being editable during disconnected mode
+	// connRBtn.setDisable(true);
+	//
+	// // Enable components
+	// loadSavedData.setDisable(false);
+	// loadFileLabel.setDisable(false);
+	// maskTestingBtn.setDisable(false);
+	//
+	// importMaskBtn.setDisable(false);
+	// setHighBtn.setDisable(false);
+	// setMaskBtn.setDisable(false);
+	// } else {
+	// if (notifyUserDisconnected()) {
+	// System.out.println("DISCONNECTED MODE EXITED");
+	//
+	// resetAxes(); // Reset the x and y axis bounds
+	// recordTimeLabel.setText("");
+	//
+	// connRBtn.setDisable(false); // Enable other radio button
+	//
+	// loadSavedData.setDisable(true);
+	// loadFileLabel.setDisable(true);
+	// maskTestingBtn.setDisable(true);
+	//
+	// // Hide mask testing components
+	// separatorLine.setVisible(false);
+	// importMaskBtn.setVisible(false);
+	// exportMaskBtn.setVisible(false);
+	// runMaskBtn.setVisible(false);
+	// maskTestResults.setVisible(false);
+	// setHighBtn.setVisible(false);
+	// setLowBtn.setVisible(false);
+	// setMaskBtn.setVisible(false);
+	// createMaskLabel.setVisible(false);
+	//
+	// // Disable what needs to be disabled & reset
+	// revertMaskTestingComponents();
+	// } else {
+	// System.out.println("DISCONNECTED MODE STAYING");
+	//
+	// disconnRBtn.setSelected(true);
+	// }
+	// }
+	// }
 
 	/**
 	 * Reverts the states of the mask-testing components.
@@ -2536,7 +2569,8 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	public void refreshPorts() {
-		SerialFramework.refreshSelectablePortsList();
+		//SerialFramework.refreshSelectablePortsList();
+		SerialTest.refreshSelectablePortsList();
 	}
 
 	/**
@@ -2544,13 +2578,13 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void changePorts() {
-		SerialFramework.selectPort();
+		// SerialFramework.selectPort();
 		// testConnection();
+		SerialTest.selectPort();
 	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		SerialFramework.refreshSelectablePortsList();
 
 		initialiseSampleRate();
 	}
