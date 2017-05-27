@@ -94,7 +94,7 @@ public class ModifyMultimeterMeasurements {
 	 * @return true if there has been no change, false otherwise
 	 */
 	private boolean checkYUnitChangesVoltage(String unit) {
-		if (unit.equals("V") && !GuiController.instance.voltage) {
+		if ((unit.equals("V") || unit.equals("V RMS")) && !GuiController.instance.voltage) {
 			GuiController.instance.voltage = true;
 			GuiController.instance.current = false;
 			GuiController.instance.resistance = false;
@@ -115,7 +115,7 @@ public class ModifyMultimeterMeasurements {
 	 * @return true if there has been no change, false otherwise
 	 */
 	private boolean checkYUnitChangesCurrent(String unit) {
-		if (unit.equals("I") && !GuiController.instance.current) {
+		if ((unit.equals("I") || unit.equals("mA RMS")) && !GuiController.instance.current) {
 			GuiController.instance.voltage = false;
 			GuiController.instance.current = true;
 			GuiController.instance.resistance = false;
@@ -164,6 +164,8 @@ public class ModifyMultimeterMeasurements {
 		} else if (unit.equals("R")) { // need to convert to Ohm
 			return "Ohm";
 		} else {
+			// FIXME:
+			System.err.println("888");
 			return "";
 		}
 	}
@@ -197,20 +199,24 @@ public class ModifyMultimeterMeasurements {
 	 *            the y-axis
 	 */
 	protected void convertYUnit(String value, NumberAxis yAxis) {
-		String displayedYUnit = value;
-		System.out.println("Displayed Unit: " + displayedYUnit);
+		String displayedYUnit = "";
 
 		// Convert Ohm to Ohm symbol.
 		if (value.equals("R")) {
 			displayedYUnit = OHM_SYMBOL;
 		} else if (value.equals("I")) {
 			displayedYUnit = "mA";
+		} else if (value.equals("J")) {
+			displayedYUnit = "mA RMS";
 		} else if (value.equals("V")) {
-			displayedYUnit = "V";
+			displayedYUnit = value;
+		} else if (value.equals("W")) {
+			displayedYUnit = "V RMS";
 		} else {
 			displayedYUnit = "";
 		}
 
+		//System.err.println("Displayed Unit: " + displayedYUnit); // FIXME
 		yAxis.setLabel("Measurements [" + displayedYUnit + "]");
 	}
 	// public String getVoltageRange(double dataValue) {

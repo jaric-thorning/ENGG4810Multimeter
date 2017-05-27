@@ -192,10 +192,16 @@ public class GuiController implements Initializable {
 
 	// Components to switch between AC and DC
 	@FXML
-	private RadioButton dcRBtn;
-	private boolean isDC = false;
+	private Button selectACDCBtn;
+	private boolean isACMode = false;
 	@FXML
 	private Label switchDCLabel;
+
+	@FXML
+	private Label brightnessLabel;
+	@FXML
+	private ComboBox<Integer> brightnessLevel;
+	private ObservableList<Integer> brightnessLevels = FXCollections.observableArrayList();
 
 	@FXML
 	private ComboBox<String> sampleRate;
@@ -299,62 +305,81 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Enables or disables the connected mode components depending on whether or not there is a valid two-way
+	 * Enables or disables the connected multimeter components depending on whether or not there is a valid two-way
 	 * connection.
 	 * 
 	 * @param status
 	 *            whether or not the components should be disabled (true) or enabled (false)
 	 */
-	protected void setConnectedModeStatus(boolean status) {
-		sampleRate.setDisable(status);
+	protected void setConnectedMultimeterComponents(boolean status) {
+		// sampleRate.setDisable(status);
+		// brightnessLevel.setDisable(status); //FIXME
 
 		voltageBtn.setDisable(status);
 		currentBtn.setDisable(status);
 		resistanceBtn.setDisable(status);
 
 		switchDCLabel.setDisable(status);
-		dcRBtn.setDisable(status);
+		brightnessLabel.setDisable(status);
+		selectACDCBtn.setDisable(status);
 
 		modeLabel.setDisable(status);
 		continuityBtn.setDisable(status);
 		logicBtn.setDisable(status);
+	}
 
+	/**
+	 * Enables or disables the connected mode components depending on whether or not there is a valid two-way
+	 * connection.
+	 * 
+	 * @param status
+	 *            whether or not the components should be disabled (true) or enabled (false)
+	 */
+	public void setConnectedModeComponents(boolean status) {
 		pauseBtn.setDisable(status);
 		saveBtn.setDisable(status);
 		discardBtn.setDisable(status);
 	}
 
-	// FIXME:
 	/**
 	 * Switches the voltage and current to DC when selected and back to AC when deselected.
 	 */
 	@FXML
 	private void switchACDC() {
-		if (dcRBtn.isSelected()) { // Change to DC
-			isDC = true;
-			dcMode();
-		} else { // Change to AC
-			isDC = false;
+		if (!isACMode) {
+			System.out.println("DATA IS AC");
+
+			isACMode = true;
 			acMode();
+		} else {
+			isACMode = false;
+			dcMode();
 		}
 	}
 
-	// FIXME: SEND IN DC MODE TOKEN
 	/**
 	 * A private helper function to 'switchACDC' to switch the text displayed to DC.
 	 */
 	private void dcMode() {
+		selectACDCBtn.setText("AC");
 		voltageBtn.setText("V [DC]");
 		currentBtn.setText("mA [DC]");
 	}
 
-	// FIXME: SEND IN AC MODE TOKEN
 	/**
 	 * A private helper function to 'switchACDC' to switch the text displayed to back to AC.
 	 */
 	private void acMode() {
+		selectACDCBtn.setText("DC");
 		voltageBtn.setText("V [AC]");
 		currentBtn.setText("mA [AC]");
+	}
+
+	public void driveACDCMode() {
+		System.out.println("DATA IS AC");
+		// selectACDCBtn.setText("H");
+		// isACMode = true;
+		// acMode();
 	}
 
 	/**
@@ -408,7 +433,15 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void measureVoltage() {
-		String code = MultimeterCodes.VOLTAGE.getCode();
+		String code = "";
+
+		if (!isACMode) { // DC
+			System.err.println("-----");
+			code = MultimeterCodes.VOLTAGE.getCode();
+		} else { // AC
+			System.err.println("++++");
+			code = MultimeterCodes.VOLTAGE_RMS.getCode();
+		}
 		serialTest.writeCode(code);
 	}
 
@@ -425,7 +458,16 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void measureCurrent() {
-		String code = MultimeterCodes.CURRENT.getCode();
+		String code = "";
+
+		if (!isACMode) { // DC
+			System.err.println("====");
+			code = MultimeterCodes.CURRENT.getCode();
+		} else { // AC
+			System.err.println("*****");
+			code = MultimeterCodes.CURRENT_RMS.getCode();
+		}
+
 		serialTest.writeCode(code);
 	}
 
@@ -454,6 +496,48 @@ public class GuiController implements Initializable {
 	}
 
 	/**
+	 * Updates the initial list of the required configurable brightness levels.
+	 */
+	private void initialiseBrightnessLevels() {
+		brightnessLevels.add(0);
+		brightnessLevels.add(25);
+		brightnessLevels.add(50);
+		brightnessLevels.add(75);
+		brightnessLevels.add(100);
+
+		brightnessLevel.setItems(brightnessLevels);
+	}
+
+	@FXML
+	private void selectBrightnessLevel() {
+		if (brightnessLevel.getSelectionModel().getSelectedIndex() == 0) { // 0
+			System.err.println("[B 0]");
+
+			String code = MultimeterCodes.BRIGHTNESS_0.getCode();
+			serialTest.writeCode(code);
+		} else if (brightnessLevel.getSelectionModel().getSelectedIndex() == 1) { // 25
+			System.err.println("[B 1]");
+
+			String code = MultimeterCodes.BRIGHTNESS_1.getCode();
+			serialTest.writeCode(code);
+		} else if (brightnessLevel.getSelectionModel().getSelectedIndex() == 2) { // 50
+			System.err.println("[B 2]");
+
+			String code = MultimeterCodes.BRIGHTNESS_2.getCode();
+			serialTest.writeCode(code);
+		} else if (brightnessLevel.getSelectionModel().getSelectedIndex() == 3) { // 75
+			System.err.println("[B 3]");
+
+			String code = MultimeterCodes.BRIGHTNESS_3.getCode();
+			serialTest.writeCode(code);
+		} else { // 100
+			System.err.println("[B 4]");
+			String code = MultimeterCodes.BRIGHTNESS_4.getCode();
+			serialTest.writeCode(code);
+		}
+	}
+
+	/**
 	 * Updates the initial list of the required configurable sample rates.
 	 */
 	private void initialiseSampleRate() {
@@ -470,39 +554,56 @@ public class GuiController implements Initializable {
 		sampleRate.setItems(sampleRates);
 	}
 
-	// TODO
 	/**
 	 * Sends out different codes depending on the sample rate selected
 	 */
 	@FXML
 	private void selectSampleRate() {
-		if (sampleRate.getSelectionModel().getSelectedItem().contains("2 meas.per")) {
-			// SAMPLES = 2;
-			// PER_TIMEFRAME = 1;
-		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("1 meas. per")) {
-			// SAMPLES = 1;
-			// PER_TIMEFRAME = 1;
-			// } else if (sampleRate.getSelectionModel().getSelectedItem().contains("2 secs")) {
-			// SAMPLES = 1;
-			// PER_TIMEFRAME = 2;
-		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("5 secs")) {
-			// SAMPLES = 1;
-			// PER_TIMEFRAME = 5;
-		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("10 secs")) {
-			// SAMPLES = 1;
-			// PER_TIMEFRAME = 10;
-		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("every min")) {
-			// SAMPLES = 1;
-			// PER_TIMEFRAME = 1 * 60; // 60 seconds are a minute
-		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("2 mins")) {
-			// SAMPLES = 1;
-			// PER_TIMEFRAME = 2 * 60;
-		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("5 mins")) {
-			// SAMPLES = 1;
-			// PER_TIMEFRAME = 5 * 60;
-		} else if (sampleRate.getSelectionModel().getSelectedItem().contains("10 mins")) {
-			// SAMPLES = 1;
-			// PER_TIMEFRAME = 10 * 60;
+		if (sampleRate.getSelectionModel().getSelectedIndex() == 0) {
+			System.err.println("[F A]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_A.getCode();
+			serialTest.writeCode(code);
+		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 1) {
+			System.err.println("[F B]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_B.getCode();
+			serialTest.writeCode(code);
+		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 2) {
+			System.err.println("[F C]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_C.getCode();
+			serialTest.writeCode(code);
+		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 3) {
+			System.err.println("[F D]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_D.getCode();
+			serialTest.writeCode(code);
+		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 4) {
+			System.err.println("[F E]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_E.getCode();
+			serialTest.writeCode(code);
+		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 5) {
+			System.err.println("[F F]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_F.getCode();
+			serialTest.writeCode(code);
+		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 6) {
+			System.err.println("[F G]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_G.getCode();
+			serialTest.writeCode(code);
+		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 7) {
+			System.err.println("[F H]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_H.getCode();
+			serialTest.writeCode(code);
+		} else {
+			System.err.println("[F I]");
+
+			String code = MultimeterCodes.SAMPLE_RATE_I.getCode();
+			serialTest.writeCode(code);
 		}
 	}
 
@@ -575,7 +676,7 @@ public class GuiController implements Initializable {
 	private void liveDataMode(Double multimeterDataValue, String unit) {
 
 		// Change multimeter text display according to ranges and values.
-		modifyMeasurements.convertYUnit(unit, yAxis);
+		modifyMeasurements.convertYUnit(unit, yAxis); // FIXME: UNITS
 
 		// Has been paused as some point
 		acquiredDataHasBeenPaused();
@@ -791,8 +892,8 @@ public class GuiController implements Initializable {
 		totalAcquisitionData.clear();
 		pauseBtn.setText("Pause");
 
-		dcRBtn.setSelected(false);
-		isDC = false;
+		selectACDCBtn.setDisable(true);
+		isACMode = false;
 
 		resistance = false;
 		voltage = false;
@@ -911,7 +1012,7 @@ public class GuiController implements Initializable {
 			voltageBtn.setDisable(true);
 			currentBtn.setDisable(true);
 			resistanceBtn.setDisable(true);
-			dcRBtn.setDisable(true);
+			selectACDCBtn.setDisable(true);
 
 			modeLabel.setDisable(true);
 			logicBtn.setDisable(true);
@@ -935,7 +1036,7 @@ public class GuiController implements Initializable {
 		voltageBtn.setDisable(false);
 		currentBtn.setDisable(false);
 		resistanceBtn.setDisable(false);
-		dcRBtn.setDisable(false);
+		selectACDCBtn.setDisable(false);
 		multimeterDisplay.setDisable(false);
 		modeLabel.setDisable(false);
 		logicBtn.setDisable(false);
@@ -1220,8 +1321,9 @@ public class GuiController implements Initializable {
 		continuity = false;
 		logic = false;
 
-		dcRBtn.setSelected(false);
-		isDC = false;
+		// FIXME
+		selectACDCBtn.setDisable(true);
+		isACMode = false;
 		voltageBtn.setText("V [AC]");
 		currentBtn.setText("mA [AC]");
 
@@ -2107,9 +2209,7 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	public void refreshPorts() {
-		quit();
-		serialTest.refreshSelectablePortsList();
-		this.quit.set(false);
+		revertConnectedComponents();
 	}
 
 	/**
@@ -2133,6 +2233,9 @@ public class GuiController implements Initializable {
 
 		// Refresh the list of available ports
 		serialTest.refreshSelectablePortsList();
+
+		// Add elements to the list of brightness levels
+		initialiseBrightnessLevels();
 
 		// Add elements to the list of sample rates
 		initialiseSampleRate();

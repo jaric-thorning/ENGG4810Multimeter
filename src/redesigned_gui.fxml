@@ -62,9 +62,9 @@
                                     <Insets left="210.0" top="35.0" />
                                  </GridPane.margin>
                               </Button>
-                              <ComboBox fx:id="sampleRate" disable="true" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectSampleRate" prefHeight="28.0" prefWidth="190.0" promptText="Sample Rate" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                              <ComboBox fx:id="sampleRate" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectSampleRate" prefHeight="28.0" prefWidth="190.0" promptText="Sample Rate" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
-                                    <Insets left="10.0" top="10.0" />
+                                    <Insets left="125.0" top="30.0" />
                                  </GridPane.margin>
                               </ComboBox>
                               <Label id="anchorPaneHeadings" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" text="  Multimeter" GridPane.rowIndex="2" GridPane.valignment="TOP">
@@ -74,7 +74,7 @@
                               </Label>
                               <TextArea fx:id="multimeterDisplay" editable="false" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="239.0" stylesheets="@tabstyle.css" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
-                                    <Insets bottom="10.0" left="40.0" right="40.0" top="50.0" />
+                                    <Insets bottom="10.0" left="40.0" right="40.0" top="70.0" />
                                  </GridPane.margin>
                                  <font>
                                     <Font size="15.0" />
@@ -85,21 +85,16 @@
                                     <Insets left="210.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Button fx:id="currentBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureCurrent" prefHeight="28.0" prefWidth="96.0" text="mA [AC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                              <Button fx:id="currentBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureCurrent" prefHeight="28.0" prefWidth="96.0" text="mA [DC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="110.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureVoltage" prefHeight="28.0" prefWidth="96.0" text="V [AC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                              <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureVoltage" prefHeight="28.0" prefWidth="96.0" text="V [DC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <RadioButton fx:id="dcRBtn" disable="true" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#switchACDC" prefHeight="18.0" prefWidth="43.0" text="DC" GridPane.rowIndex="5" GridPane.valignment="TOP">
-                                 <GridPane.margin>
-                                    <Insets left="81.0" top="15.0" />
-                                 </GridPane.margin>
-                              </RadioButton>
                               <Label fx:id="switchDCLabel" disable="true" focusTraversable="false" text="Switch to:" GridPane.rowIndex="5" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" />
@@ -140,6 +135,21 @@
                                     <Insets left="210.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
+                              <Button fx:id="selectACDCBtn" disable="true" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#switchACDC" prefHeight="28.0" prefWidth="40.0" text="AC" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="81.0" top="15.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <ComboBox fx:id="brightnessLevel" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectBrightnessLevel" prefHeight="28.0" prefWidth="113.0" promptText="Brightness" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="30.0" />
+                                 </GridPane.margin>
+                              </ComboBox>
+                              <Label fx:id="brightnessLabel" text="Brightness:" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Label>
                            </children>
                         </GridPane>
                      </children>

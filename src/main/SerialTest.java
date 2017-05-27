@@ -70,7 +70,7 @@ public class SerialTest {
 	 */
 	public void closeOpenPort() {
 		isChecked = false;
-		
+
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
@@ -128,19 +128,21 @@ public class SerialTest {
 					// Check if the port was opened and if it binded to the listener
 					if (checkOpenPort(serialPort)) {
 						System.out.println("Success.");
-
-						// if (checkConnection()) { // Check if there's a two-way connection
-						 GuiController.instance.setConnectedModeStatus(false); // Enable Components
-						// } else {
-						// System.out.println("Failed to receive data from port");
-						// GuiController.instance.setConnectedModeStatus(true); // Disable Components
-						// }
+						GuiController.instance.setConnectedModeComponents(false);
+						GuiController.instance.setConnectedMultimeterComponents(false); 
+						
+//						if (checkConnection()) { // Check if there's a two-way connection
+//							GuiController.instance.setConnectedMultimeterComponents(false); // Enable Components
+//						} else {
+//							System.out.println("Failed to receive data from port");
+//							GuiController.instance.setConnectedMultimeterComponents(true); // Disable Components
+//						}
 
 						return;
 
 					} else {
 						System.out.println("Failed to open port.");
-						GuiController.instance.setConnectedModeStatus(true); // Disable Components
+						GuiController.instance.setConnectedMultimeterComponents(true); // Disable Components
 						return;
 					}
 				}
@@ -168,7 +170,6 @@ public class SerialTest {
 
 		openSerialPort = serialPort;
 
-		
 		return true;
 	}
 
@@ -256,8 +257,8 @@ public class SerialTest {
 			return;
 		}
 		closeOpenPort(); // Close any open ports
-		GuiController.instance.setConnectedModeStatus(true); // Disable connected mode components
-
+		GuiController.instance.setConnectedMultimeterComponents(true); // Disable connected mode components
+		GuiController.instance.setConnectedModeComponents(true);
 		portNames.clear();
 
 		SerialPort[] ports = SerialPort.getCommPorts();

@@ -62,9 +62,10 @@ public class SerialDataListener implements SerialPortDataListener {
 			StringBuilder input = new StringBuilder();
 			serialTest.setReadFromSerial(sEvent.getSerialPort().getInputStream());
 
-			try {
-				// FIXME: won't quit while -> closeport
+			try { // Thread.sleep(20);
+					// FIXME: won't quit while -> closeport
 				while ((s = (char) serialTest.getReadFromSerial().read()) != 0 && !quit.get()) {
+
 					input.append(s);
 
 					if (s == '\n') {
@@ -76,7 +77,7 @@ public class SerialDataListener implements SerialPortDataListener {
 				}
 
 				serialTest.getReadFromSerial().close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				this.errored = true;
 				System.err.println("Error reading from port");
 				serialTest.closeOpenPort();
@@ -95,42 +96,29 @@ public class SerialDataListener implements SerialPortDataListener {
 	 */
 	private void getData(String receivedData) {
 
-		// Check if there's two-way connection
-		// receivedTwoWayCheck(receivedData);
-
 		if (isValidText(receivedData) && !checkReceivedDataEnds(receivedData)) {
-			System.out.println("\"" + receivedData + "\"");
+			//System.out.println("\"" + receivedData + "\"");
 
 			if (receivedData.charAt(1) == 'D') { // Change multimeter display
 
 				updateMultimeterDisplay(receivedData.substring(2));
-			} else if (receivedData.charAt(1) == 'V' || receivedData.charAt(1) == 'I'
-					|| receivedData.charAt(1) == 'R') { // Change values received
-
+			} else if (receivedData.charAt(1) == 'V' || receivedData.charAt(1) == 'W' || receivedData.charAt(1) == 'I'
+					|| receivedData.charAt(1) == 'J' || receivedData.charAt(1) == 'R') { // Change values received
+				
 				sortMultimeterMeasurements(receivedData.substring(1));
 			} else {
 				// IGNORE
 			}
 		} else if (isValidText(receivedData) && !checkReceivedCommands(receivedData)) {
-			if (receivedData.charAt(1) == 'S') {// Change multimeter settings
-				System.err.println("Y");
-				// sortMultimeterCommand(receivedData);
-			}
-		}
-	}
 
-	/**
-	 * A private helper function for 'getData' which determines if the given String matches the two-way connection code.
-	 * 
-	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
-	 */
-	private void receivedTwoWayCheck(String receivedData) {
-		boolean failedToDecode = !isValidText(receivedData);
-
-		if (!failedToDecode) {
-			if (receivedData.length() == 1 && receivedData.equals("C")) {
+			// Check if there's two-way connection
+			if (receivedData.length() == 3 && receivedData.substring(1, 1).equals("C")) {
 				serialTest.setIsChecked(true);
+			} else if (receivedData.charAt(1) == 'S') {// Change multimeter settings
+
+				sortMultimeterCommand(receivedData);
+			} else {
+				System.err.println(".....something else");
 			}
 		}
 	}
@@ -217,9 +205,14 @@ public class SerialDataListener implements SerialPortDataListener {
 			}
 
 			if (!failedToDecode) {
+				String unit = "";
 
+				unit = Character.toString(receivedData.charAt(0));
+
+				if (receivedData.charAt(0) == 'W' || receivedData.charAt(0) == 'J') {
+					GuiController.instance.driveACDCMode();
+				}
 				// Record and display updated results
-				String unit = Character.toString(receivedData.charAt(0));
 				GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
 			} else {
 				System.err.println("Failed to decode data:" + measurementDataValue);
