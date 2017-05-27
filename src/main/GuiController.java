@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.sun.javafx.geom.Line2D;
@@ -43,7 +44,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.shape.Line;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
@@ -62,6 +62,8 @@ public class GuiController implements Initializable {
 	private ModifyMultimeterMeasurements modifyMeasurements = new ModifyMultimeterMeasurements();
 	private CheckOverlap checkingOverlap = new CheckOverlap();
 	private ISOTimeInterval startTime = null;
+	
+	private SerialTest serialTest;
 
 	/* Components required for resizing the GUI when maximising or resizing */
 	@FXML
@@ -217,6 +219,8 @@ public class GuiController implements Initializable {
 	private static final double X_LOWER_BOUND = 0D;
 	private static final double Y_UPPER_BOUND = 50D;
 	private static final double Y_LOWER_BOUND = -10D;
+	
+	private AtomicBoolean quit;
 
 	public GuiController() {
 		instance = this;
@@ -225,6 +229,9 @@ public class GuiController implements Initializable {
 		highMaskBoundarySeries = new XYChart.Series<>();
 		lowMaskBoundarySeries = new XYChart.Series<>();
 		readingSeries = new XYChart.Series<>();
+		
+		this.quit = new AtomicBoolean(false);
+		this.serialTest = new SerialTest(quit);
 	}
 
 	/**
@@ -356,7 +363,7 @@ public class GuiController implements Initializable {
 	@FXML
 	private void selectContinuityMode() {
 		String code = MultimeterCodes.CONTINUITY.getCode();
-		SerialTest.writeCode(code);
+		serialTest.writeCode(code);
 	}
 
 	// FIXME
@@ -379,7 +386,7 @@ public class GuiController implements Initializable {
 	@FXML
 	private void selectLogicMode() {
 		String code = MultimeterCodes.LOGIC.getCode();
-		SerialTest.writeCode(code);
+		serialTest.writeCode(code);
 	}
 
 	// FIXME
@@ -402,7 +409,7 @@ public class GuiController implements Initializable {
 	@FXML
 	private void measureVoltage() {
 		String code = MultimeterCodes.VOLTAGE.getCode();
-		SerialTest.writeCode(code);
+		serialTest.writeCode(code);
 	}
 
 	// FIXME
@@ -419,7 +426,7 @@ public class GuiController implements Initializable {
 	@FXML
 	private void measureCurrent() {
 		String code = MultimeterCodes.CURRENT.getCode();
-		SerialTest.writeCode(code);
+		serialTest.writeCode(code);
 	}
 
 	// FIXME
@@ -436,7 +443,7 @@ public class GuiController implements Initializable {
 	@FXML
 	private void measureResistance() {
 		String code = MultimeterCodes.RESISTANCE.getCode();
-		SerialTest.writeCode(code);
+		serialTest.writeCode(code);
 	}
 
 	/**
@@ -540,9 +547,6 @@ public class GuiController implements Initializable {
 			});
 			return;
 		}
-
-		// System.out.println(" RS: " + readingSeries.getData().size() + ", " + storedYUnits.size());
-		// System.out.println("SS: " + storedISOTimes.size());
 
 		// Modify Plot Parts.
 		if (!modifyMeasurements.validateYAxisUnits(unit)) {
@@ -768,9 +772,11 @@ public class GuiController implements Initializable {
 	 */
 	protected void revertConnectedComponents() {
 
+
 		// Reset ports
-		SerialTest.closeOpenPort();
-		SerialTest.refreshSelectablePortsList();
+		quit();
+		serialTest.refreshSelectablePortsList();
+		this.quit.set(false);
 
 		resetAxesGraphDetails();
 
@@ -1411,7 +1417,6 @@ public class GuiController implements Initializable {
 
 			@Override
 			public void handle(MouseEvent event) {
-				System.out.println("C: " + lowCounter);
 
 				// Left mouse button and at least one of the add mask buttons
 				if (event.getButton() == MouseButton.PRIMARY && (isHighBtnSelected || isLowBtnSelected)) {
@@ -1966,7 +1971,7 @@ public class GuiController implements Initializable {
 		}
 
 		/*
-		 * TODO: incoroporate resistance else if (maskYUnit.contains(OHM_SYMBOL) && dataYUnit.contains(maskYUnit)) { //
+		 * TODO: incorporate resistance else if (maskYUnit.contains(OHM_SYMBOL) && dataYUnit.contains(maskYUnit)) { //
 		 * FIXME: find out which symbol will represent ohms return true; }
 		 */
 		return false;
@@ -2103,7 +2108,9 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	public void refreshPorts() {
-		SerialTest.refreshSelectablePortsList();
+		quit();
+		serialTest.refreshSelectablePortsList();
+		this.quit.set(false);
 	}
 
 	/**
@@ -2111,16 +2118,21 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void changePorts() {
-		SerialTest.selectPort();
+		serialTest.selectPort();
 	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 
 		// Refresh the list of available ports
-		SerialTest.refreshSelectablePortsList();
+		serialTest.refreshSelectablePortsList();
 
 		// Add elements to the list of sample rates
 		initialiseSampleRate();
+	}
+	
+	public void quit(){
+		this.quit.set(true);
+		serialTest.closeOpenPort();
 	}
 }

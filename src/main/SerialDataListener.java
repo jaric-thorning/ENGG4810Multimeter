@@ -1,6 +1,9 @@
 package main;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
@@ -15,7 +18,9 @@ import com.fazecast.jSerialComm.SerialPortEvent;
  *
  */
 public class SerialDataListener implements SerialPortDataListener {
-	private static final String PACKET_OPEN = "|";
+	private static final String PACKET_BOUNDARIES = "|";
+	private static final String PACKET_OPEN = "[";
+	private static final String PACKET_CLOSE = "]";
 
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
@@ -24,6 +29,17 @@ public class SerialDataListener implements SerialPortDataListener {
 
 	// Whether the port connection has bugged out.
 	private boolean errored = false;
+	private String firstDisplay = "";
+	private String secondDisplay = "";
+	
+	private AtomicBoolean quit;
+	
+	private SerialTest cereal;
+	
+	public SerialDataListener(AtomicBoolean quit, SerialTest serialTest){
+		this.quit = quit;
+		this.cereal = serialTest;
+	}
 
 	/**
 	 * Handles a listening event (LISTENING_EVENT_DATA_AVAILABLE) on the serial port. Reads the data and displays it.
@@ -40,7 +56,7 @@ public class SerialDataListener implements SerialPortDataListener {
 			if (sEvent.getSerialPort().bytesAvailable() < 0) {
 				this.errored = true;
 				System.err.println("Error reading from port");
-				SerialTest.closeOpenPort();
+				cereal.closeOpenPort();
 
 				return;
 			}
@@ -48,27 +64,26 @@ public class SerialDataListener implements SerialPortDataListener {
 			// Getting the data from input stream
 			char s = 0;
 			StringBuilder input = new StringBuilder();
+			cereal.setReadFromSerial(sEvent.getSerialPort().getInputStream());
 
 			try {
-				SerialTest.setReadFromSerial(sEvent.getSerialPort().getInputStream());
-
-				// FIXME: make a bit more robust
-				while ((s = (char) SerialTest.getReadFromSerial().read()) != '|') {
+				// FIXME: won't quit while -> closeport
+				while ((s = (char) cereal.getReadFromSerial().read()) != 0 && !quit.get()) {
 					input.append(s);
 
-					if (input.length() > 20) {
+					if (s == '\n') {
+						String line = input.toString().trim();
+
+						getData(line);
 						input = new StringBuilder();
 					}
 				}
 
-				getData(input.toString());
-
-				SerialTest.getReadFromSerial().close();
+				cereal.getReadFromSerial().close();
 			} catch (IOException e) {
-
 				this.errored = true;
 				System.err.println("Error reading from port");
-				SerialTest.closeOpenPort();
+				cereal.closeOpenPort();
 
 				return;
 			}
@@ -85,23 +100,25 @@ public class SerialDataListener implements SerialPortDataListener {
 	private void getData(String receivedData) {
 
 		// Check if there's two-way connection
-		receivedTwoWayCheck(receivedData);
+		// receivedTwoWayCheck(receivedData);
 
-		if (receivedData.length() > 4) { // FIXME: Change this
-			if (receivedData.charAt(0) == 'D') { // Change multimeter display
+		if (isValidText(receivedData) && !checkReceivedDataEnds(receivedData)) {
+			System.out.println("\"" + receivedData + "\"");
 
-				updateMultimeterDisplay(receivedData.substring(1));
-			} else if (receivedData.charAt(0) == 'V' || receivedData.charAt(0) == 'I'
-					|| receivedData.charAt(0) == 'R') { // Change values received
+			if (receivedData.charAt(1) == 'D') { // Change multimeter display
 
-				sortMultimeterMeasurements(receivedData);
-			} else if (receivedData.charAt(0) == 'S') {// Change multimeter settings
-				System.out.println("RECEIVING CODES");
-				// FIXME
+				updateMultimeterDisplay(receivedData.substring(2));
+			} else if (receivedData.charAt(1) == 'V' || receivedData.charAt(1) == 'I'
+					|| receivedData.charAt(1) == 'R') { // Change values received
+
+				sortMultimeterMeasurements(receivedData.substring(4));
+			} else if (receivedData.charAt(1) == 'S') {// Change multimeter settings
+				System.err.println("Y");
 				// sortMultimeterCommand(receivedData);
 			}
-
-			System.err.println(receivedData);
+			// } else {
+			// // Ignore
+			// }
 		}
 	}
 
@@ -112,11 +129,11 @@ public class SerialDataListener implements SerialPortDataListener {
 	 *            the data received from the input stream that's been stitched into a String
 	 */
 	private void receivedTwoWayCheck(String receivedData) {
-		boolean failedToDecode = determineValidText(receivedData);
+		boolean failedToDecode = !isValidText(receivedData);
 
 		if (!failedToDecode) {
 			if (receivedData.length() == 1 && receivedData.equals("C")) {
-				SerialTest.setIsChecked(true);
+				cereal.setIsChecked(true);
 			}
 		}
 	}
@@ -128,24 +145,56 @@ public class SerialDataListener implements SerialPortDataListener {
 	 *            the data received from the input stream that's been stitched into a String
 	 */
 	private void updateMultimeterDisplay(String receivedData) {
-		boolean failedToDecode = determineValidText(receivedData);
+		boolean failedToDecode = false;
 
 		if (!failedToDecode) {
 
 			if (receivedData.charAt(0) == '1' && !GuiController.instance.multimeterDisplay.isDisabled()) {
 				receivedData = receivedData.replace("=", PLUS_MINUS_SYMBOL);
-				GuiController.instance.multimeterDisplay.setText(receivedData.substring(2).trim() + "\n");
+
+				firstDisplay = receivedData.substring(2, receivedData.length() - 1).trim() + "\n";
 			} else if (receivedData.charAt(0) == '2' && !GuiController.instance.multimeterDisplay.isDisabled()) {
 				receivedData = receivedData.replace(";", OHM_SYMBOL);
 
-				GuiController.instance.multimeterDisplay.appendText(receivedData.substring(2).trim());
+				secondDisplay = receivedData.substring(2, receivedData.length() - 1).trim() + "\n";
 			} else {
 				failedToDecode = true;
+			}
+			// System.out.println("\"" + firstDisplay + "\"");
+			// System.out.println("\"" + secondDisplay + "\"");
+
+			// Update Multimeter display iif the values for the top and bottom lines have been found
+			if (!firstDisplay.isEmpty() && !secondDisplay.isEmpty()) {
+				GuiController.instance.multimeterDisplay.setText(firstDisplay + secondDisplay);
+				firstDisplay = "";
+				secondDisplay = "";
 			}
 
 		} else {
 			System.err.println("***Failed to decode data: " + receivedData);
 		}
+	}
+
+	/**
+	 * Check that the first and last values of the received data has the expected value.
+	 * 
+	 * @param receivedData
+	 *            the data received from the input stream that's been stitched into a String
+	 * @return false if the received data is valid, true if it isn't
+	 */
+	private boolean checkReceivedDataEnds(String receivedData) {
+		return !receivedData.startsWith(PACKET_BOUNDARIES) && !receivedData.endsWith(PACKET_BOUNDARIES);
+	}
+
+	/**
+	 * Check that the first and last values of the received data has the expected value.
+	 * 
+	 * @param receivedData
+	 *            the data received from the input stream that's been stitched into a String
+	 * @return false if the received data is valid, true if it isn't
+	 */
+	private boolean checkReceivedCommands(String receivedData) {
+		return !receivedData.startsWith(PACKET_OPEN) && !receivedData.endsWith(PACKET_CLOSE);
 	}
 
 	/**
@@ -156,28 +205,30 @@ public class SerialDataListener implements SerialPortDataListener {
 	 */
 	private void sortMultimeterMeasurements(String receivedData) {
 
-		boolean failedToDecode = determineValidText(receivedData);
-
-		// Check for voltage/current/resistance results.
-		String trimmedData = receivedData.substring(3, receivedData.length()).trim();
-
+		boolean failedToDecode = false;
 		double measurementDataValue = 0D;
-		try {
-			measurementDataValue = Double.parseDouble(trimmedData);// trimmedData.substring(3).trim());
-		} catch (NumberFormatException e) {
-
-			// If data received from the serial connection was not the right type
-			failedToDecode = true;
-		}
 
 		if (!failedToDecode) {
 
-			// Record and display updated results
-			String unit = Character.toString(receivedData.charAt(0));
-			System.err.println(measurementDataValue);
-			GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
+			// Check for voltage/current/resistance results.
+			try {
+				measurementDataValue = Double.parseDouble(receivedData.substring(0, receivedData.length() - 1).trim());
+			} catch (NumberFormatException e) {
+
+				// If data received from the serial connection was not the right type
+				failedToDecode = true;
+			}
+
+			if (!failedToDecode) {
+
+				// Record and display updated results
+				String unit = Character.toString(receivedData.charAt(0));
+				GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
+			} else {
+				System.err.println("Failed to decode data:" + measurementDataValue);
+			}
 		} else {
-			System.out.println("Failed to decode data:" + measurementDataValue);
+			System.err.println("***Failed to decode data: " + receivedData);
 		}
 	}
 
@@ -193,11 +244,11 @@ public class SerialDataListener implements SerialPortDataListener {
 		// Check for multimeter display commands.
 		String trimmedData = receivedData.substring(2, receivedData.length());
 
-		boolean failedToDecode = determineValidText(trimmedData);
+		boolean failedToDecode = !isValidText(trimmedData);
 
 		char modeType = 0;
 
-		System.err.println("H: " + trimmedData);
+		// System.err.println("H: " + trimmedData);
 
 		// // If data received from the serial connection was not the right type
 		// if (trimmedData.charAt(0) != MODE)
@@ -247,21 +298,6 @@ public class SerialDataListener implements SerialPortDataListener {
 	 */
 	private boolean isValidText(String receivedData) {
 		return receivedData != null && !receivedData.equalsIgnoreCase("");
-	}
-
-	/**
-	 * Determines the validity of the received data
-	 * 
-	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
-	 * @return true if it's not valid, false otherwise
-	 */
-	private boolean determineValidText(String receivedData) {
-		if (!isValidText(receivedData)) {
-			return true;
-		}
-
-		return false;
 	}
 
 	@Override

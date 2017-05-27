@@ -3,6 +3,7 @@ package main;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fazecast.jSerialComm.SerialPort;
 
@@ -20,37 +21,37 @@ import javafx.collections.ObservableList;
  */
 public class SerialTest {
 
-	private static ObservableList<String> portNames = FXCollections.observableArrayList();
-	private static SerialPort openSerialPort = null;
-	private static InputStream readFromSerial = null;
-	private static PrintWriter writtenToSerial = null;
+	private ObservableList<String> portNames = FXCollections.observableArrayList();
+	private SerialPort openSerialPort = null;
+	private InputStream readFromSerial = null;
+	private PrintWriter writtenToSerial = null;
 
 	// A flag for two-way connection
-	private static boolean isChecked = false;
+	private boolean isChecked = false;
 
 	// Listens for available data
-	private static SerialDataListener dataListener = new SerialDataListener();
+	private SerialDataListener dataListener;
 
-	public SerialTest() {
-
+	public SerialTest(AtomicBoolean quit) {
+		this.dataListener = new SerialDataListener(quit, this);
 	}
 
 	/**
 	 * Gets the 'readFromSerial' input stream.
-	 * 
+	 *
 	 * @return the input stream the data will be flowing into
 	 */
-	public static InputStream getReadFromSerial() {
+	public InputStream getReadFromSerial() {
 		return readFromSerial;
 	}
 
 	/**
 	 * Sets the 'readFromSerial' to a new value.
-	 * 
+	 *
 	 * @param newValue
 	 *            the value which the input stream will have
 	 */
-	public static void setReadFromSerial(InputStream newValue) {
+	public void setReadFromSerial(InputStream newValue) {
 		readFromSerial = newValue;
 	}
 
@@ -60,16 +61,16 @@ public class SerialTest {
 	 * @param newValue
 	 *            whether or not there's a two-way connection ( true if there's a two-way connection, false otherwise)
 	 */
-	public static void setIsChecked(boolean newValue) {
+	public void setIsChecked(boolean newValue) {
 		isChecked = newValue;
 	}
 
 	/**
 	 * Closes open serial port, if it is still open.
 	 */
-	public static void closeOpenPort() {
+	public void closeOpenPort() {
 		isChecked = false;
-
+		
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
@@ -112,7 +113,7 @@ public class SerialTest {
 	 * Handles the changing of the serial port selection. If there are ports (with valid names) it binds the serial port
 	 * (refreshes the port list if it didn't bind); otherwise is closes the open port.
 	 */
-	public static void selectPort() {
+	public void selectPort() {
 		System.out.println("Changed to this port: " + GuiController.instance.portsAvailable.getValue());
 
 		SerialPort[] ports = SerialPort.getCommPorts();
@@ -128,12 +129,12 @@ public class SerialTest {
 					if (checkOpenPort(serialPort)) {
 						System.out.println("Success.");
 
-						if (checkConnection()) { // Check if there's a two-way connection
-							GuiController.instance.setConnectedModeStatus(false); // Enable Components
-						} else {
-							System.out.println("Failed to receive data from port");
-							GuiController.instance.setConnectedModeStatus(true); // Disable Components
-						}
+						// if (checkConnection()) { // Check if there's a two-way connection
+						 GuiController.instance.setConnectedModeStatus(false); // Enable Components
+						// } else {
+						// System.out.println("Failed to receive data from port");
+						// GuiController.instance.setConnectedModeStatus(true); // Disable Components
+						// }
 
 						return;
 
@@ -157,15 +158,17 @@ public class SerialTest {
 	 * @return whether or not the serial port was opened and had a listener binded to it successfully (true it did,
 	 *         false it didn't)
 	 */
-	private static boolean checkOpenPort(SerialPort serialPort) {
+	private boolean checkOpenPort(SerialPort serialPort) {
 		closeOpenPort(); // Close any previously opened ports
 
 		if (!(serialPort.openPort() && bindListen(serialPort))) {
+
 			return false; // Port wasn't successful at opening and adding a listener
 		}
 
 		openSerialPort = serialPort;
 
+		
 		return true;
 	}
 
@@ -176,7 +179,7 @@ public class SerialTest {
 	 *            the port that needs to be binded to
 	 * @return whether or not the serial port was binded to successfully (true if it did, false if if didn't)
 	 */
-	private static boolean bindListen(SerialPort serialPort) {
+	private boolean bindListen(SerialPort serialPort) {
 		System.out.println("Binding to Serial Port " + serialPort.getSystemPortName() + "...");
 
 		serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
@@ -197,7 +200,7 @@ public class SerialTest {
 	 * @param output
 	 *            the code to write out
 	 */
-	public static void writeCode(String output) {
+	public void writeCode(String output) {
 		try {
 
 			// Write multimeter code over the open port
@@ -216,7 +219,7 @@ public class SerialTest {
 	 * 
 	 * @return true if there is a two-way connection, false otherwise
 	 */
-	private static boolean checkConnection() {
+	private boolean checkConnection() {
 		System.out.println("...Checking connection");
 
 		long initialTime = System.nanoTime(); // Current time
@@ -242,7 +245,7 @@ public class SerialTest {
 	/**
 	 * Refreshes the existing ports list to include any new ports detected, as well as closes any open ports.
 	 */
-	public static void refreshSelectablePortsList() {
+	public void refreshSelectablePortsList() {
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
@@ -252,7 +255,6 @@ public class SerialTest {
 			});
 			return;
 		}
-
 		closeOpenPort(); // Close any open ports
 		GuiController.instance.setConnectedModeStatus(true); // Disable connected mode components
 

@@ -44,6 +44,7 @@ public class GuiView extends Application {
 	private Stage stage = new Stage();
 
 	private static GuiView instance;
+	private GuiController controller;
 
 	public GuiView() {
 		instance = this;
@@ -72,7 +73,7 @@ public class GuiView extends Application {
 	public void stop() throws Exception {
 
 		// Close any open ports
-		SerialTest.closeOpenPort();
+		controller.quit();
 
 		// Shuts down any threads
 		super.stop();
@@ -98,7 +99,7 @@ public class GuiView extends Application {
 		primaryStage.setMinHeight(STAGE_HEIGHT);
 
 		// Get access to the GUI controller
-		GuiController controller = loader.getController();
+		controller = loader.getController();
 
 		// Add width/height listeners
 		sceneWidthChange(scene, controller);
