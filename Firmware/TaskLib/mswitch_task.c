@@ -83,7 +83,7 @@ int reset_resister = 0;
 
 extern xSemaphoreHandle g_pUARTSemaphore;
 
-void check_voltage_range(float value);
+void check_voltage_range(float value, int mode);
 void set_shift_pin(int pin, int value);
 void set_mode(int new_mode);
 void change_voltage(int voltage);
@@ -104,7 +104,7 @@ MSWITCHTask(void *pvParameters)
 
     char * buffer = (char*)bget(64 * sizeof(char));
 
-    sd_message.filename  = "logfile4.txt";
+    sd_message.filename  = "ltest.txt";
 
 
     ui32MSWITCHRefreshTime = MSWITCH_REFRESH_TIME;
@@ -153,13 +153,13 @@ MSWITCHTask(void *pvParameters)
 
 
         } else if(mswitch_message.type == 'R'){
-          /*if(logging == 0){
+          if(logging == 0){
             UARTprintf("Recording to SD....\n\r");
             logging = 1;
           } else{
             UARTprintf("Recording done.\n\r");
             logging = 0;
-          }*/
+          }
 
         } else if(mswitch_message.type == 'V'){
           //UARTprintf("ADC 1 : %d\n\r", mswitch_message.ui32Value);
@@ -168,12 +168,12 @@ MSWITCHTask(void *pvParameters)
 
             lcd_message.type = 'V';
             lcd_message.range = range;
-            check_voltage_range(value);
+            check_voltage_range(value, mode);
           } else if (mode == AC_VOLTAGE){
             //TODO CHANGE THIS
             lcd_message.type = 'W';
             lcd_message.range = 12;
-            check_voltage_range(value);
+            check_voltage_range(value, mode);
           } else if(mode == DC_CURRENT){ //current
             value = mswitch_message.ui32Value/4095.0 * 2 * range_current - range_current;
             //UARTprintf("Recieved uValue = %d", mswitch_message.ui32Value);
@@ -319,11 +319,25 @@ void set_shift_pin(int pin, int value){
 
 void set_mode(int new_mode){
   //mode = new_mode;
-  if((new_mode == DC_VOLTAGE) || (new_mode == AC_VOLTAGE)){
+  if(new_mode == DC_VOLTAGE){
     //write S1 to 12V mode (010)
     set_shift_pin(S1_C_PIN, 0);
     set_shift_pin(S1_B_PIN, 1);
     set_shift_pin(S1_A_PIN, 0);
+
+    //write S2 to 200mA (11) and IHN to 1 (off)
+    set_shift_pin(S2_B_PIN, 1);
+    set_shift_pin(S2_A_PIN, 1);
+    set_shift_pin(S2_I_PIN, 1);
+
+    //write S3 to voltage mode (01)
+    set_shift_pin(S3_B_PIN, 0);
+    set_shift_pin(S3_A_PIN, 1);
+
+  } else if ( new_mode == AC_VOLTAGE){
+    set_shift_pin(S1_C_PIN, 1);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 1);
 
     //write S2 to 200mA (11) and IHN to 1 (off)
     set_shift_pin(S2_B_PIN, 1);
@@ -388,6 +402,28 @@ void change_voltage(int voltage){
   xQueueReset(g_pMSWITCHQueue);
 }
 
+void change_ac_voltage(int voltage){
+  if(voltage == 12){
+    set_shift_pin(S1_C_PIN, 1);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 1);
+  }
+  else if(voltage == 5){
+    set_shift_pin(S1_C_PIN, 1);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 0);
+  }
+  else if(voltage == 1){
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 1);
+    set_shift_pin(S1_A_PIN, 1);
+  }
+  else{
+    UARTprintf("WARNING - UNKNOWN VOLTAGE LEVEL SETTING\n\r");
+  }
+  xQueueReset(g_pMSWITCHQueue);
+}
+
 void change_current(int current){
   if(current == 10){
     set_shift_pin(S2_B_PIN, 1);
@@ -422,7 +458,7 @@ void change_resistance(int resistance){
   xQueueReset(g_pMSWITCHQueue);
 }
 
-void check_voltage_range(float value){
+void check_voltage_range(float value, int mode){
 	if( value < 0){
 		value *= -1;
 	}
@@ -430,29 +466,49 @@ void check_voltage_range(float value){
 		if( value > 12){
 			UARTprintf("Warning: Value out of range!\n");
 			//Reset all to 12V range
-      change_voltage(12);
+      if(mode == AC_VOLTAGE){
+        change_ac_voltage(12);
+      } else{
+        change_voltage(12);
+      }
 		} else if( value < 5){
 			UARTprintf("Switching to 5V resolution\n");
 			range = 5;
 			//Switch Down
-      change_voltage(5);
+      if(mode == AC_VOLTAGE){
+        change_ac_voltage(5);
+      } else{
+        change_voltage(5);
+      }
 		}
 	} else if ( range == 5){
 		if( value >= 5){
 			UARTprintf("Switching to 12V resolution\n");
 			range = 13;
-			change_voltage(12);
+      if(mode == AC_VOLTAGE){
+        change_ac_voltage(12);
+      } else{
+			  change_voltage(12);
+      }
 
 		} else if( value < 1){
 			UARTprintf("Switching to 1V resolution\n");
 			range = 1;
-			change_voltage(1);
+      if(mode == AC_VOLTAGE){
+        change_ac_voltage(1);
+      } else{
+			  change_voltage(1);
+      }
 		}
 	} else if (range == 1){
   		if( value >= 0.9){
   			UARTprintf("Switching to 5V resolution\n");
   			range = 5;
-  			change_voltage(5);
+        if(mode == AC_VOLTAGE){
+          change_ac_voltage(5);
+        } else{
+  			  change_voltage(5);
+        }
 		} else if( value < 1){
 			//No worries
 		}
@@ -533,18 +589,22 @@ void check_resistance_range(float value){
       change_resistance(1);
 		}
 	} else if ( range_resistance == 1){
-    if( value > 1){
+    if( value > 10){
+      UARTprintf("Switching to 100k resolution\n");
+			range_resistance = 100;
+      change_resistance(100);
+    } else if( value > 1){
       UARTprintf("Switching to 10k resolution\n");
 			range_resistance = 10;
       change_resistance(10);
 		} else if( value < 1){
-			zero_count++;
+			/*zero_count++;
       if(zero_count > 10){
         UARTprintf("Switching to 1000k resolution\n");
         change_resistance(1000);
         range_resistance = 1000;
         zero_count = 0;
-      }
+      }*/
 		}
 	}
   else{

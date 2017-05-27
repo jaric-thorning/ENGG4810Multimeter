@@ -37,7 +37,7 @@
 #define ADC_ITEM_SIZE           sizeof(struct adc_queue_message)
 #define ADC_QUEUE_SIZE          5
 
-#define ADC_REFRESH_TIME 1000
+#define ADC_REFRESH_TIME 100
 
 uint32_t ui32Value;
 
@@ -151,8 +151,12 @@ ADCTask(void *pvParameters)
         if(decimal < 0){
           decimal *= -1;
         }
-        //UARTprintf("ADC: %d.%d\n\r", integer, decimal);
 
+        /*if( xSemaphoreTake(g_pUARTSemaphore,portMAX_DELAY) == pdTRUE )
+        {
+        UARTprintf("External ADC: %d.%d\n\r", integer, decimal);
+        }
+        xSemaphoreGive(g_pUARTSemaphore);*/
         /*UARTprintf("External ADC read: ");
         for(int i = 23; i >= 0; i--){
           UARTprintf("%d", (data >> i) & 1);
@@ -162,7 +166,7 @@ ADCTask(void *pvParameters)
         UARTprintf("Data not ready.\n\r");
       }
 
-      if(adc_mode == 'R'){
+      if(0){//adc_mode == 'R'){
         if(getting_max){
 
           if(converted > max_value){
@@ -225,7 +229,7 @@ ADCTask(void *pvParameters)
                 decimal *= -1;
               }
               UARTprintf("RMS: %d.%d\n\r", integer, decimal);
-
+              vTaskDelayUntil(&ui32WakeTime, 1000 / portTICK_RATE_MS);
               //reset all values:
               getting_max = 1;
               calculating_rms = 0;

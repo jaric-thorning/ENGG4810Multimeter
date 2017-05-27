@@ -105,7 +105,7 @@ SDTaskInit(void)
         return(1);
     }
 
-    UARTprintf("SD initiated...\n\r");
+    UARTprintf("    SD initiated...\n\r");
 
     //
     // Success.

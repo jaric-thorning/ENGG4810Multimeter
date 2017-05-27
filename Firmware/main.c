@@ -28,16 +28,21 @@
 #include "uart.h"
 
 
+#define POWER_PIN GPIO_PIN_1
+#define POWER_PORT GPIO_PORTF_BASE
+#define POWER_GPIO SYSCTL_PERIPH_GPIOF
+
 
 // --------------- TASK CONTROL ------------------
 
-#define COMMTASK        1
 #define LEDTASK         1
-#define LCDTASK         1
 #define SWITCHTASK      1
-#define ADCTASK         1
-#define MSWITCHTASK     1
-#define SDTASK          0
+
+#define LCDTASK         1 //works
+#define COMMTASK        1
+#define ADCTASK         1 //works
+#define MSWITCHTASK     1 //works
+#define SDTASK          1
 #define BUZZERTASK      1
 
 // -----------------------------------------------
@@ -109,6 +114,20 @@ main(void)
     UARTprintf("Initialising Components...\n\r");
 
     g_pUARTSemaphore = xSemaphoreCreateMutex();
+
+    //ENABLE POWER
+
+    //External Button Init
+    /*SysCtlPeripheralEnable(POWER_GPIO);
+    while(!SysCtlPeripheralReady(POWER_GPIO))
+	  {
+	  }
+    GPIOPinTypeGPIOOutput(POWER_PORT, POWER_PIN);
+
+    GPIOPinWrite(POWER_PORT, POWER_PIN, POWER_PIN);
+
+
+    UARTprintf("Enabling Power...\n\r");*/
 
     // Create the LED task.
     if(LEDTASK){
