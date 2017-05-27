@@ -62,7 +62,7 @@ public class GuiController implements Initializable {
 	private ModifyMultimeterMeasurements modifyMeasurements = new ModifyMultimeterMeasurements();
 	private CheckOverlap checkingOverlap = new CheckOverlap();
 	private ISOTimeInterval startTime = null;
-	
+
 	private SerialTest serialTest;
 
 	/* Components required for resizing the GUI when maximising or resizing */
@@ -219,7 +219,7 @@ public class GuiController implements Initializable {
 	private static final double X_LOWER_BOUND = 0D;
 	private static final double Y_UPPER_BOUND = 50D;
 	private static final double Y_LOWER_BOUND = -10D;
-	
+
 	private AtomicBoolean quit;
 
 	public GuiController() {
@@ -229,7 +229,7 @@ public class GuiController implements Initializable {
 		highMaskBoundarySeries = new XYChart.Series<>();
 		lowMaskBoundarySeries = new XYChart.Series<>();
 		readingSeries = new XYChart.Series<>();
-		
+
 		this.quit = new AtomicBoolean(false);
 		this.serialTest = new SerialTest(quit);
 	}
@@ -771,7 +771,6 @@ public class GuiController implements Initializable {
 	 * Reverts the status' of connected components.
 	 */
 	protected void revertConnectedComponents() {
-
 
 		// Reset ports
 		quit();
@@ -2121,6 +2120,14 @@ public class GuiController implements Initializable {
 		serialTest.selectPort();
 	}
 
+	/**
+	 * Closes any open ports that were/are being used for serialTest
+	 */
+	public void quit() {
+		this.quit.set(true);
+		serialTest.closeOpenPort();
+	}
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 
@@ -2129,10 +2136,5 @@ public class GuiController implements Initializable {
 
 		// Add elements to the list of sample rates
 		initialiseSampleRate();
-	}
-	
-	public void quit(){
-		this.quit.set(true);
-		serialTest.closeOpenPort();
 	}
 }

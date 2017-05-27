@@ -1,8 +1,6 @@
 package main;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -25,20 +23,18 @@ public class SerialDataListener implements SerialPortDataListener {
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
 
-	private static final char MODE = 'M';
-
 	// Whether the port connection has bugged out.
 	private boolean errored = false;
 	private String firstDisplay = "";
 	private String secondDisplay = "";
-	
+
 	private AtomicBoolean quit;
-	
-	private SerialTest cereal;
-	
-	public SerialDataListener(AtomicBoolean quit, SerialTest serialTest){
+
+	private SerialTest serialTest;
+
+	public SerialDataListener(AtomicBoolean quit, SerialTest serialTest) {
 		this.quit = quit;
-		this.cereal = serialTest;
+		this.serialTest = serialTest;
 	}
 
 	/**
@@ -56,7 +52,7 @@ public class SerialDataListener implements SerialPortDataListener {
 			if (sEvent.getSerialPort().bytesAvailable() < 0) {
 				this.errored = true;
 				System.err.println("Error reading from port");
-				cereal.closeOpenPort();
+				serialTest.closeOpenPort();
 
 				return;
 			}
@@ -64,11 +60,11 @@ public class SerialDataListener implements SerialPortDataListener {
 			// Getting the data from input stream
 			char s = 0;
 			StringBuilder input = new StringBuilder();
-			cereal.setReadFromSerial(sEvent.getSerialPort().getInputStream());
+			serialTest.setReadFromSerial(sEvent.getSerialPort().getInputStream());
 
 			try {
 				// FIXME: won't quit while -> closeport
-				while ((s = (char) cereal.getReadFromSerial().read()) != 0 && !quit.get()) {
+				while ((s = (char) serialTest.getReadFromSerial().read()) != 0 && !quit.get()) {
 					input.append(s);
 
 					if (s == '\n') {
@@ -79,11 +75,11 @@ public class SerialDataListener implements SerialPortDataListener {
 					}
 				}
 
-				cereal.getReadFromSerial().close();
+				serialTest.getReadFromSerial().close();
 			} catch (IOException e) {
 				this.errored = true;
 				System.err.println("Error reading from port");
-				cereal.closeOpenPort();
+				serialTest.closeOpenPort();
 
 				return;
 			}
@@ -111,14 +107,15 @@ public class SerialDataListener implements SerialPortDataListener {
 			} else if (receivedData.charAt(1) == 'V' || receivedData.charAt(1) == 'I'
 					|| receivedData.charAt(1) == 'R') { // Change values received
 
-				sortMultimeterMeasurements(receivedData.substring(4));
-			} else if (receivedData.charAt(1) == 'S') {// Change multimeter settings
+				sortMultimeterMeasurements(receivedData.substring(1));
+			} else {
+				// IGNORE
+			}
+		} else if (isValidText(receivedData) && !checkReceivedCommands(receivedData)) {
+			if (receivedData.charAt(1) == 'S') {// Change multimeter settings
 				System.err.println("Y");
 				// sortMultimeterCommand(receivedData);
 			}
-			// } else {
-			// // Ignore
-			// }
 		}
 	}
 
@@ -133,7 +130,7 @@ public class SerialDataListener implements SerialPortDataListener {
 
 		if (!failedToDecode) {
 			if (receivedData.length() == 1 && receivedData.equals("C")) {
-				cereal.setIsChecked(true);
+				serialTest.setIsChecked(true);
 			}
 		}
 	}
@@ -212,7 +209,7 @@ public class SerialDataListener implements SerialPortDataListener {
 
 			// Check for voltage/current/resistance results.
 			try {
-				measurementDataValue = Double.parseDouble(receivedData.substring(0, receivedData.length() - 1).trim());
+				measurementDataValue = Double.parseDouble(receivedData.substring(3, receivedData.length() - 1).trim());
 			} catch (NumberFormatException e) {
 
 				// If data received from the serial connection was not the right type
