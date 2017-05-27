@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import com.sun.javafx.geom.Line2D;
 
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
 import javafx.scene.chart.LineChart;
@@ -13,7 +12,6 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 
 /**
@@ -27,10 +25,6 @@ import javafx.scene.shape.Polygon;
  * @modifier/@author dayakern
  */
 public class ModifiedLineChart extends LineChart<Number, Number> {
-
-	// To determine whether or not the selected series relates to a high or low boundary area
-	private boolean isHighBoundary = false;
-	private boolean isLowBoundary = false;
 
 	// Stores the boundary mask polygons
 	private ArrayList<Polygon> polygonsLowerBoundary;
@@ -94,26 +88,6 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 		this.setAnimated(false);
 	}
 
-	/**
-	 * Sets the low mask boundary option if it is currently selected or not.
-	 * 
-	 * @param newValue
-	 *            the new value of the isLowBoundary boolean.
-	 */
-	public void setLowBoundarySelected(boolean newValue) {
-		isLowBoundary = newValue;
-	}
-
-	/**
-	 * Sets the high mask boundary option if it is currently selected or not.
-	 * 
-	 * @param newValue
-	 *            the new value of the isHighBoundary boolean.
-	 */
-	public void setHighBoundarySelected(boolean newValue) {
-		isHighBoundary = newValue;
-	}
-
 	@Override
 	protected void layoutPlotChildren() {
 		super.layoutPlotChildren();
@@ -140,9 +114,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 		getPlotChildren().addAll(polygonsHigherBoundary);
 
 		// Check if any of the new mask points are invalid.
-		setupBoundsCheck(polygonsHigherBoundary, isHighBoundary);
-		setupBoundsCheck(polygonsLowerBoundary, isLowBoundary);
-
+		setupBoundsCheck(polygonsHigherBoundary);
+		setupBoundsCheck(polygonsLowerBoundary);
 	}
 
 	/**
@@ -179,7 +152,6 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 
 			// Change area fill
 			setPolygonFill(series.getName(), polygon);
-
 			polygonList.add(polygon);
 		}
 	}
@@ -207,21 +179,13 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	 * 
 	 * @param polygons
 	 *            the list of all the polygons which make up the mask boundary area under/over the line
-	 * @param isSelected
-	 *            whether or not the high or low mask has been selected
 	 */
-	private void setupBoundsCheck(ArrayList<Polygon> polygons, boolean isSelected) {
+	private void setupBoundsCheck(ArrayList<Polygon> polygons) {
 		for (Polygon polygon : polygons) {
-			if (!isSelected) {
 
-				// Disable the selection of any chart space under the polygon
-				polygon.setMouseTransparent(false);
-				setupPolygonListener(polygon);
-			} else {
-
-				// Enable the selection of any chart space under the polygon
-				polygon.setMouseTransparent(true);
-			}
+			// Enable the selection of any chart space under the polygon
+			setupPolygonListener(polygon);
+			polygon.setMouseTransparent(true);
 		}
 	}
 
@@ -232,7 +196,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	 *            a polygon belonging to either the low or high mask boundary areas
 	 */
 	private void setupPolygonListener(Polygon polygon) {
-		polygon.addEventHandler(MouseEvent.MOUSE_CLICKED, dataEvents.addWarning(polygon, isLowBoundary));
+		polygon.addEventHandler(MouseEvent.MOUSE_CLICKED, dataEvents.addWarning(polygon));
 	}
 
 	/**
@@ -283,6 +247,62 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 			}
 		}
 		return errorCounter;
+	}
+
+	/**
+	 * Checks if the given data point overlap anywhere over the high/low mask boundary area.
+	 * 
+	 * @param currentDataPoint
+	 *            current data point of low mask series
+	 * @return false if there was an overlap, true otherwise
+	 */
+	protected boolean maskTestSinglePointOverlapCheck(XYChart.Data<Number, Number> currentDataPoint) {
+		ArrayList<Polygon> maskPolygons = polygonsHigherBoundary;
+
+		// Determine overlap
+		for (Polygon p : maskPolygons) {
+			double currentTempX = this.getXAxis().getDisplayPosition(currentDataPoint.getXValue());
+			double currentTempY = this.getYAxis().getDisplayPosition(currentDataPoint.getYValue());
+
+			if (p.contains(new Point2D(currentTempX, currentTempY))) {
+
+				GuiView.getInstance().illegalMaskPoint();
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Checks if the data points overlap anywhere over the high/low mask boundary area.
+	 * 
+	 * @param currentDataPoint
+	 *            current data point of low mask series
+	 * @param nextDataPoint
+	 *            next data point of low mask series
+	 * @return true if there were no overlaps, false otherwise
+	 */
+	protected boolean maskTestPointsOverlapCheck(XYChart.Data<Number, Number> currentDataPoint,
+			XYChart.Data<Number, Number> nextDataPoint) {
+
+		ArrayList<Polygon> maskPolygons = polygonsHigherBoundary;
+
+		// Determine overlap
+		for (Polygon p : maskPolygons) {
+			double currentTempX = this.getXAxis().getDisplayPosition(currentDataPoint.getXValue());
+			double currentTempY = this.getYAxis().getDisplayPosition(currentDataPoint.getYValue());
+
+			double nextTempX = this.getXAxis().getDisplayPosition(nextDataPoint.getXValue());
+			double nextTempY = this.getYAxis().getDisplayPosition(nextDataPoint.getYValue());
+
+			if ((p.contains(new Point2D(currentTempX, currentTempY))
+					|| (p.contains(new Point2D(nextTempX, nextTempY))))) {
+
+				GuiView.getInstance().illegalMaskPoint();
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**

@@ -60,6 +60,7 @@ public class GuiController implements Initializable {
 	private DataEvents event = new DataEvents();
 	private DataComparator compare = new DataComparator();
 	private ModifyMultimeterMeasurements modifyMeasurements = new ModifyMultimeterMeasurements();
+	private CheckOverlap checkingOverlap = new CheckOverlap();
 	private ISOTimeInterval startTime = null;
 
 	/* Components required for resizing the GUI when maximising or resizing */
@@ -273,7 +274,8 @@ public class GuiController implements Initializable {
 		double newAxisLowerValue = xAxis.getLowerBound() - 1;
 
 		if (newAxisLowerValue >= 0) { // Cannot move further left
-			lineChart.updateMaskBoundaries(newAxisUpperValue, newAxisLowerValue);
+			xAxis.setUpperBound(newAxisUpperValue);
+			xAxis.setLowerBound(newAxisLowerValue);
 		}
 	}
 
@@ -594,7 +596,19 @@ public class GuiController implements Initializable {
 						yDataCoord, startTime.toString(), endTime.toString(), false));
 
 		// Update chart bounds
-		int dataBoundsRange = (int) Math.ceil(ISOTimeInterval.xValue(startTime.getDate(), endTime.getDate()));
+		updateChartXBounds(startTime.getDate(), endTime.getDate());
+	}
+
+	/**
+	 * Updates the chart's upper and lower x-axis bounds.
+	 * 
+	 * @param startTime
+	 *            the first time the data point was recorded
+	 * @param endTime
+	 *            the lastest time the last data point was recorded
+	 */
+	private void updateChartXBounds(LocalDateTime startTime, LocalDateTime endTime) {
+		int dataBoundsRange = (int) Math.ceil(ISOTimeInterval.xValue(startTime, endTime));
 		if (dataBoundsRange > X_UPPER_BOUND) {
 			xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
 			xAxis.setUpperBound(dataBoundsRange);
@@ -736,14 +750,16 @@ public class GuiController implements Initializable {
 		recordTimeLabel.setText(startTime + " / " + endTime);
 	}
 
-	// FIXME
 	/**
-	 * If the units of the y-values change, then reset the axes bounds.
+	 * If the units of the y-values change, then reset the x-axes bounds.
 	 */
 	private void resetXAxis() {
 		if (voltage || current || resistance) {
 			xAxis.setLowerBound(X_LOWER_BOUND);
 			xAxis.setUpperBound(X_UPPER_BOUND);
+
+			xAxis.setMinorTickCount(2);
+			xAxis.setTickUnit(1D);
 		}
 	}
 
@@ -823,9 +839,6 @@ public class GuiController implements Initializable {
 		overlappedIntervals.clear();
 		storedYUnits.clear(); // FIXME
 
-		lineChart.setHighBoundarySelected(false);
-		lineChart.setLowBoundarySelected(false);
-
 		lowCounter = 0;
 		startTime = null;
 
@@ -838,7 +851,13 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void discardAll() {
-		revertMaskTestingComponents();
+		if (notifyDiscardingData()) {
+
+			// Reset the data
+			revertMaskTestingComponents();
+
+			System.out.println("DATA DISCARDED");
+		}
 	}
 
 	/**
@@ -856,12 +875,12 @@ public class GuiController implements Initializable {
 		yAxis.setTickUnit(5D);
 		yAxis.setLabel("Measurements");
 
-		// Also reset the displayed chart coordinate values.
+		// Reset the displayed chart coordinate values.
 		xCoordValues.setText("X: ");
 		yCoordValues.setText("Y: ");
 		recordTimeLabel.setText("");
 
-		// Also reset the displayed plot related details.
+		// Reset the displayed plot related details.
 		xDataCoord.setText("X: ");
 		yDataCoord.setText("Y: ");
 		recordTimeLabel.setText("");
@@ -937,6 +956,9 @@ public class GuiController implements Initializable {
 		if (selectedFile != null) {
 			System.out.println("FILE NAME: " + selectedFile.getPath());
 
+			// Set boundaries if they haven't already been set
+			setBoundariesInStone();
+
 			// Clear data from list if reloaded multiple times
 			readingSeries.getData().clear();
 			storedISOTimes.clear();
@@ -959,8 +981,7 @@ public class GuiController implements Initializable {
 				modifyMeasurements.convertMeasurementYUnit(storedYUnits.get(0), yAxis);
 			}
 
-			// FIXME: make sure auto-ranging is set true/false in right places
-			yAxis.setAutoRanging(true);
+			yAxis.setAutoRanging(true); // FIXME
 
 			// Display data + plot behaviours
 			addDataToSeries(inputDataXValues, inputDataYValues, inputDataIsoTime);
@@ -1076,6 +1097,9 @@ public class GuiController implements Initializable {
 	private void addData(ArrayList<Double> inputDataXValues, ArrayList<Double> inputDataYValues, String checkedIsoTime,
 			ArrayList<String> checkedIsoTimes, boolean isSD) {
 
+		ISOTimeInterval startTime = ISOTimeInterval.parseISOTime(checkedIsoTime);
+		readingSeries.getNode().toFront();
+
 		for (int i = 0; i < inputDataXValues.size(); i++) {
 			double inputXDataValue = inputDataXValues.get(i);
 			double inputYDataValue = inputDataYValues.get(i);
@@ -1092,14 +1116,24 @@ public class GuiController implements Initializable {
 					event.clearDataXYValues(xDataCoord, yDataCoord));
 
 			// Update chart bounds if line chart exceeds them.
-			ISOTimeInterval startTime = ISOTimeInterval.parseISOTime(checkedIsoTime);
 			ISOTimeInterval endTime = ISOTimeInterval.parseISOTime(checkedIsoTimes.get(i));
+			updateChartXBounds(startTime.getDate(), endTime.getDate());
 
-			int dataBoundsRange = (int) Math.ceil(ISOTimeInterval.xValue(startTime.getDate(), endTime.getDate()));
-			if (dataBoundsRange > X_UPPER_BOUND) {
-				xAxis.setLowerBound(dataBoundsRange - X_UPPER_BOUND);
-				xAxis.setUpperBound(dataBoundsRange);
-			}
+			// Update mask upper boundary
+			updateMaskAfterFileLoaded(highMaskBoundarySeries);
+			updateMaskAfterFileLoaded(lowMaskBoundarySeries);
+		}
+	}
+
+	/**
+	 * A private helper function to 'addData' which updates any existing upper/lower mask upper boundary
+	 * 
+	 * @param series
+	 *            high/low mask series
+	 */
+	private void updateMaskAfterFileLoaded(XYChart.Series<Number, Number> series) {
+		if (series.getData().size() > 0) {
+			series.getData().get(series.getData().size() - 1).setXValue(xAxis.getUpperBound());
 		}
 	}
 
@@ -1156,22 +1190,14 @@ public class GuiController implements Initializable {
 
 			// Reset the plotted data
 			resetPlottedData();
-
-			System.out.println("DATA DISCARDED");
-		} else {
-			System.out.println("DATA NOT DISCARDED");
 		}
 	}
 
+	// FIXME
 	/**
 	 * A private helper function to 'discardData' which clears the plot and resets some connected components
 	 */
 	private void resetPlottedData() {
-		// FIXME: not sure if I control these
-		// -------------------------
-		dcRBtn.setSelected(false);
-		isDC = false;
-		// -------------------------
 
 		// Clear all things
 		multimeterDisplay.setText("");
@@ -1188,6 +1214,11 @@ public class GuiController implements Initializable {
 		current = false;
 		continuity = false;
 		logic = false;
+
+		dcRBtn.setSelected(false);
+		isDC = false;
+		voltageBtn.setText("V [AC]");
+		currentBtn.setText("mA [AC]");
 
 		// Reset the plot data
 		readingSeries.getData().clear();
@@ -1302,138 +1333,6 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Checks if overlap between the two mask boundaries has occurred.
-	 * 
-	 * @param newSeries
-	 *            the mask boundary which has not been set yet (low mask boundary)
-	 * @param existingSeries
-	 *            the mask boundary which has already been set (high mask boundary)
-	 * @return true if there is no overlap, false otherwise
-	 */
-	private boolean testMaskOverlap(XYChart.Series<Number, Number> newSeries,
-			XYChart.Series<Number, Number> existingSeries) {
-
-		if (existingSeries.getData().size() > 1 && newSeries.getData().size() > 1) {
-			for (int i = 0; i < existingSeries.getData().size() - 1; i++) {
-				for (int j = 0; j < newSeries.getData().size() - 1; j++) {
-					Data<Number, Number> currentNDataPoint = newSeries.getData().get(j);
-					Data<Number, Number> nextNDataPoint = newSeries.getData().get(j + 1);
-
-					// Create line between current and next new series data points.
-					Line2D checkIntersection = new Line2D();
-					Point2D currentNPoint = new Point2D(currentNDataPoint.getXValue().floatValue(),
-							currentNDataPoint.getYValue().floatValue());
-					Point2D nextNPoint = new Point2D(nextNDataPoint.getXValue().floatValue(),
-							nextNDataPoint.getYValue().floatValue());
-					checkIntersection.setLine(currentNPoint, nextNPoint);
-
-					// Create lines between current and next existing series data points.
-					Data<Number, Number> currentDataPoint = existingSeries.getData().get(i);
-					Data<Number, Number> nextDataPoint = existingSeries.getData().get(i + 1);
-
-					Point2D existingCurrentPoint = new Point2D(currentDataPoint.getXValue().floatValue(),
-							currentDataPoint.getYValue().floatValue());
-					Point2D existingNextPoint = new Point2D(nextDataPoint.getXValue().floatValue(),
-							nextDataPoint.getYValue().floatValue());
-
-					// Overlaps
-					if (checkIntersection.intersectsLine(new Line2D(existingCurrentPoint, existingNextPoint))) {
-
-						GuiView.getInstance().illegalMaskPoint();
-						return false;
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	// FIXME
-	/**
-	 * Checks if any points of the given mask overlap with the existing mask.
-	 * 
-	 * @param newSeries
-	 *            the mask series with points to test collision
-	 * @param existingSeries
-	 *            the existing mask series
-	 * @return true if there is not collision, false otherwise
-	 */
-	private boolean testIfPointOverlappedMask(XYChart.Series<Number, Number> newSeries,
-			XYChart.Series<Number, Number> existingSeries) {
-
-		System.out.println("-------------------------");
-		if (existingSeries.getData().size() > 1 && newSeries.getData().size() > 1) {
-			for (int i = 0; i < existingSeries.getData().size() - 1; i++) {
-				for (int j = 0; j < newSeries.getData().size(); j++) {
-					Data<Number, Number> currentNDataPoint = newSeries.getData().get(j);
-
-					// Get current point of 'newSeries'
-					Point2D currentNPoint = new Point2D(currentNDataPoint.getXValue().floatValue(),
-							currentNDataPoint.getYValue().floatValue());
-
-					// Create lines between current and next existing series data points.
-					Data<Number, Number> currentDataPoint = existingSeries.getData().get(i);
-					Data<Number, Number> nextDataPoint = existingSeries.getData().get(i + 1);
-
-					Point2D existingCurrentPoint = new Point2D(currentDataPoint.getXValue().floatValue(),
-							currentDataPoint.getYValue().floatValue());
-					Point2D existingNextPoint = new Point2D(nextDataPoint.getXValue().floatValue(),
-							nextDataPoint.getYValue().floatValue());
-
-					// Determine if the new series point overlaps onto the exisiting series line.
-					if (!determineCollinearness(currentNPoint, existingCurrentPoint, existingNextPoint)) {
-
-						GuiView.getInstance().illegalMaskPoint();
-
-						return false;
-					}
-				}
-			}
-		} else if (newSeries.getData().size() == 1) {
-			System.out.println("YO;");
-			Point2D firstPoint = new Point2D(newSeries.getData().get(0).getXValue().floatValue(),
-					newSeries.getData().get(0).getYValue().floatValue());
-			return checkSinglePointIntersection(firstPoint);
-		}
-		System.out.println("-------------------------");
-		return true;
-	}
-
-	/**
-	 * A private function for 'testOverlapPoint' which determines if the moved data point collides with any line
-	 * segments of the existing series.
-	 * 
-	 * @param newPoint
-	 *            the point selected and moved.
-	 * @param existingPointStart
-	 *            the points which are start of the line segment
-	 * @param existingPointEnd
-	 *            the points which are end of the line segment
-	 * @return true if there is no collision, false otherwise
-	 */
-	private boolean determineCollinearness(Point2D newPoint, Point2D existingPointStart, Point2D existingPointEnd) {
-
-		// Took collinear formula from: http://www.math-for-all-grades.com/Collinear-points.html
-		float a = existingPointStart.x - newPoint.x;
-		float b = newPoint.x - existingPointEnd.x;
-		float c = existingPointStart.y - newPoint.y;
-		float d = newPoint.y - existingPointEnd.y;
-
-		float ad = a * d;
-		float bc = b * c;
-
-		float gradient = (1F / 2F) * (ad - bc);
-
-		System.out.println(gradient);
-		// The point is more or less collinear [taking into account float decimals]
-		if (gradient < 1 && gradient > -1) {
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
 	 * When the data-point is moved by the mouse, make sure the user cannot drag it into the other mask area.
 	 * 
 	 * @param dataPoint
@@ -1456,21 +1355,25 @@ public class GuiController implements Initializable {
 					// Change cursor
 					dataPoint.getNode().setCursor(Cursor.HAND);
 
-					// Change position to match the mouse coords.
+					// Change position to match the mouse coords
 					dataPoint.setXValue(getMouseChartCoords(event, true));
 					dataPoint.setYValue(getMouseChartCoords(event, false));
 
-					// Testing if moved point overlapped onto the line
-					if (!testIfPointOverlappedMask(lowMaskBoundarySeries, highMaskBoundarySeries)) {
-						dataPoint.setXValue(originX);
-						dataPoint.setYValue(originY);
-					}
+					// Only need to check for low boundary
+					if (series.getName().contains("low")) {
 
-					// Testing if any line segments overlap as a result of the moved data point
-					if (!testMaskOverlap(lowMaskBoundarySeries, highMaskBoundarySeries)) {
+						// Make sure first point isn't invalid
+						if (lowMaskBoundarySeries.getData().size() == 1
+								&& !lineChart.maskTestSinglePointOverlapCheck(lowMaskBoundarySeries.getData().get(0))) {
+							dataPoint.setXValue(originX);
+							dataPoint.setYValue(originY);
+						}
 
-						dataPoint.setXValue(originX);
-						dataPoint.setYValue(originY);
+						// Testing if any line segments overlap as a result of the moved data point
+						if (!checkingOverlap.testMaskOverlap(lowMaskBoundarySeries, highMaskBoundarySeries)) {
+							dataPoint.setXValue(originX);
+							dataPoint.setYValue(originY);
+						}
 					}
 
 					// Update the x/y coordinate value display
@@ -1527,8 +1430,9 @@ public class GuiController implements Initializable {
 						setUpBoundaries(highMaskBoundarySeries, coordX, coordY);
 					} else {// Set up low boundary
 
-						// Check that no overlap before adding new points
-						if (checkLowHighMaskOverlap(coordX, coordY, lowCounter)) {
+						// Check that there's no overlap before adding new points
+						if (checkingOverlap.checkLowHighMaskOverlap(lowMaskBoundarySeries, highMaskBoundarySeries,
+								coordX, coordY, lowCounter)) {
 
 							setUpBoundaries(lowMaskBoundarySeries, coordX, coordY);
 
@@ -1539,166 +1443,6 @@ public class GuiController implements Initializable {
 			}
 		});
 
-	}
-
-	/**
-	 * Determines if the mask point to be added to the lower mask boundary will not overlap over areas of the high mask
-	 * boundary area.
-	 * 
-	 * @param coordX
-	 *            the x-value of the point to be added.
-	 * @param coordY
-	 *            the v-value of the point to be added.
-	 * @param counter
-	 *            keeps track of where the new point is (before/after existing point)
-	 * @return true if there is no overlap. false otherwise.
-	 */
-	private boolean checkLowHighMaskOverlap(Number coordX, Number coordY, int counter) {
-
-		// Values of new points
-		float tempX = coordX.floatValue();
-		float tempY = coordY.floatValue();
-		Point2D newPoint = new Point2D(tempX, tempY);
-
-		if (lowMaskBoundarySeries.getData().size() > 0) {
-			ArrayList<Float> existingValues = assignExistingXValue(lowMaskBoundarySeries, tempX, counter,
-					lowMaskBoundarySeries.getData().get(counter - 1).getXValue().floatValue());
-
-			float existingX = existingValues.get(0);
-			float existingY = existingValues.get(1);
-
-			Point2D existingPoint = new Point2D(existingX, existingY);
-
-			// System.out.println(highMaskBoundarySeries.getData().toString());
-
-			return checkIntersection(existingPoint, newPoint);
-		} else if (lowMaskBoundarySeries.getData().size() == 0) {
-			System.out.println("YO;");
-			return checkSinglePointIntersection(newPoint);
-		}
-
-		return true;
-	}
-
-	/**
-	 * A private helper function for 'checkLowHighMaskOverlap' which determines if the first low mask series placed on
-	 * the chart overlaps with any of the existing mask series (high)
-	 * 
-	 * @param newPoint
-	 *            the point to be added
-	 * @return true if there is no overlap, false otherwise
-	 */
-	private boolean checkSinglePointIntersection(Point2D newPoint) {
-		for (int i = 0; i < highMaskBoundarySeries.getData().size() - 1; i++) {
-
-			// Points of the high mask area
-			Data<Number, Number> currentDataPoint = highMaskBoundarySeries.getData().get(i);
-			Data<Number, Number> nextDataPoint = highMaskBoundarySeries.getData().get(i + 1);
-
-			Point2D currentPoint = new Point2D(currentDataPoint.getXValue().floatValue(),
-					currentDataPoint.getYValue().floatValue());
-			Point2D nextPoint = new Point2D(nextDataPoint.getXValue().floatValue(),
-					nextDataPoint.getYValue().floatValue());
-
-			// Check if point overlaps
-			if (!determineCollinearness(newPoint, currentPoint, nextPoint)) {
-				GuiView.getInstance().illegalMaskPoint();
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * A private helper function to 'checkLowHighMaskOverlap' which determines if the point to be added would cause an
-	 * overlap if added.
-	 * 
-	 * @param existingPoint
-	 *            the start point of a to-be-line segment of the low mask series
-	 * @param newPoint
-	 *            the end point of a to-be-line segment of the low mask series
-	 * @return true if there is no overlap, false otherwise.
-	 */
-	private boolean checkIntersection(Point2D existingPoint, Point2D newPoint) {
-
-		// Create line to test if new point's line will overlap existing
-		Line2D lowBoundaryLineSegment = new Line2D();
-		lowBoundaryLineSegment.setLine(existingPoint, newPoint);
-
-		for (int i = 0; i < highMaskBoundarySeries.getData().size() - 1; i++) {
-
-			// Points of the high mask area
-			Data<Number, Number> currentDataPoint = highMaskBoundarySeries.getData().get(i);
-			Data<Number, Number> nextDataPoint = highMaskBoundarySeries.getData().get(i + 1);
-
-			Point2D currentPoint = new Point2D(currentDataPoint.getXValue().floatValue(),
-					currentDataPoint.getYValue().floatValue());
-			Point2D nextPoint = new Point2D(nextDataPoint.getXValue().floatValue(),
-					nextDataPoint.getYValue().floatValue());
-
-			// Check if point overlaps
-			if (!determineCollinearness(newPoint, currentPoint, nextPoint)) {
-				System.out.println("ILLEAGE MOVE");
-				GuiView.getInstance().illegalMaskPoint();
-				return false;
-			}
-
-			// Check if line segment overlaps
-			Line2D test = new Line2D(currentPoint, nextPoint);
-			if (lowBoundaryLineSegment.intersectsLine(test)) {
-
-				// Warning message
-				GuiView.getInstance().illegalMaskPoint();
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * A private helper function to 'checkLowHighMaskOverlap' which determines which direction the line will be in
-	 * (right to left, or left to right).
-	 * 
-	 * @param series
-	 *            the low boundary series
-	 * @param tempX
-	 *            the x-value of the point to be added
-	 * @param counter
-	 *            where in the low boundary series the point is
-	 * @param compareX
-	 *            the x-value of an existing point
-	 * @return a list that has the x and y value that needs to be compared
-	 */
-	private ArrayList<Float> assignExistingXValue(XYChart.Series<Number, Number> series, float tempX, int counter,
-			float compareX) {
-		ArrayList<Float> tempList = new ArrayList<>();
-
-		for (int i = 0; i < series.getData().size() - 1; i++) {
-			float currentX = series.getData().get(i).getXValue().floatValue();
-			float currentY = series.getData().get(i).getYValue().floatValue();
-			float nextX = series.getData().get(i + 1).getXValue().floatValue();
-
-			// Add point between two points
-			if ((tempX > currentX) && (tempX < nextX)) {
-				System.out.println("in between: " + (i + 1) + ", " + (i + 2));
-				tempList.add(currentX);
-				tempList.add(currentY);
-				return tempList;
-			}
-		}
-
-		// Add point to the direct left (start of the list)
-		if (tempX < compareX) {
-			tempList.add(series.getData().get(0).getXValue().floatValue());
-			tempList.add(series.getData().get(0).getYValue().floatValue());
-		} else { // Add point to the direct right (end of the list)
-			tempList.add(series.getData().get(counter - 1).getXValue().floatValue());
-			tempList.add(series.getData().get(counter - 1).getYValue().floatValue());
-		}
-
-		return tempList;
 	}
 
 	/**
@@ -1880,13 +1624,19 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void setMaskBoundary() {
+		setBoundariesInStone();
+	}
+
+	/**
+	 * Locks in the boundary mask areas, orders and adds boundary points.
+	 */
+	private void setBoundariesInStone() {
 		if (isHighBtnSelected && !isLowBtnSelected && (highMaskBoundarySeries.getData().size() > 0)) {
 			if (orderAndAddBoundaryPoints(highMaskBoundarySeries, lowMaskBoundarySeries)) {
 				event.removeAllListeners(highMaskBoundarySeries);
 
 				setHighBtn.setDisable(true);
 				isHighBtnSelected = false;
-				lineChart.setHighBoundarySelected(false);
 				setLowBtn.setDisable(false);
 			}
 
@@ -1897,7 +1647,6 @@ public class GuiController implements Initializable {
 
 				setLowBtn.setDisable(true);
 				isLowBtnSelected = false;
-				lineChart.setLowBoundarySelected(false);
 			} else {
 				System.out.println("NOT YET");
 			}
@@ -1929,9 +1678,6 @@ public class GuiController implements Initializable {
 		isHighBtnSelected = true;
 		isLowBtnSelected = false;
 
-		lineChart.setLowBoundarySelected(false);
-		lineChart.setHighBoundarySelected(true);
-
 		System.out.println("high was selected");
 	}
 
@@ -1942,9 +1688,6 @@ public class GuiController implements Initializable {
 	private void setLowBoundary() {
 		isHighBtnSelected = false;
 		isLowBtnSelected = true;
-
-		lineChart.setLowBoundarySelected(true);
-		lineChart.setHighBoundarySelected(false);
 
 		System.out.println("low was selected");
 	}
@@ -2168,6 +1911,7 @@ public class GuiController implements Initializable {
 
 			// Check if there is a clash of units.
 			if (determineUnitClash(selectedFile)) {
+
 				// Display mask data points.
 				addMaskDataPoints(selectedFile);
 
@@ -2268,8 +2012,8 @@ public class GuiController implements Initializable {
 		tempHighMaskBoundarySeries.getData().sort(compare.sortChart());
 		tempLowMaskBoundarySeries.getData().sort(compare.sortChart());
 
-		// Check if overlap occurs
-		if (testMaskOverlap(tempLowMaskBoundarySeries, tempHighMaskBoundarySeries)) {
+		// Check if mask overlap occurs
+		if (checkingOverlap.testMaskOverlap(tempLowMaskBoundarySeries, tempHighMaskBoundarySeries)) {
 			highMaskBoundarySeries.getData().addAll(tempHighMaskBoundarySeries.getData());
 			lowMaskBoundarySeries.getData().addAll(tempLowMaskBoundarySeries.getData());
 		}
