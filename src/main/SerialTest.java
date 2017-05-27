@@ -3,6 +3,7 @@ package main;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fazecast.jSerialComm.SerialPort;
 
@@ -11,45 +12,63 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 /**
- *  class which handles serial comms. Note this code is modified off TP1 code which my team member
- * originally wrote.
- */
-/**
- * The SerialFramework class handles serial communications between software/hardware/firmware. NOTE: This code is
- * modified off TP1 code which my team member originally wrote.
+ * The SerialTest class handles serial communications between software/hardware/firmware. NOTE: The concept of binding
+ * to the port, closing the ports and refreshing the ports is modified off TP1 code which my team member originally
+ * wrote.
  * 
- * @author dayakern
+ * @modifier/@author dayakern
  *
  */
 public class SerialTest {
 
-	private static ObservableList<String> portNames = FXCollections.observableArrayList();
+	private ObservableList<String> portNames = FXCollections.observableArrayList();
+	private SerialPort openSerialPort = null;
+	private InputStream readFromSerial = null;
+	private PrintWriter writtenToSerial = null;
 
-	private static SerialPort openSerialPort = null;
-	// private static BufferedReader readFromSerial = null;
-	private static InputStream readFromSerial = null;
-	private static PrintWriter writeToSerial = null;
+	// A flag for two-way connection
+	private boolean isChecked = false;
 
-	private static boolean isChecked = false; // Two-way connection has been checked
+	// Listens for available data
+	private SerialDataListener dataListener;
 
-	private static SerialDataListener listener = new SerialDataListener();
+	public SerialTest(AtomicBoolean quit) {
+		this.dataListener = new SerialDataListener(quit, this);
+	}
 
-	public static InputStream getReadFromSerial() {
+	/**
+	 * Gets the 'readFromSerial' input stream.
+	 *
+	 * @return the input stream the data will be flowing into
+	 */
+	public InputStream getReadFromSerial() {
 		return readFromSerial;
 	}
 
-	public static void setReadFromSerial(InputStream receivedValue) {
-		readFromSerial = receivedValue;
+	/**
+	 * Sets the 'readFromSerial' to a new value.
+	 *
+	 * @param newValue
+	 *            the value which the input stream will have
+	 */
+	public void setReadFromSerial(InputStream newValue) {
+		readFromSerial = newValue;
 	}
 
-	public static void setIsChecked(boolean newValue) {
+	/**
+	 * Sets the value 'isChecked' to a new value.
+	 * 
+	 * @param newValue
+	 *            whether or not there's a two-way connection ( true if there's a two-way connection, false otherwise)
+	 */
+	public void setIsChecked(boolean newValue) {
 		isChecked = newValue;
 	}
 
 	/**
 	 * Closes open serial port, if it is still open.
 	 */
-	public static void closeOpenPort() {
+	public void closeOpenPort() {
 		isChecked = false;
 
 		if (!Platform.isFxApplicationThread()) {
@@ -62,17 +81,18 @@ public class SerialTest {
 			return;
 		}
 
+		// Close open port
 		if (openSerialPort != null) {
 			openSerialPort.closePort();
 			System.out.println("...closing openSerialport");
 			openSerialPort = null;
 		}
 
-		// Close buffered reader
+		// Close input stream reader
 		if (readFromSerial != null) {
 			try {
 				readFromSerial.close();
-				System.out.println("...losing readFromSerialReader");
+				System.out.println("...closing readFromSerialReader");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -81,20 +101,19 @@ public class SerialTest {
 		}
 
 		// Close printer writer
-		if (writeToSerial != null) {
-			writeToSerial.close();
+		if (writtenToSerial != null) {
+			writtenToSerial.close();
 			System.out.println("...closing writeToSerial");
 
-			writeToSerial = null;
+			writtenToSerial = null;
 		}
 	}
 
-	// FIXME: TEST FOR TWO-WAY
 	/**
 	 * Handles the changing of the serial port selection. If there are ports (with valid names) it binds the serial port
 	 * (refreshes the port list if it didn't bind); otherwise is closes the open port.
 	 */
-	public static void selectPort() {
+	public void selectPort() {
 		System.out.println("Changed to this port: " + GuiController.instance.portsAvailable.getValue());
 
 		SerialPort[] ports = SerialPort.getCommPorts();
@@ -106,42 +125,46 @@ public class SerialTest {
 				if (serialPort.getDescriptivePortName().equals(GuiController.instance.portsAvailable.getValue())) {
 					System.out.println("Opening Serial Port " + serialPort.getSystemPortName() + "...");
 
-					// Check if the port was opened
+					// Check if the port was opened and if it binded to the listener
 					if (checkOpenPort(serialPort)) {
 						System.out.println("Success.");
-
-						if (checkConnection()) { // CHECK THERE'S DATA + TWO-WAY CONNECTION
-							GuiController.instance.setConnectedModeStatus(false); // Enable
-						} else {
-							System.out.println("Failed to receive data from port");
-							GuiController.instance.setConnectedModeStatus(true); // Disable
-						}
+						GuiController.instance.setConnectedModeComponents(false);
+						GuiController.instance.setConnectedMultimeterComponents(false); 
+						
+//						if (checkConnection()) { // Check if there's a two-way connection
+//							GuiController.instance.setConnectedMultimeterComponents(false); // Enable Components
+//						} else {
+//							System.out.println("Failed to receive data from port");
+//							GuiController.instance.setConnectedMultimeterComponents(true); // Disable Components
+//						}
 
 						return;
 
 					} else {
 						System.out.println("Failed to open port.");
-						GuiController.instance.setConnectedModeStatus(true); // Disable
+						GuiController.instance.setConnectedMultimeterComponents(true); // Disable Components
 						return;
 					}
 				}
 			}
 
-			refreshSelectablePortsList(); // PROBATION
+			refreshSelectablePortsList();
 		}
 	}
 
 	/**
-	 * A private helper function to 'selectPort', which opens the given port.
+	 * A private helper function to 'selectPort' which opens the given port and adds a data listener to the port.
 	 * 
 	 * @param serialPort
-	 *            the port that needs to be opened
-	 * @return whether or not the serial port was opened successfully (true it did, false it didn't)
+	 *            the port that will be opened
+	 * @return whether or not the serial port was opened and had a listener binded to it successfully (true it did,
+	 *         false it didn't)
 	 */
-	private static boolean checkOpenPort(SerialPort serialPort) {
+	private boolean checkOpenPort(SerialPort serialPort) {
 		closeOpenPort(); // Close any previously opened ports
 
 		if (!(serialPort.openPort() && bindListen(serialPort))) {
+
 			return false; // Port wasn't successful at opening and adding a listener
 		}
 
@@ -150,14 +173,21 @@ public class SerialTest {
 		return true;
 	}
 
-	private static boolean bindListen(SerialPort serialPort) {
+	/**
+	 * A private helper function to 'checkOpenPort' which binds a listener to the serial port.
+	 * 
+	 * @param serialPort
+	 *            the port that needs to be binded to
+	 * @return whether or not the serial port was binded to successfully (true if it did, false if if didn't)
+	 */
+	private boolean bindListen(SerialPort serialPort) {
 		System.out.println("Binding to Serial Port " + serialPort.getSystemPortName() + "...");
 
 		serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-		// serialPort.setBaudRate(9600);
+		serialPort.setBaudRate(9600);
 
-		// Add the data listener to the data. [also loads in the data]
-		if (!serialPort.addDataListener(listener)) {
+		// Add the data listener to the data (also loads in the data)
+		if (!serialPort.addDataListener(dataListener)) {
 			serialPort.closePort();
 			return false;
 		}
@@ -166,39 +196,43 @@ public class SerialTest {
 	}
 
 	/**
-	 * Writes out specified code to remotely control the multimeter
+	 * Writes out specified code to remotely control the multimeter.
 	 * 
 	 * @param output
 	 *            the code to write out
 	 */
-	public static void writeCode(String output) {
-		// System.out.println("output: " + output);
-
+	public void writeCode(String output) {
 		try {
+
 			// Write multimeter code over the open port
-			writeToSerial = new PrintWriter(openSerialPort.getOutputStream(), true);
-			writeToSerial.println(output);
+			writtenToSerial = new PrintWriter(openSerialPort.getOutputStream(), true);
+			writtenToSerial.println(output);
+
 			System.out.println("....writing to port");
-			writeToSerial.close();
+			writtenToSerial.close();
 		} catch (NullPointerException e) {
 			System.err.println("Port Cannot Be Written To");
 		}
 	}
 
-	private static boolean checkConnection() {
+	/**
+	 * A private helper function for 'selectPort' which determines if there is a two-way connection (can write).
+	 * 
+	 * @return true if there is a two-way connection, false otherwise
+	 */
+	private boolean checkConnection() {
 		System.out.println("...Checking connection");
 
-		long initialTime = System.nanoTime(); // current time
+		long initialTime = System.nanoTime(); // Current time
 		long time = 0;
 		double timeOut = 5e+8; // 1/2 a second
-		writeCode("|C|");
 
-		// FIXME: THERE STILL ARE DELAYS HERE
+		writeCode(MultimeterCodes.TWO_WAY_CHECK.getCode());
+
 		while (time < timeOut) {
 			time = System.nanoTime() - initialTime;
 		}
 
-		// need to check value
 		if (isChecked) {
 			System.out.println("CONNECTION");
 			return true;
@@ -212,7 +246,7 @@ public class SerialTest {
 	/**
 	 * Refreshes the existing ports list to include any new ports detected, as well as closes any open ports.
 	 */
-	public static void refreshSelectablePortsList() {
+	public void refreshSelectablePortsList() {
 		if (!Platform.isFxApplicationThread()) {
 			Platform.runLater(new Runnable() {
 				@Override
@@ -222,10 +256,9 @@ public class SerialTest {
 			});
 			return;
 		}
-
 		closeOpenPort(); // Close any open ports
-		GuiController.instance.setConnectedModeStatus(true); // Disable connected mode components
-
+		GuiController.instance.setConnectedMultimeterComponents(true); // Disable connected mode components
+		GuiController.instance.setConnectedModeComponents(true);
 		portNames.clear();
 
 		SerialPort[] ports = SerialPort.getCommPorts();

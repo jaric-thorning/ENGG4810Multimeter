@@ -25,7 +25,6 @@ public class DataEvents {
 	public DataEvents() {
 	}
 
-	// TODO: ADD FOR CONNECTED MODE
 	/**
 	 * An event handler for displaying the x/y values of the plotted data point when the mouse enters the data point
 	 * 
@@ -134,7 +133,6 @@ public class DataEvents {
 				if (event.getButton() == MouseButton.SECONDARY) {
 					series.getData().remove(dataPoint);
 
-					// FIXME: find out what this actually does
 					// Modify the 'book-mark' of the low mask series
 					if (series.getName().contains("low")) {
 						GuiController.instance.lowCounter--;
@@ -168,22 +166,17 @@ public class DataEvents {
 	 * 
 	 * @param polygon
 	 *            the polygon that was clicked
-	 * @param isLowBoundary
-	 *            whether or not the mask area in question is the low mask boundary area
 	 * @return the event handler
 	 */
-	protected EventHandler<MouseEvent> addWarning(Polygon polygon, boolean isLowBoundary) {
+	protected EventHandler<MouseEvent> addWarning(Polygon polygon) {
 		EventHandler<MouseEvent> onMouseClick = new EventHandler<MouseEvent>() {
 
 			@Override
 			public void handle(MouseEvent event) {
-				if (isLowBoundary) { // Only error under specific conditions
-
-					// Display warning
-					GuiView.getInstance().illegalMaskPoint();
-				}
+				System.err.println("MM: ");
+				// Display warning
+				GuiView.getInstance().illegalMaskPoint();
 			}
-
 		};
 		return onMouseClick;
 	}

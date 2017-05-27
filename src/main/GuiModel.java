@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import javafx.scene.chart.XYChart;
 
 /**
- * The GuiModel class represents the Model of the Model-View-Controller pattern 
+ * The GuiModel class represents the Model of the Model-View-Controller pattern
+ * 
  * @author dayakern
  *
  */
@@ -83,9 +84,14 @@ public class GuiModel {
 	/**
 	 * Saves data to a given file.
 	 * 
-	 * @precondition All data samples are the same length & yUnit has values.
 	 * @param bufferedWriter
 	 *            the buffered writer needed to write data to the file
+	 * @param series
+	 *            the x/y data to save
+	 * @param yUnits
+	 *            the y-value units
+	 * @param isoTimes
+	 *            the times each data point was displayed
 	 * @throws IOException
 	 *             occurs when there is a problem with the buffered writer
 	 */
@@ -189,12 +195,11 @@ public class GuiModel {
 
 	/**
 	 * Saves mask data to a given file.
-	 * 
-	 * @precondition All data samples are the same length
-	 * @param bufferedWriter
-	 *            the buffered writer needed to write data to the file
-	 * @throws IOException
-	 *             occurs when there is a problem with the buffered writer
+	 * @param bufferedWriter the buffered writer needed to write data to the file
+	 * @param series the mask boundary area which holds the x/y data to save
+	 * @param yUnit the y-value units
+	 * @param seriesName name of mask boundary area (to determine which points belong to which mask)
+	 * @throws IOException occurs when there is a problem with the buffered writer
 	 */
 	public void saveMaskData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series, String yUnit,
 			String seriesName) throws IOException {

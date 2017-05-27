@@ -17,6 +17,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
+import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -36,13 +37,14 @@ public class GuiView extends Application {
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
 	private static final Double STAGE_WIDTH = 1097D;
-	private static final Double STAGE_HEIGHT = 625D;//602D;
+	private static final Double STAGE_HEIGHT = 625D;
 
-	private String fxmlFileName = "/redesigned_gui.fxml"; // "/gui_test.fxml";
+	private String fxmlFileName = "/redesigned_gui.fxml";
 	private String GuiTitle = "Digital Multimeter Mark 9001";
 	private Stage stage = new Stage();
 
 	private static GuiView instance;
+	private GuiController controller;
 
 	public GuiView() {
 		instance = this;
@@ -71,8 +73,7 @@ public class GuiView extends Application {
 	public void stop() throws Exception {
 
 		// Close any open ports
-		// SerialFramework.closeOpenPort();
-		SerialTest.closeOpenPort();
+		controller.quit();
 
 		// Shuts down any threads
 		super.stop();
@@ -98,11 +99,11 @@ public class GuiView extends Application {
 		primaryStage.setMinHeight(STAGE_HEIGHT);
 
 		// Get access to the GUI controller
-		GuiController controller = loader.getController();
+		controller = loader.getController();
 
 		// Add width/height listeners
-		sceneWidthChange(stage, scene, controller);
-		sceneHeightChange(stage, scene, controller);
+		sceneWidthChange(scene, controller);
+		sceneHeightChange(scene, controller);
 
 		// Set up line chart styling & behaviour
 		setupLineChart(controller.xAxis, controller.yAxis, controller);
@@ -111,7 +112,7 @@ public class GuiView extends Application {
 		// Display coordinates on the screen
 		displayPlotCoordinates(controller);
 
-		// Default to disconnected mode tab
+		// Default to disconnected mode tab & set up tab changes
 		controller.modeOptions.getSelectionModel().select(1);
 		setupTabChange(controller);
 
@@ -123,26 +124,33 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * Determines which tab is the newly selected tab.
+	 * Determines what happens to the current tab's components when the other tab is selected.
 	 * 
 	 * @param controller
 	 *            the GUI Controller with components to access/modify
 	 */
 	private void setupTabChange(GuiController controller) {
-		controller.modeOptions.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+
+		controller.modeOptions.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
 
 			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				if (newValue.intValue() == 0) {
-					// FIXME: have the whole things about do you wanna switch?
-					 System.out.println("CONNECTED MODE INITIATED");
-					 System.out.println("//-------------------//");
-					 controller.yAxis.setAutoRanging(true);
-				} else {
-					// FIXME: have the whole things about do you wanna switch?
-					 System.out.println("DISCONNECTED MODE INITIATED");
-					 System.out.println("//-------------------//");
-					 controller.yAxis.setAutoRanging(false);
+			public void changed(ObservableValue<? extends Tab> observable, Tab otherTab, Tab newlySelectedTab) {
+				if (newlySelectedTab.equals(controller.connectedTab)) {
+					System.out.println("LEAVING DISCON"); // TODO:REMOVE
+
+					controller.yAxis.setAutoRanging(true);
+
+					// Reset disconnected components
+					controller.revertMaskTestingComponents();
+				}
+
+				if (newlySelectedTab.equals(controller.disconnectedTab)) {
+					System.out.println("LEAVING CONN"); // TODO:REMOVE
+
+					controller.yAxis.setAutoRanging(false);
+
+					// Reset connected components
+					controller.revertConnectedComponents();
 				}
 			}
 		});
@@ -200,7 +208,7 @@ public class GuiView extends Application {
 		controller.chartBackground = controller.lineChart.lookup(".chart-plot-background");
 		controller.chartBackground.setCursor(Cursor.CROSSHAIR);
 
-		controller.createHighLowBoundaryAreas(controller.chartBackground);
+		controller.createMaskAreas(controller.chartBackground);
 	}
 
 	/**
@@ -215,7 +223,7 @@ public class GuiView extends Application {
 	private void setupAxes(NumberAxis xAxis, NumberAxis yAxis) {
 		xAxis.setLabel("Time (seconds)");
 		xAxis.setLowerBound(0D);
-		xAxis.setUpperBound(10D);
+		xAxis.setUpperBound(20D);
 		xAxis.setForceZeroInRange(false);
 		xAxis.setAutoRanging(false);
 		xAxis.setAnimated(false);
@@ -225,7 +233,7 @@ public class GuiView extends Application {
 
 		yAxis.setLabel("Measurements");
 		yAxis.setUpperBound(50D);
-		yAxis.setLowerBound(-10D);
+		yAxis.setLowerBound(-20D);
 		yAxis.setForceZeroInRange(false);
 		yAxis.setAutoRanging(true);
 		yAxis.setAnimated(false);
@@ -235,58 +243,53 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * A private helper function to 'start' which adds a listener to the width property of the scene, and to some of the
-	 * contained elements.
+	 * Adds a listener to the width property of the scene, and to some of the contained elements.
 	 * 
 	 * @param scene
 	 *            the scene which has the width listener attached to it
 	 * @param controller
 	 *            the GUI Controller with components to access/modify
 	 */
-	private void sceneWidthChange(Stage stage, Scene scene, GuiController controller) {
+	private void sceneWidthChange(Scene scene, GuiController controller) {
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
 
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneWidth,
 					Number newSceneWidth) {
-				 double rightAnchorWidth = ((double) newSceneWidth) - 335D;
-				//
-				 controller.appPane.setMinWidth((double) newSceneWidth);
-				 controller.rightAnchor.setMinWidth(rightAnchorWidth);
-				 controller.graphLabelAnchor.setMinWidth(rightAnchorWidth);
-			}
+				double rightAnchorWidth = ((double) newSceneWidth) - 335D;
 
+				controller.appPane.setMinWidth((double) newSceneWidth);
+				controller.rightAnchor.setMinWidth(rightAnchorWidth);
+				controller.graphLabelAnchor.setMinWidth(rightAnchorWidth);
+			}
 		});
 	}
 
 	/**
-	 * A private helper function to 'start' which adds a listener to the height property of the scene, and to some of
-	 * the contained elements.
+	 * Adds a listener to the height property of the scene, and to some of the contained elements.
 	 * 
 	 * @param scene
 	 *            the scene which has the height listener attached to it
 	 * @param controller
 	 *            the GUI Controller with components to access/modify
 	 */
-	private void sceneHeightChange(Stage stage, Scene scene, GuiController controller) {
+	private void sceneHeightChange(Scene scene, GuiController controller) {
 		scene.heightProperty().addListener(new ChangeListener<Number>() {
 
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldSceneHeight,
 					Number newSceneHeight) {
-				// double anchorPaneHeight = ((double) newSceneHeight) - 8D;
-				//
-				 controller.appPane.setMinHeight((double) newSceneHeight);
-				 controller.rightAnchor.setMinHeight(((double) newSceneHeight) - 45);
-				 controller.modeOptions.setMinHeight(((double) newSceneHeight) - 10);
-			}
 
+				controller.appPane.setMinHeight((double) newSceneHeight);
+				controller.rightAnchor.setMinHeight(((double) newSceneHeight) - 45);
+				controller.modeOptions.setMinHeight(((double) newSceneHeight) - 10);
+			}
 		});
 	}
 
 	/**
-	 * A helper function, to display a pop-up dialog box to the user (i.e. when they are about to exit connected or
-	 * disconnected mode or save a file). Dialog box structure modified from
+	 * Displays customised pop-up dialog box to the user (i.e. when they are about to exit connected or disconnected
+	 * mode or save a file). Dialog box structure modified from TP1 code, which was modified from:
 	 * http://code.makery.ch/blog/javafx-dialogs-official/.
 	 * 
 	 * @param title
@@ -296,7 +299,7 @@ public class GuiView extends Application {
 	 * @param errorType
 	 *            if the message should be a warning or error type
 	 * @param alertType
-	 *            the actual type of the alert box, (i.e. only displaying ok for an error alert)
+	 *            the actual type of the alert box, (i.e. only displaying OK for an error alert)
 	 * @return the status of the User's selection
 	 */
 	public Alert alertUser(String title, String context, String errorType, AlertType alertType) {

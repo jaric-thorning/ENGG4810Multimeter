@@ -16,7 +16,7 @@
    <children>
       <TabPane id="options" fx:id="modeOptions" layoutX="5.0" layoutY="5.0" prefHeight="592.0" prefWidth="319.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Connected">
+          <Tab fx:id="connectedTab" text="Connected">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -49,7 +49,7 @@
                                     <Insets bottom="5.0" left="10.0" top="35.0" />
                                  </GridPane.margin>
                               </ComboBox>
-                              <Label id="anchorPaneHeadings" fx:id="dataSource11" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Connection Options" GridPane.valignment="TOP">
+                              <Label id="anchorPaneHeadings" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Connection Options" GridPane.valignment="TOP">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
@@ -62,22 +62,22 @@
                                     <Insets left="210.0" top="35.0" />
                                  </GridPane.margin>
                               </Button>
-                              <ComboBox fx:id="sampleRate" disable="true" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectSampleRate" prefHeight="28.0" prefWidth="190.0" promptText="Sample Rate" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                              <ComboBox fx:id="sampleRate" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectSampleRate" prefHeight="28.0" prefWidth="190.0" promptText="Sample Rate" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
-                                    <Insets left="10.0" top="10.0" />
+                                    <Insets left="125.0" top="30.0" />
                                  </GridPane.margin>
                               </ComboBox>
-                              <Label id="anchorPaneHeadings" fx:id="multimeter" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" text="  Multimeter" GridPane.rowIndex="2" GridPane.valignment="TOP">
+                              <Label id="anchorPaneHeadings" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" text="  Multimeter" GridPane.rowIndex="2" GridPane.valignment="TOP">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
                               </Label>
-                              <TextArea fx:id="multimeterDisplay" disable="true" editable="false" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="239.0" stylesheets="@tabstyle.css" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                              <TextArea fx:id="multimeterDisplay" editable="false" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="239.0" stylesheets="@tabstyle.css" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
-                                    <Insets bottom="10.0" left="40.0" right="40.0" top="50.0" />
+                                    <Insets bottom="10.0" left="40.0" right="40.0" top="70.0" />
                                  </GridPane.margin>
                                  <font>
-                                    <Font size="20.0" />
+                                    <Font size="15.0" />
                                  </font>
                               </TextArea>
                               <Button fx:id="resistanceBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureResistance" prefHeight="28.0" prefWidth="96.0" text="Ω" GridPane.rowIndex="4" GridPane.valignment="TOP">
@@ -85,21 +85,16 @@
                                     <Insets left="210.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Button fx:id="currentBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureCurrent" prefHeight="28.0" prefWidth="96.0" text="mA [AC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                              <Button fx:id="currentBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureCurrent" prefHeight="28.0" prefWidth="96.0" text="mA [DC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="110.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureVoltage" prefHeight="28.0" prefWidth="96.0" text="V [AC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                              <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureVoltage" prefHeight="28.0" prefWidth="96.0" text="V [DC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <RadioButton fx:id="dcRBtn" disable="true" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#switchACDC" prefHeight="18.0" prefWidth="43.0" text="DC" GridPane.rowIndex="5" GridPane.valignment="TOP">
-                                 <GridPane.margin>
-                                    <Insets left="81.0" top="15.0" />
-                                 </GridPane.margin>
-                              </RadioButton>
                               <Label fx:id="switchDCLabel" disable="true" focusTraversable="false" text="Switch to:" GridPane.rowIndex="5" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" />
@@ -120,7 +115,7 @@
                                     <Insets left="65.0" top="15.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Label id="anchorPaneHeadings" fx:id="dataSource1" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Data Options" GridPane.rowIndex="7" GridPane.valignment="TOP">
+                              <Label id="anchorPaneHeadings" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Data Options" GridPane.rowIndex="7" GridPane.valignment="TOP">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
@@ -140,13 +135,28 @@
                                     <Insets left="210.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
+                              <Button fx:id="selectACDCBtn" disable="true" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#switchACDC" prefHeight="28.0" prefWidth="40.0" text="AC" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="81.0" top="15.0" />
+                                 </GridPane.margin>
+                              </Button>
+                              <ComboBox fx:id="brightnessLevel" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectBrightnessLevel" prefHeight="28.0" prefWidth="113.0" promptText="Brightness" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="30.0" />
+                                 </GridPane.margin>
+                              </ComboBox>
+                              <Label fx:id="brightnessLabel" text="Brightness:" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Label>
                            </children>
                         </GridPane>
                      </children>
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab text="Disconnected">
+          <Tab fx:id="disconnectedTab" text="Disconnected">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -182,7 +192,7 @@
                                     <Insets left="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Label id="anchorPaneHeadings" fx:id="dataSource" focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Data Options" GridPane.valignment="TOP">
+                              <Label id="anchorPaneHeadings" focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Data Options" GridPane.valignment="TOP">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
@@ -192,17 +202,17 @@
                                     <Insets left="54.0" top="25.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Label fx:id="loadFileLabel" focusTraversable="false" text="Load:" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                              <Label focusTraversable="false" text="Load:" GridPane.rowIndex="1" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" top="10.0" />
                                  </GridPane.margin>
                               </Label>
-                              <Label id="anchorPaneHeadings" fx:id="dataSource2" focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Mask Options" GridPane.rowIndex="2" GridPane.valignment="TOP">
+                              <Label id="anchorPaneHeadings" focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Mask Options" GridPane.rowIndex="2" GridPane.valignment="TOP">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
                               </Label>
-                              <Label fx:id="createMaskLabel" focusTraversable="false" text="Create Mask:" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                              <Label focusTraversable="false" text="Create Mask:" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" top="10.0" />
                                  </GridPane.margin>
@@ -227,17 +237,17 @@
                                     <Insets left="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="28.0" prefWidth="110.0" text="Discard All" GridPane.rowIndex="6" GridPane.valignment="TOP">
+                              <Button fx:id="discardAllBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#discardAll" prefHeight="28.0" prefWidth="110.0" text="Discard All" GridPane.rowIndex="6" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Label id="anchorPaneHeadings" fx:id="dataSource21" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Mask Test Results" GridPane.rowIndex="7" GridPane.valignment="TOP">
+                              <Label id="anchorPaneHeadings" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="319.0" stylesheets="@tabstyle.css" text="  Mask Test Results" GridPane.rowIndex="7" GridPane.valignment="TOP">
                                  <font>
                                     <Font size="14.0" />
                                  </font>
                               </Label>
-                              <TextArea fx:id="maskTestResults" editable="false" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="71.0" prefWidth="309.0" GridPane.rowIndex="9" GridPane.valignment="TOP">
+                              <TextArea fx:id="maskTestResults" disable="true" editable="false" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="71.0" prefWidth="309.0" GridPane.rowIndex="9" GridPane.valignment="TOP">
                                  <font>
                                     <Font size="10.0" />
                                  </font>

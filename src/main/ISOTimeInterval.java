@@ -55,7 +55,7 @@ public class ISOTimeInterval {
 		// Convert to seconds
 		Duration duration = Duration.between(startDate, endDate);
 		seconds = duration.toMillis() / 1000D;
-		//System.out.println("SECONDS: " + seconds);
+
 		return seconds;
 	}
 
@@ -68,7 +68,7 @@ public class ISOTimeInterval {
 	/**
 	 * Parses a string to be a 'yyyy-MM-dd'T'HH:mm:ss.SSS' formatted ISO time interval.
 	 * 
-	 * @param s
+	 * @param stringToParse
 	 *            the string to be parsed
 	 * @return the newly formatted string in ISO time interval formatting
 	 * @throws NullPointerException
@@ -76,8 +76,8 @@ public class ISOTimeInterval {
 	 * @throws DateTimeParseException
 	 *             if the string cannot be parsed
 	 */
-	public static ISOTimeInterval parseISOTime(String s) throws NullPointerException, DateTimeParseException {
-		LocalDateTime date = LocalDateTime.parse(s);
+	public static ISOTimeInterval parseISOTime(String stringToParse) throws NullPointerException, DateTimeParseException {
+		LocalDateTime date = LocalDateTime.parse(stringToParse);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(ISO_FORMATTER);
 		ISOTimeInterval newIsoTime = new ISOTimeInterval(date, formatter);
 

@@ -5,23 +5,25 @@
 
 .default-color0.chart-line-symbol
 { 
-	-fx-background-color: black, #F08080; 
+	-fx-background-color: #F08080, #F08080;
 	-fx-background-radius: 3px;
     -fx-padding: 3px;
 }
 
 .default-color1.chart-line-symbol
 { 
-	-fx-background-color: black, #6495ED;
+	-fx-background-color: #6495ED, #6495ED;
 	-fx-background-radius: 3px; 
     -fx-padding: 3px;
 }
 
 .default-color2.chart-line-symbol
 { 
-	-fx-background-color: black, #80f080; 
+	-fx-background-color: #80f080, #80f080; 
 	-fx-background-radius: 3px; 
     -fx-padding: 3px; 
 }
 
 .chart-legend { -fx-background-color: transparent; }
+
+.chart-series-line { -fx-stroke-width: 1px; }
