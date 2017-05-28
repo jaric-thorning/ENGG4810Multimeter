@@ -48,7 +48,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 /**
- * The GuiController class represents the Controller of the Model-View-Controller pattern
+ * The GuiController class represents the Controller of the
+ * Model-View-Controller pattern
  * 
  * @author dayakern
  *
@@ -149,7 +150,8 @@ public class GuiController implements Initializable {
 	private RadioButton maskORBtn;
 	@FXML
 	private Button setHighBtn;
-	private boolean isHighBtnSelected; // Flag for if setHighBtn has been clicked
+	private boolean isHighBtnSelected; // Flag for if setHighBtn has been
+										// clicked
 	@FXML
 	private Button setLowBtn;
 	private boolean isLowBtnSelected;// Flag for if setLowBtn has been clicked
@@ -171,7 +173,8 @@ public class GuiController implements Initializable {
 	NumberAxis xAxis;
 	NumberAxis yAxis;
 	ModifiedLineChart lineChart;
-	Node chartBackground; // Handle on chart background for getting lineChart coordinates
+	Node chartBackground; // Handle on chart background for getting lineChart
+							// coordinates
 
 	// Holds the upper & lower boundary points and read data
 	private XYChart.Series<Number, Number> highMaskBoundarySeries;
@@ -308,8 +311,9 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Decreases the upper and lower bounds of the x-axis to let the user see as much plotted data as they want instead
-	 * of just a set amount. Zero is the farthest the user can move the plot left.
+	 * Decreases the upper and lower bounds of the x-axis to let the user see as
+	 * much plotted data as they want instead of just a set amount. Zero is the
+	 * farthest the user can move the plot left.
 	 */
 	@FXML
 	private void moveXAxisLeft() {
@@ -324,8 +328,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Increases the upper and lower bounds of the x-axis to let the user see as much plotted data as they want instead
-	 * of just a set amount.
+	 * Increases the upper and lower bounds of the x-axis to let the user see as
+	 * much plotted data as they want instead of just a set amount.
 	 */
 	@FXML
 	private void moveXAxisRight() {
@@ -336,11 +340,12 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Enables or disables the connected multimeter components depending on whether or not there is a valid two-way
-	 * connection.
+	 * Enables or disables the connected multimeter components depending on
+	 * whether or not there is a valid two-way connection.
 	 * 
 	 * @param status
-	 *            whether or not the components should be disabled (true) or enabled (false)
+	 *            whether or not the components should be disabled (true) or
+	 *            enabled (false)
 	 */
 	protected void setConnectedMultimeterComponents(boolean status) {
 		// sampleRate.setDisable(status);
@@ -360,11 +365,12 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Enables or disables the connected mode components depending on whether or not there is a valid two-way
-	 * connection.
+	 * Enables or disables the connected mode components depending on whether or
+	 * not there is a valid two-way connection.
 	 * 
 	 * @param status
-	 *            whether or not the components should be disabled (true) or enabled (false)
+	 *            whether or not the components should be disabled (true) or
+	 *            enabled (false)
 	 */
 	public void setConnectedModeComponents(boolean status) {
 		pauseBtn.setDisable(status);
@@ -373,7 +379,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Switches the voltage and current to DC when selected and back to AC when deselected.
+	 * Switches the voltage and current to DC when selected and back to AC when
+	 * deselected.
 	 */
 	@FXML
 	private void switchACDC() {
@@ -388,7 +395,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Changes the status of the 'selectACDCBtn' button to DC, as well as sets the AC flag
+	 * Changes the status of the 'selectACDCBtn' button to DC, as well as sets
+	 * the AC flag
 	 */
 	public void driveACMode() {
 		if (!Platform.isFxApplicationThread()) {
@@ -408,7 +416,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Changes the status of the 'selectACDCBtn' button to AC, as well as sets the AC flag
+	 * Changes the status of the 'selectACDCBtn' button to AC, as well as sets
+	 * the AC flag
 	 */
 	public void driveDCMode() {
 		if (!Platform.isFxApplicationThread()) {
@@ -657,7 +666,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'recordAndDisplayNewResult' which displays multimeter data on chart.
+	 * A private helper function to 'recordAndDisplayNewResult' which displays
+	 * multimeter data on chart.
 	 * 
 	 * @param multimeterDataValue
 	 *            the received multimeter data value
@@ -683,8 +693,9 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'updateMultimeterDisplay' which dictates how the storage of data occurs and how the
-	 * data looks like displayed within the GUI when it's not paused.
+	 * A private helper function to 'updateMultimeterDisplay' which dictates how
+	 * the storage of data occurs and how the data looks like displayed within
+	 * the GUI when it's not paused.
 	 * 
 	 * @param multimeterDataValue
 	 *            the received multimeter data value
@@ -726,7 +737,7 @@ public class GuiController implements Initializable {
 	 * @param startTime
 	 *            the first time the data point was recorded
 	 * @param endTime
-	 *            the lastest time the last data point was recorded
+	 *            the latest time the last data point was recorded
 	 */
 	private void updateChartXBounds(LocalDateTime startTime, LocalDateTime endTime) {
 		int dataBoundsRange = (int) Math.ceil(ISOTimeInterval.xValue(startTime, endTime));
@@ -737,8 +748,9 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'liveData' which adds the accumulated data to the displayed multimeter data on the
-	 * chart (as well as adding to the ISO time and y-units list).
+	 * A private helper function to 'liveData' which adds the accumulated data
+	 * to the displayed multimeter data on the chart (as well as adding to the
+	 * ISO time and y-units list).
 	 */
 	private void acquiredDataHasBeenPaused() {
 		if (totalAcquisitionData.size() > 0) {
@@ -769,11 +781,12 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'acquiredDataHasBeenPaused' which adds the plot behaviour to the points acquired
-	 * when the application was paused.
+	 * A private helper function to 'acquiredDataHasBeenPaused' which adds the
+	 * plot behaviour to the points acquired when the application was paused.
 	 * 
 	 * @param pausedStoredISOTimeDataPoints
-	 *            the list of times the data was received when the application was paused.
+	 *            the list of times the data was received when the application
+	 *            was paused.
 	 */
 	private void addAcquiredDataWhilePaused(ArrayList<ISOTimeInterval> pausedStoredISOTimeDataPoints) {
 
@@ -787,8 +800,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'updateMultimeterDisplay' which dictates how the storage of data occurs when it's
-	 * paused.
+	 * A private helper function to 'updateMultimeterDisplay' which dictates how
+	 * the storage of data occurs when it's paused.
 	 * 
 	 * @param multimeterDataValue
 	 *            the received multimeter data value
@@ -811,8 +824,9 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'updateMultimeterDisplay' which does the modifying of the plot and sets the flag
-	 * that when the data was paused, the measurement value changed (i.e. V->A)
+	 * A private helper function to 'updateMultimeterDisplay' which does the
+	 * modifying of the plot and sets the flag that when the data was paused,
+	 * the measurement value changed (i.e. V->A)
 	 */
 	private void modifyPlotParts() {
 
@@ -835,7 +849,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Calculates the ISO 8601 time interval between the first and latest last point.
+	 * Calculates the ISO 8601 time interval between the first and latest last
+	 * point.
 	 * 
 	 * @return the time the point was displayed
 	 */
@@ -983,7 +998,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Resets the axes to their original upper and lower boundaries, as well as graph axis details.
+	 * Resets the axes to their original upper and lower boundaries, as well as
+	 * graph axis details.
 	 */
 	private void resetAxesGraphDetails() {
 		xAxis.setLowerBound(X_LOWER_BOUND);
@@ -1016,7 +1032,8 @@ public class GuiController implements Initializable {
 
 		if (!isPaused) {
 			System.out.println("DATA IS PAUSED");
-			// System.out.println("PAUSED RS: " + readingSeries.getData().size() + ", " + yUnits.size());
+			// System.out.println("PAUSED RS: " + readingSeries.getData().size()
+			// + ", " + yUnits.size());
 
 			isPaused = true;
 			pauseBtn.setText("Unpause");
@@ -1041,7 +1058,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Enable multimeter components when pause button has been clicked on again, and pause is now resumed
+	 * Enable multimeter components when pause button has been clicked on again,
+	 * and pause is now resumed
 	 */
 	private void resumedDataAcquisition() {
 		isPaused = false;
@@ -1118,7 +1136,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'loadFile' which reads in data from a given file.
+	 * A private helper function for 'loadFile' which reads in data from a given
+	 * file.
 	 * 
 	 * @param selectedFile
 	 *            file to read data from
@@ -1155,8 +1174,9 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'loadFile' which adds the x and y values to the correct line chart series
-	 * (readingSeries) as well as to determine which ISO display behaviour to use (files from SD card and from recorded
+	 * A private helper function to 'loadFile' which adds the x and y values to
+	 * the correct line chart series (readingSeries) as well as to determine
+	 * which ISO display behaviour to use (files from SD card and from recorded
 	 * software are different).
 	 * 
 	 * @param inputDataXValues
@@ -1202,26 +1222,28 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'addDataToSeries' which adds the data loaded from the file to the correct line-chart
-	 * series.
+	 * A private helper function to 'addDataToSeries' which adds the data loaded
+	 * from the file to the correct line-chart series.
 	 * 
 	 * @param inputDataXValues
 	 *            the x values loaded in from the file
 	 * @param inputDataYValues
 	 *            the y values loaded in from the file
 	 * @param checkedIsoTime
-	 *            the start value for displaying ISO time of first data point (has been checked if it belongs to the SD
-	 *            file or recorded software file)
+	 *            the start value for displaying ISO time of first data point
+	 *            (has been checked if it belongs to the SD file or recorded
+	 *            software file)
 	 * @param checkedIsoTimes
-	 *            the others values for displaying ISO time of all data points (have been checked if it belongs to the
-	 *            SD file or recorded software file)
+	 *            the others values for displaying ISO time of all data points
+	 *            (have been checked if it belongs to the SD file or recorded
+	 *            software file)
 	 * @param isSD
-	 *            whether or not the data belongs to an SD file or the recorded software file.
+	 *            whether or not the data belongs to an SD file or the recorded
+	 *            software file.
 	 */
 	private void addData(ArrayList<Double> inputDataXValues, ArrayList<Double> inputDataYValues, String checkedIsoTime,
 			ArrayList<String> checkedIsoTimes, boolean isSD) {
 
-		ISOTimeInterval startTime = ISOTimeInterval.parseISOTime(checkedIsoTime);
 		readingSeries.getNode().toFront();
 
 		for (int i = 0; i < inputDataXValues.size(); i++) {
@@ -1239,10 +1261,6 @@ public class GuiController implements Initializable {
 			dataPoint.getNode().addEventFilter(MouseEvent.MOUSE_EXITED,
 					event.clearDataXYValues(xDataCoord, yDataCoord));
 
-			// Update chart bounds if line chart exceeds them.
-			ISOTimeInterval endTime = ISOTimeInterval.parseISOTime(checkedIsoTimes.get(i));
-			updateChartXBounds(startTime.getDate(), endTime.getDate());
-
 			// Update mask upper boundary
 			updateMaskAfterFileLoaded(highMaskBoundarySeries);
 			updateMaskAfterFileLoaded(lowMaskBoundarySeries);
@@ -1250,7 +1268,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'addData' which updates any existing upper/lower mask upper boundary
+	 * A private helper function to 'addData' which updates any existing
+	 * upper/lower mask upper boundary
 	 * 
 	 * @param series
 	 *            high/low mask series
@@ -1262,8 +1281,9 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Saves the currently acquired data if data acquisition is paused. An error message will pop up if the data has not
-	 * been paused, and the data will not be saved.
+	 * Saves the currently acquired data if data acquisition is paused. An error
+	 * message will pop up if the data has not been paused, and the data will
+	 * not be saved.
 	 * 
 	 * @precondition readingSeries has data in it.
 	 */
@@ -1318,7 +1338,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'discardData' which clears the plot and resets some connected components
+	 * A private helper function to 'discardData' which clears the plot and
+	 * resets some connected components
 	 */
 	private void resetPlottedData() {
 
@@ -1352,8 +1373,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'discardData'. Displays a pop-up message notifying the user that data will be
-	 * discarded if they continue.
+	 * A private helper function to 'discardData'. Displays a pop-up message
+	 * notifying the user that data will be discarded if they continue.
 	 * 
 	 * @return true when data is to be retained, false otherwise.
 	 */
@@ -1393,7 +1414,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'getMouseToChartCoords' that gets the x and y
+	 * A private helper function to 'getMouseToChartCoords' that gets the x and
+	 * y
 	 * 
 	 * @param event
 	 *            the mouse event to attach this to.
@@ -1422,7 +1444,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Adds and sorts the elements in the given mask series as well as adds delete and move point functionality.
+	 * Adds and sorts the elements in the given mask series as well as adds
+	 * delete and move point functionality.
 	 * 
 	 * @param series
 	 *            the high/low mask boundaries to add the data to
@@ -1454,7 +1477,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * When the data-point is moved by the mouse, make sure the user cannot drag it into the other mask area.
+	 * When the data-point is moved by the mouse, make sure the user cannot drag
+	 * it into the other mask area.
 	 * 
 	 * @param dataPoint
 	 *            the data point that is moved.
@@ -1490,7 +1514,8 @@ public class GuiController implements Initializable {
 							dataPoint.setYValue(originY);
 						}
 
-						// Testing if any line segments overlap as a result of the moved data point
+						// Testing if any line segments overlap as a result of
+						// the moved data point
 						if (!checkingOverlap.testMaskOverlap(lowMaskBoundarySeries, highMaskBoundarySeries)) {
 							dataPoint.setXValue(originX);
 							dataPoint.setYValue(originY);
@@ -1509,8 +1534,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'moveData' which updates the displayed x and y positions of the cursor within the
-	 * line-chart space.
+	 * A private helper function for 'moveData' which updates the displayed x
+	 * and y positions of the cursor within the line-chart space.
 	 * 
 	 * @param mouseEvent
 	 *            the mouse event to attach this to.
@@ -1546,11 +1571,13 @@ public class GuiController implements Initializable {
 
 					if (isHighBtnSelected) { // Set up high boundary
 
-						// No need to check if it overlaps, as lower bound is compared to it.
+						// No need to check if it overlaps, as lower bound is
+						// compared to it.
 						setUpBoundaries(highMaskBoundarySeries, coordX, coordY);
 					} else {// Set up low boundary
 
-						// Check that there's no overlap before adding new points
+						// Check that there's no overlap before adding new
+						// points
 						if (checkingOverlap.checkLowHighMaskOverlap(lowMaskBoundarySeries, highMaskBoundarySeries,
 								coordX, coordY, lowCounter)) {
 
@@ -1566,14 +1593,16 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Orders the specified series data-points by increasing x-axis values. If a first and last boundary point (i.e. x =
-	 * 0, x = 50) haven't been specified, they are created.
+	 * Orders the specified series data-points by increasing x-axis values. If a
+	 * first and last boundary point (i.e. x = 0, x = 50) haven't been
+	 * specified, they are created.
 	 * 
 	 * @param existingSeries
 	 *            the mask series to sort
 	 * @param currentSeries
 	 *            the mask series currently being modified
-	 * @return true if boundary points were added without intersection issue, false otherwise
+	 * @return true if boundary points were added without intersection issue,
+	 *         false otherwise
 	 */
 	private boolean orderAndAddBoundaryPoints(XYChart.Series<Number, Number> existingSeries,
 			XYChart.Series<Number, Number> currentSeries) {
@@ -1628,26 +1657,32 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'orderAndAddBoundaryPoints' which adds the first and last boundary points (x lower
-	 * and x upper) to the mask series.
+	 * A private helper function to 'orderAndAddBoundaryPoints' which adds the
+	 * first and last boundary points (x lower and x upper) to the mask series.
 	 * 
 	 * @param boundaryPoint
-	 *            the absolute first/last boundary point to be added (0 or x-axis upperbound)
+	 *            the absolute first/last boundary point to be added (0 or
+	 *            x-axis upperbound)
 	 * @param xValueExistingData
 	 *            the first point in the existing mask series
 	 * @param currentSeries
 	 *            the mask series which is currently being modified
 	 * @param existingSeries
 	 *            the mask series which already has been set
-	 * @return true if there is no overlap, false if the added point will overlap with existing mask
+	 * @return true if there is no overlap, false if the added point will
+	 *         overlap with existing mask
 	 */
 	private boolean addingBoundaryPoints(XYChart.Data<Number, Number> boundaryPoint, double xValueExistingData,
 			XYChart.Series<Number, Number> currentSeries, XYChart.Series<Number, Number> existingSeries) {
 
-		int insertBoundaryPosition = 0; // the place within the mask series to add the new boundary point
-		int newExistingDataPosition = 0; // the new position of the first/last boundary point to be added
-		int finalBoundaryDataPosition = 0; // the new position of the original first/last mask series data point
-		boolean isLowerBoundary = false; // determining if moving right to left (high) / left to right (low)
+		int insertBoundaryPosition = 0; // the place within the mask series to
+										// add the new boundary point
+		int newExistingDataPosition = 0; // the new position of the first/last
+											// boundary point to be added
+		int finalBoundaryDataPosition = 0; // the new position of the original
+											// first/last mask series data point
+		boolean isLowerBoundary = false; // determining if moving right to left
+											// (high) / left to right (low)
 		double xBounds = 0D; // upper / lower bounds of the x-axis
 
 		if (boundaryPoint.getXValue().intValue() == 0) { // Lower bound
@@ -1668,7 +1703,8 @@ public class GuiController implements Initializable {
 			isLowerBoundary = false;
 		}
 
-		// If there do not exist first and last points with the x upper and lower bound values, add the boundary points
+		// If there do not exist first and last points with the x upper and
+		// lower bound values, add the boundary points
 		if (xValueExistingData != xBounds) {
 
 			// Make sure that you can't add incorrect first elements
@@ -1688,7 +1724,8 @@ public class GuiController implements Initializable {
 			}
 		} else {
 
-			// Set last y-value of the existing series (boundary point) to match the second last data point
+			// Set last y-value of the existing series (boundary point) to match
+			// the second last data point
 			existingSeries.getData().get(newExistingDataPosition)
 					.setYValue(existingSeries.getData().get(finalBoundaryDataPosition).getYValue());
 		}
@@ -1696,14 +1733,17 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Check that the given data point is less than all the other data points within the mask series.
+	 * Check that the given data point is less than all the other data points
+	 * within the mask series.
 	 * 
 	 * @param dataPoint
 	 *            the boundary data point to add
 	 * @param existingSeries
-	 *            the mask series which already has been set, and to be checked against for potential collision
+	 *            the mask series which already has been set, and to be checked
+	 *            against for potential collision
 	 * @param isLowerBoundary
-	 *            whether or not the series is the low (true)/high (false) boundary
+	 *            whether or not the series is the low (true)/high (false)
+	 *            boundary
 	 * @return true if there is no collision, false otherwise
 	 */
 	private boolean getMax(XYChart.Data<Number, Number> dataPoint, XYChart.Series<Number, Number> existingSeries,
@@ -1726,7 +1766,8 @@ public class GuiController implements Initializable {
 			}
 		}
 
-		// Check if there will be a collision with the points from the existing series data
+		// Check if there will be a collision with the points from the existing
+		// series data
 		if (subList.size() > 0) {
 			for (XYChart.Data<Number, Number> d : subList) {
 				if (dataPoint.getYValue().doubleValue() >= d.getYValue().doubleValue()) {
@@ -1739,8 +1780,9 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Locks in the current boundary mask (high/low). If both mask boundary areas have been selected, then enable the
-	 * running of the mask test to occur.
+	 * Locks in the current boundary mask (high/low). If both mask boundary
+	 * areas have been selected, then enable the running of the mask test to
+	 * occur.
 	 */
 	@FXML
 	private void setMaskBoundary() {
@@ -1871,7 +1913,8 @@ public class GuiController implements Initializable {
 			System.out.println(overlap);
 		}
 
-		// Display intervals where overlapping occurred (excluding final region).
+		// Display intervals where overlapping occurred (excluding final
+		// region).
 		for (int i = 0; i < overlappedIntervals.size() - 1; i++) {
 			if (overlappedIntervals.get(i).x2 < overlappedIntervals.get(i + 1).x1) {
 
@@ -1883,18 +1926,19 @@ public class GuiController implements Initializable {
 			}
 		}
 
-		// Display intervals where overlapping occurred (including final region).
+		// Display intervals where overlapping occurred (including final
+		// region).
 		determineOverlapRegion(overlappedIntervals, failedRegionStart, overlappedIntervals.size());
 
 		maskTestResults.appendText("------------------------------" + "\n");
 		maskTestResults.appendText("FAILED AMOUNT OF TIME: \n");
-		maskTestResults.appendText( MEASUREMENT_DECIMAL.format(determineFailedOverlapTime(overlappedIntervals)) + "s\n");
+		maskTestResults.appendText(MEASUREMENT_DECIMAL.format(determineFailedOverlapTime(overlappedIntervals)) + "s\n");
 		maskTestResults.appendText("------------------------------" + "\n");
 	}
 
 	/**
-	 * A private helper function to 'displayFailedIntervals' which displays all the regions that were indentified as
-	 * invalid.
+	 * A private helper function to 'displayFailedIntervals' which displays all
+	 * the regions that were indentified as invalid.
 	 * 
 	 * @param overlappedIntervals
 	 *            a list of line segments which failed (went into mask region).
@@ -1915,8 +1959,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'displayFailedIntervals' which calculates the total amount of time spent in the
-	 * failed regions.
+	 * A private helper function to 'displayFailedIntervals' which calculates
+	 * the total amount of time spent in the failed regions.
 	 * 
 	 * @param overlappedIntervals
 	 *            a list of line segments which failed (went into mask region).
@@ -1934,24 +1978,27 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'runMaskTest' which determines if any of the loaded points overlaps the mask area
-	 * below the line.
+	 * A private helper function for 'runMaskTest' which determines if any of
+	 * the loaded points overlaps the mask area below the line.
 	 */
 	private int checkForMaskAreaOverlap(int counter) {
 		for (int i = 0; i < readingSeries.getData().size() - 1; i++) {
 			XYChart.Data<Number, Number> currentDataPoint = readingSeries.getData().get(i);
 			XYChart.Data<Number, Number> nextDataPoint = readingSeries.getData().get(i + 1);
 
-			counter += lineChart.maskTestOverlapCheck(true, currentDataPoint, nextDataPoint); // High boundary
+			counter += lineChart.maskTestOverlapCheck(true, currentDataPoint, nextDataPoint); // High
+																								// boundary
 
-			counter += lineChart.maskTestOverlapCheck(false, currentDataPoint, nextDataPoint); // Low boundary
+			counter += lineChart.maskTestOverlapCheck(false, currentDataPoint, nextDataPoint); // Low
+																								// boundary
 		}
 
 		return counter;
 	}
 
 	/**
-	 * A private helper function for 'runMaskTest' which checks if there have been collisions and counts them.
+	 * A private helper function for 'runMaskTest' which checks if there have
+	 * been collisions and counts them.
 	 * 
 	 * @param current
 	 *            the current point in the series.
@@ -2000,7 +2047,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Loads the mask data file. If the yUnit doesn't match it errors and doesn't load.
+	 * Loads the mask data file. If the yUnit doesn't match it errors and
+	 * doesn't load.
 	 */
 	@FXML
 	private void importMaskData() {
@@ -2044,8 +2092,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'importMaskData' which determines if the mask to load in has y-unit values which
-	 * clash.
+	 * A private helper function for 'importMaskData' which determines if the
+	 * mask to load in has y-unit values which clash.
 	 * 
 	 * @param selectedFile
 	 *            the file to grab specific mask data from
@@ -2069,8 +2117,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function for 'determineUnitClash' which checks that the y-unit of the mask file correspond to
-	 * the y-units of the displayed data.
+	 * A private helper function for 'determineUnitClash' which checks that the
+	 * y-unit of the mask file correspond to the y-units of the displayed data.
 	 * 
 	 * @param maskYUnit
 	 *            the mask y-unit values.
@@ -2086,15 +2134,16 @@ public class GuiController implements Initializable {
 		}
 
 		/*
-		 * TODO: incorporate resistance else if (maskYUnit.contains(OHM_SYMBOL) && dataYUnit.contains(maskYUnit)) { //
-		 * FIXME: find out which symbol will represent ohms return true; }
+		 * TODO: incorporate resistance else if (maskYUnit.contains(OHM_SYMBOL)
+		 * && dataYUnit.contains(maskYUnit)) { // FIXME: find out which symbol
+		 * will represent ohms return true; }
 		 */
 		return false;
 	}
 
 	/**
-	 * Displays an error message if the user has tried to load in a mask file with values that do not match those of the
-	 * already loaded data.
+	 * Displays an error message if the user has tried to load in a mask file
+	 * with values that do not match those of the already loaded data.
 	 */
 	private void errorMessageInvalidMask() {
 		String title = "Error! Attempting To Load Mask Incorrectly";
@@ -2107,7 +2156,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * A private helper function to 'importMaskData' which adds the data to the mask series.
+	 * A private helper function to 'importMaskData' which adds the data to the
+	 * mask series.
 	 * 
 	 * @param selectedFile
 	 *            the file to get imported mask data from
@@ -2159,7 +2209,8 @@ public class GuiController implements Initializable {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(selectedFile.getPath()))) {
 
 				// Only need one element from yUnit, as they are all the same
-				if (storedYUnits.size() > 0) { // multimeter readings data file has been loaded
+				if (storedYUnits.size() > 0) { // multimeter readings data file
+												// has been loaded
 					savedUnits = modifyMeasurements.modifyMaskUnit(storedYUnits.get(0));
 				} else {
 					savedUnits = modifyMeasurements.modifyMaskUnit(maskVRBtn, maskARBtn, maskORBtn);
@@ -2200,7 +2251,8 @@ public class GuiController implements Initializable {
 	}
 
 	/**
-	 * Determines that only 'V', 'A', 'Ohm' options can be selected at any one time for the mask y-unit value.
+	 * Determines that only 'V', 'A', 'Ohm' options can be selected at any one
+	 * time for the mask y-unit value.
 	 * 
 	 * @param one
 	 *            the radio button that is not selected
