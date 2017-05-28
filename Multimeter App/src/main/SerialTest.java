@@ -21,7 +21,7 @@ import javafx.collections.ObservableList;
  *
  */
 public class SerialTest {
-	private static final int BAUD_RATE = 9600;// 38400;
+	private static final int BAUD_RATE = 38400;
 
 	private ObservableList<String> portNames;
 	private SerialPort openSerialPort;
