@@ -102,10 +102,9 @@ public class SerialDataListener implements SerialPortDataListener {
 
 		if (isValidText(receivedData) && !checkReceivedDataEnds(receivedData)) {
 
-			// TODO: add received C
-			// TODO: check for frequency
-			// TODO: check for brightness
-			if (receivedData.charAt(1) == 'D') { // Change multimeter display
+			if (receivedData.charAt(1) == 'C') {
+				// TODO: add received C
+			} else if (receivedData.charAt(1) == 'D') { // Change multimeter display
 
 				updateMultimeterDisplay(receivedData.substring(2));
 			} else if (receivedData.charAt(1) == 'V' || receivedData.charAt(1) == 'W' || receivedData.charAt(1) == 'I'
@@ -113,9 +112,12 @@ public class SerialDataListener implements SerialPortDataListener {
 					|| receivedData.charAt(1) == 'C') { // Change values received
 
 				sortMultimeterMeasurements(receivedData.substring(1));
-			} else if (receivedData.charAt(1) == 'F') {
+			} else if (receivedData.charAt(1) == 'B') { // Change brightness levels
 
 				selectBrightnessPercentage(receivedData.substring(1));
+			} else if (receivedData.charAt(1) == 'F') { // Change frequency rate levels
+
+				selectFrequencyRate(receivedData.substring(1));
 			} else {
 				// IGNORE
 			}
@@ -123,12 +125,71 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
+	 * A private helper function for 'getData' which selects the frequency rate iff the given String is valid.
+	 * 
+	 * @param receivedData
+	 *            the data received from the input stream that's been stitched into a String
+	 */
+	private void selectFrequencyRate(String receivedData) {
+		boolean failedToDecode = false;
+		int frequencyRate = 0;
+
+		if (!failedToDecode) {
+
+			// Get frequency rates
+			try {
+				frequencyRate = Integer.parseInt(receivedData.substring(3, receivedData.length() - 1).trim());
+			} catch (NumberFormatException e) {
+
+				// If data received from the serial connection was not the right type
+				failedToDecode = true;
+			}
+
+			// Check for valid index number
+			failedToDecode = !(0 <= frequencyRate && frequencyRate <= 9);
+
+			if (!failedToDecode) {
+
+				// Change brightness levels
+				GuiController.instance.updateFrequencyRate(frequencyRate);
+			}
+		} else {
+			System.err.println("***Failed to decode data: " + receivedData);
+		}
+	}
+
+	/**
 	 * A private helper function for 'getData' which selects the brightness display iff the given String is valid.
 	 * 
-	 * @param receivedData the data received from the input stream that's been stitched into a String
+	 * @param receivedData
+	 *            the data received from the input stream that's been stitched into a String
 	 */
 	private void selectBrightnessPercentage(String receivedData) {
+		boolean failedToDecode = false;
+		int brightnessLevel = 0;
 
+		if (!failedToDecode) {
+
+			// Get brightness level
+			try {
+				brightnessLevel = Integer.parseInt(receivedData.substring(3, receivedData.length() - 1).trim());
+			} catch (NumberFormatException e) {
+
+				// If data received from the serial connection was not the right type
+				failedToDecode = true;
+			}
+
+			// Check for valid index number
+			failedToDecode = !(0 <= brightnessLevel && brightnessLevel <= 4);
+
+			if (!failedToDecode) {
+
+				// Change brightness levels
+				GuiController.instance.updateBrightnessLevel(brightnessLevel);
+			}
+		} else {
+			System.err.println("***Failed to decode data: " + receivedData);
+		}
 	}
 
 	/**
@@ -195,6 +256,7 @@ public class SerialDataListener implements SerialPortDataListener {
 			try {
 				measurementDataValue = Double.parseDouble(receivedData.substring(3, receivedData.length() - 1).trim());
 			} catch (NumberFormatException e) {
+				System.err.println("Failed to decode data:" + measurementDataValue);
 
 				// If data received from the serial connection was not the right type
 				failedToDecode = true;
@@ -208,8 +270,6 @@ public class SerialDataListener implements SerialPortDataListener {
 
 				// Record and display updated results
 				GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
-			} else {
-				System.err.println("Failed to decode data:" + measurementDataValue);
 			}
 		} else {
 			System.err.println("***Failed to decode data: " + receivedData);

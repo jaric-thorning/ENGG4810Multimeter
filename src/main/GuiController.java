@@ -436,14 +436,6 @@ public class GuiController implements Initializable {
 		serialTest.writeCode(code);
 	}
 
-	// FIXME
-	/**
-	 * Executes any continuity mode related events.
-	 */
-	protected void driveContinuity() {
-		System.out.println("Driving continuity");
-	}
-
 	/**
 	 * Writes out code to remotely control multimeter's logic mode
 	 */
@@ -451,15 +443,6 @@ public class GuiController implements Initializable {
 	private void selectLogicMode() {
 		String code = MultimeterCodes.LOGIC.getCode();
 		serialTest.writeCode(code);
-	}
-
-	// FIXME
-	/**
-	 * Executes any logic mode related events
-	 */
-	protected void driveLogic() {
-		System.out.println("Driving Logic");
-
 	}
 
 	/**
@@ -477,14 +460,6 @@ public class GuiController implements Initializable {
 			code = MultimeterCodes.VOLTAGE_RMS.getCode();
 		}
 		serialTest.writeCode(code);
-	}
-
-	// FIXME
-	/**
-	 * Executes any voltage mode related events
-	 */
-	protected void driveVoltage() {
-		System.out.println("Driving voltage");
 	}
 
 	/**
@@ -505,14 +480,6 @@ public class GuiController implements Initializable {
 		serialTest.writeCode(code);
 	}
 
-	// FIXME
-	/**
-	 * Executes any current mode related events
-	 */
-	protected void driveCurrent() {
-		System.out.println("Driving current");
-	}
-
 	/**
 	 * Writes out code to remotely control multimeter (Select resistance).
 	 */
@@ -520,13 +487,6 @@ public class GuiController implements Initializable {
 	private void measureResistance() {
 		String code = MultimeterCodes.RESISTANCE.getCode();
 		serialTest.writeCode(code);
-	}
-
-	/**
-	 * Executes any resistance mode related events.
-	 */
-	protected void driveResistance() {
-		System.out.println("Driving resistance");
 	}
 
 	/**
@@ -542,33 +502,74 @@ public class GuiController implements Initializable {
 		brightnessLevel.setItems(brightnessLevels);
 	}
 
+	/**
+	 * Sends the codes corresponding to the value which was selected
+	 */
 	@FXML
 	private void selectBrightnessLevel() {
 		if (brightnessLevel.getSelectionModel().getSelectedIndex() == 0) { // 0
-			System.err.println("[B 0]");
 
 			String code = MultimeterCodes.BRIGHTNESS_0.getCode();
 			serialTest.writeCode(code);
 		} else if (brightnessLevel.getSelectionModel().getSelectedIndex() == 1) { // 25
-			System.err.println("[B 1]");
 
 			String code = MultimeterCodes.BRIGHTNESS_1.getCode();
 			serialTest.writeCode(code);
 		} else if (brightnessLevel.getSelectionModel().getSelectedIndex() == 2) { // 50
-			System.err.println("[B 2]");
 
 			String code = MultimeterCodes.BRIGHTNESS_2.getCode();
 			serialTest.writeCode(code);
 		} else if (brightnessLevel.getSelectionModel().getSelectedIndex() == 3) { // 75
-			System.err.println("[B 3]");
 
 			String code = MultimeterCodes.BRIGHTNESS_3.getCode();
 			serialTest.writeCode(code);
-		} else { // 100
-			System.err.println("[B 4]");
+		} else if (brightnessLevel.getSelectionModel().getSelectedIndex() == 4) { // 100
+
 			String code = MultimeterCodes.BRIGHTNESS_4.getCode();
 			serialTest.writeCode(code);
+		} else {
+			// Do nothing
 		}
+	}
+
+	/**
+	 * Sets the brightness level to whatever has been selected
+	 * 
+	 * @param newValue
+	 *            the index of the combo box to select the displayed result
+	 */
+	public void updateBrightnessLevel(int newValue) {
+		if (!Platform.isFxApplicationThread()) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					updateBrightnessLevel(newValue);
+				}
+			});
+			return;
+		}
+
+		brightnessLevel.getSelectionModel().select(newValue);
+	}
+
+	/**
+	 * Sets the frequency rate to whatever has been selected
+	 * 
+	 * @param newValue
+	 *            the index of the combo box to select the displayed result
+	 */
+	public void updateFrequencyRate(int newValue) {
+		if (!Platform.isFxApplicationThread()) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					updateFrequencyRate(newValue);
+				}
+			});
+			return;
+		}
+
+		sampleRate.getSelectionModel().select(newValue);
 	}
 
 	/**
@@ -594,47 +595,38 @@ public class GuiController implements Initializable {
 	@FXML
 	private void selectSampleRate() {
 		if (sampleRate.getSelectionModel().getSelectedIndex() == 0) {
-			System.err.println("[F A]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_A.getCode();
 			serialTest.writeCode(code);
 		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 1) {
-			System.err.println("[F B]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_B.getCode();
 			serialTest.writeCode(code);
 		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 2) {
-			System.err.println("[F C]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_C.getCode();
 			serialTest.writeCode(code);
 		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 3) {
-			System.err.println("[F D]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_D.getCode();
 			serialTest.writeCode(code);
 		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 4) {
-			System.err.println("[F E]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_E.getCode();
 			serialTest.writeCode(code);
 		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 5) {
-			System.err.println("[F F]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_F.getCode();
 			serialTest.writeCode(code);
 		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 6) {
-			System.err.println("[F G]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_G.getCode();
 			serialTest.writeCode(code);
 		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 7) {
-			System.err.println("[F H]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_H.getCode();
 			serialTest.writeCode(code);
 		} else {
-			System.err.println("[F I]");
 
 			String code = MultimeterCodes.SAMPLE_RATE_I.getCode();
 			serialTest.writeCode(code);
@@ -673,15 +665,6 @@ public class GuiController implements Initializable {
 	 *            the received y-unit value
 	 */
 	private void updateMultimeterDisplay(Double multimeterDataValue, String unit) {
-		if (!Platform.isFxApplicationThread()) {
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					updateMultimeterDisplay(multimeterDataValue, unit);
-				}
-			});
-			return;
-		}
 
 		// Modify Plot Parts.
 		System.out.println("U------U:" + unit);
@@ -711,7 +694,7 @@ public class GuiController implements Initializable {
 	private void liveDataMode(Double multimeterDataValue, String unit) {
 
 		// Change multimeter text display according to ranges and values.
-		modifyMeasurements.convertYUnit(unit, yAxis); // FIXME: UNITS
+		modifyMeasurements.convertYUnit(unit, yAxis);
 
 		// Has been paused as some point
 		acquiredDataHasBeenPaused();
@@ -722,8 +705,6 @@ public class GuiController implements Initializable {
 		// ISO Time Intervals
 		ISOTimeInterval endTime = establishISOTime();
 		pausedStoredISOTimeData.add(endTime);
-
-		// System.out.println("START: " + startTime + " END: " + endTime);
 
 		// Normally add received data
 		Double xValue = ISOTimeInterval.xValue(startTime.getDate(), endTime.getDate());
@@ -865,7 +846,7 @@ public class GuiController implements Initializable {
 			LocalDateTime local = LocalDateTime.now();
 			startTime = new ISOTimeInterval(local, DateTimeFormatter.ofPattern(ISO_FORMATTER));
 			endTime = startTime;
-		} else { // Get the end time //FIXME: CHANGED LOCAL2 TO LOCAL
+		} else { // Get the end time
 			LocalDateTime local = LocalDateTime.now();
 			endTime = new ISOTimeInterval(local, DateTimeFormatter.ofPattern(ISO_FORMATTER));
 		}
@@ -1336,7 +1317,6 @@ public class GuiController implements Initializable {
 		}
 	}
 
-	// FIXME
 	/**
 	 * A private helper function to 'discardData' which clears the plot and resets some connected components
 	 */

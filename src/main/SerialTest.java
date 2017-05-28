@@ -127,7 +127,8 @@ public class SerialTest {
 
 		SerialPort[] ports = SerialPort.getCommPorts();
 		if (GuiController.instance.portsAvailable.getValue() != null
-				&& !GuiController.instance.portsAvailable.getValue().equalsIgnoreCase("")) {
+				&& !GuiController.instance.portsAvailable.getValue().equalsIgnoreCase("")
+				&& !GuiController.instance.portsAvailable.getValue().equals("Ports")) {
 			for (SerialPort serialPort : ports) {
 
 				// Within the list of ports, check the selected port
