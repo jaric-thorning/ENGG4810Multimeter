@@ -162,7 +162,6 @@ public class ModifyMultimeterMeasurements {
 	 */
 	private boolean checkYUnitChangesLogic(String unit) {
 		if (unit.equals("L") && !GuiController.instance.logic) {
-			System.err.println("LOGIC MODE");
 			GuiController.instance.voltage = false;
 			GuiController.instance.current = false;
 			GuiController.instance.resistance = false;
@@ -185,7 +184,6 @@ public class ModifyMultimeterMeasurements {
 	 */
 	private boolean checkYUnitChangesContinuity(String unit) {
 		if (unit.equals("C") && !GuiController.instance.continuity) {
-			System.err.println("CONT MODE");
 			GuiController.instance.voltage = false;
 			GuiController.instance.current = false;
 			GuiController.instance.resistance = false;
@@ -229,7 +227,6 @@ public class ModifyMultimeterMeasurements {
 	 */
 	protected void convertMeasurementYUnit(String value, NumberAxis yAxis) {
 		String displayedYUnit = value;
-		System.out.println("Displayed Unit: " + displayedYUnit);
 
 		// Convert Ohm to symbol.
 		if (value.equals("Ohm")) {

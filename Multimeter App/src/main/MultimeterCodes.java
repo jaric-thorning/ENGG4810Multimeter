@@ -21,7 +21,7 @@ public enum MultimeterCodes {
 	BRIGHTNESS_0("B 0"), BRIGHTNESS_1("B 1"), BRIGHTNESS_2("B 2"), BRIGHTNESS_3("B 3"), BRIGHTNESS_4("B 4"),
 
 	// Check that writing works
-	TWO_WAY_CHECK("[T]");
+	TWO_WAY_CHECK("[C]");
 
 	private final String code; // Code to write across serial comms
 

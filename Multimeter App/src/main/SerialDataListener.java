@@ -20,7 +20,7 @@ public class SerialDataListener implements SerialPortDataListener {
 
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
-	private static final double TIME_OUT = 5e+8; // 1/2 a second
+	private static final double TIME_OUT = 500000000;// 5e+8; // 1/2 a second
 
 	// Whether the port connection has bugged out.
 	private boolean errored;
@@ -70,31 +70,29 @@ public class SerialDataListener implements SerialPortDataListener {
 			serialTest.setReadFromSerial(sEvent.getSerialPort().getInputStream());
 
 			try {
-
+				if (!serialTest.getIsChecked()) {
+					initialTime = System.nanoTime(); // Current time
+				}
+				
+				// Every second send out the write code
 				while ((s = (char) serialTest.getReadFromSerial().read()) != 0 && !quit.get()) {
-
 					input.append(s);
-
-					if (!serialTest.getIsChecked()) {
-						initialTime = System.nanoTime(); // Current time
-					}
 
 					if (s == '\n') {
 						String line = input.toString().trim();
 
-						if (!serialTest.getIsChecked()) {
+						// Check for two-way connection
+						if (!serialTest.getIsChecked() && (time < TIME_OUT)) {
+							System.out.println("1");
 							time = System.nanoTime() - initialTime;
+							GuiController.instance.setConnectedMultimeterComponents(true);
 							checkData(line);
-
-							if (time > TIME_OUT && !serialTest.getIsChecked()) {
-								System.err.println("NO TWO WAY");
-							} else {
-
-							}
+							System.err.println(line);
+							System.out.println("T: " + time + " < TO: " + TIME_OUT);
+						} else {
+							System.err.println("\"" + line + "\"");
+							getData(line);
 						}
-						// System.err.println("\"" + line + "\"");
-
-						getData(line);
 
 						input = new StringBuilder();
 					}
@@ -113,10 +111,13 @@ public class SerialDataListener implements SerialPortDataListener {
 
 	private void checkData(String receivedData) {
 
-		if (isValidText(receivedData) && !checkReceivedDataEnds(receivedData)) {
+		if (isValidText(receivedData)) {// &&
+										// !checkReceivedDataEnds(receivedData))
+										// {
 			if (receivedData.charAt(1) == 'C' && receivedData.length() == 3) {
-				// TODO: add received C
+				System.err.println("RECEIVED C");
 				serialTest.setIsChecked(true);
+				GuiController.instance.setConnectedMultimeterComponents(false);
 			}
 		}
 	}

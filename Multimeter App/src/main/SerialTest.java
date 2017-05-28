@@ -151,18 +151,9 @@ public class SerialTest {
 					if (checkOpenPort(serialPort)) {
 						System.out.println("Success.");
 						GuiController.instance.setConnectedModeComponents(false);
-						GuiController.instance.setConnectedMultimeterComponents(false);
 
-						// if (checkConnection()) { // Check if there's a
-						// two-way connection
-						// GuiController.instance.setConnectedMultimeterComponents(false);
-						// // Enable Components
-						// } else {
-						// System.out.println("Failed to receive data from
-						// port");
-						// GuiController.instance.setConnectedMultimeterComponents(true);
-						// // Disable Components
-						// }
+						// Send code for two-way check
+						writeCode(MultimeterCodes.TWO_WAY_CHECK.getCode());
 
 						return;
 
@@ -247,35 +238,6 @@ public class SerialTest {
 	}
 
 	/**
-	 * A private helper function for 'selectPort' which determines if there is a
-	 * two-way connection (can write).
-	 * 
-	 * @return true if there is a two-way connection, false otherwise
-	 */
-	private boolean checkConnection() {
-		System.out.println("...Checking connection");
-
-		long initialTime = System.nanoTime(); // Current time
-		long time = 0;
-		double timeOut = 5e+8; // 1/2 a second
-
-		writeCode(MultimeterCodes.TWO_WAY_CHECK.getCode());
-
-		while (time < timeOut) {
-			time = System.nanoTime() - initialTime;
-		}
-
-		if (isChecked) {
-			System.out.println("CONNECTION");
-			return true;
-		} else {
-			System.out.println("NO TWO-WAY");
-			return false;
-		}
-
-	}
-
-	/**
 	 * Refreshes the existing ports list to include any new ports detected, as
 	 * well as closes any open ports.
 	 */
@@ -290,10 +252,9 @@ public class SerialTest {
 			return;
 		}
 		closeOpenPort(); // Close any open ports
-		GuiController.instance.setConnectedMultimeterComponents(true); // Disable
-																		// connected
-																		// mode
-																		// components
+		
+		// Disable connected mode components
+		GuiController.instance.setConnectedMultimeterComponents(true);
 		GuiController.instance.setConnectedModeComponents(true);
 		portNames.clear();
 

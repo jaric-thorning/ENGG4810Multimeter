@@ -350,8 +350,8 @@ public class GuiController implements Initializable {
 	 *            enabled (false)
 	 */
 	protected void setConnectedMultimeterComponents(boolean status) {
-		// sampleRate.setDisable(status);
-		// brightnessLevel.setDisable(status); //FIXME
+		 sampleRate.setDisable(status);
+		 brightnessLevel.setDisable(status);
 
 		voltageBtn.setDisable(status);
 		currentBtn.setDisable(status);
