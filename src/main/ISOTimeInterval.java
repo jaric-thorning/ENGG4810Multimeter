@@ -12,9 +12,8 @@ import java.time.format.DateTimeParseException;
  *
  */
 public class ISOTimeInterval {
-	String formattedDate = "";
 	private LocalDateTime date;
-	DateTimeFormatter formatter;
+	private DateTimeFormatter formatter;
 
 	private static final String ISO_FORMATTER = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 
@@ -61,7 +60,7 @@ public class ISOTimeInterval {
 
 	@Override
 	public String toString() {
-		formattedDate = date.format(formatter);
+		String formattedDate = date.format(formatter);
 		return formattedDate;
 	}
 
@@ -76,7 +75,8 @@ public class ISOTimeInterval {
 	 * @throws DateTimeParseException
 	 *             if the string cannot be parsed
 	 */
-	public static ISOTimeInterval parseISOTime(String stringToParse) throws NullPointerException, DateTimeParseException {
+	public static ISOTimeInterval parseISOTime(String stringToParse)
+			throws NullPointerException, DateTimeParseException {
 		LocalDateTime date = LocalDateTime.parse(stringToParse);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(ISO_FORMATTER);
 		ISOTimeInterval newIsoTime = new ISOTimeInterval(date, formatter);

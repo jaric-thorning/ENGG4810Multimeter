@@ -20,20 +20,29 @@ import javafx.collections.ObservableList;
  *
  */
 public class SerialTest {
+	private static final int BAUD_RATE = 9600;// 38400;
 
-	private ObservableList<String> portNames = FXCollections.observableArrayList();
-	private SerialPort openSerialPort = null;
-	private InputStream readFromSerial = null;
-	private PrintWriter writtenToSerial = null;
+	private ObservableList<String> portNames;
+	private SerialPort openSerialPort;
+	private InputStream readFromSerial;
+	private PrintWriter writtenToSerial;
 
 	// A flag for two-way connection
-	private boolean isChecked = false;
+	private boolean isChecked;
 
 	// Listens for available data
 	private SerialDataListener dataListener;
 
 	public SerialTest(AtomicBoolean quit) {
 		this.dataListener = new SerialDataListener(quit, this);
+
+		readFromSerial = null;
+		openSerialPort = null;
+		writtenToSerial = null;
+
+		isChecked = false;
+
+		portNames = FXCollections.observableArrayList();
 	}
 
 	/**
@@ -129,14 +138,14 @@ public class SerialTest {
 					if (checkOpenPort(serialPort)) {
 						System.out.println("Success.");
 						GuiController.instance.setConnectedModeComponents(false);
-						GuiController.instance.setConnectedMultimeterComponents(false); 
-						
-//						if (checkConnection()) { // Check if there's a two-way connection
-//							GuiController.instance.setConnectedMultimeterComponents(false); // Enable Components
-//						} else {
-//							System.out.println("Failed to receive data from port");
-//							GuiController.instance.setConnectedMultimeterComponents(true); // Disable Components
-//						}
+						GuiController.instance.setConnectedMultimeterComponents(false);
+
+						// if (checkConnection()) { // Check if there's a two-way connection
+						// GuiController.instance.setConnectedMultimeterComponents(false); // Enable Components
+						// } else {
+						// System.out.println("Failed to receive data from port");
+						// GuiController.instance.setConnectedMultimeterComponents(true); // Disable Components
+						// }
 
 						return;
 
@@ -184,7 +193,7 @@ public class SerialTest {
 		System.out.println("Binding to Serial Port " + serialPort.getSystemPortName() + "...");
 
 		serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-		serialPort.setBaudRate(9600);
+		serialPort.setBaudRate(BAUD_RATE);
 
 		// Add the data listener to the data (also loads in the data)
 		if (!serialPort.addDataListener(dataListener)) {

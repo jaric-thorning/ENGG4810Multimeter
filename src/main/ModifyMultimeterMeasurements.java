@@ -16,8 +16,7 @@ import javafx.scene.control.TextArea;
  */
 public class ModifyMultimeterMeasurements {
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
-	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
-	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
+//	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 
 	public ModifyMultimeterMeasurements() {
 
@@ -94,7 +93,8 @@ public class ModifyMultimeterMeasurements {
 	 * @return true if there has been no change, false otherwise
 	 */
 	private boolean checkYUnitChangesVoltage(String unit) {
-		if ((unit.equals("V") || unit.equals("V RMS")) && !GuiController.instance.voltage) {
+		if ((unit.equals("V") || unit.equals("W")) && !GuiController.instance.voltage) {
+			System.err.println("V RMS CHANGE");
 			GuiController.instance.voltage = true;
 			GuiController.instance.current = false;
 			GuiController.instance.resistance = false;
@@ -115,7 +115,8 @@ public class ModifyMultimeterMeasurements {
 	 * @return true if there has been no change, false otherwise
 	 */
 	private boolean checkYUnitChangesCurrent(String unit) {
-		if ((unit.equals("I") || unit.equals("mA RMS")) && !GuiController.instance.current) {
+		if ((unit.equals("I") || unit.equals("J")) && !GuiController.instance.current) {
+			System.err.println("mA RMS CHANGE");
 			GuiController.instance.voltage = false;
 			GuiController.instance.current = true;
 			GuiController.instance.resistance = false;
@@ -156,10 +157,10 @@ public class ModifyMultimeterMeasurements {
 	 *            the y-unit to format
 	 * @return the formatted y-unit
 	 */
-	protected String getUnitToSave(String unit) {
-		if (unit.equals("V")) {
+	protected String getUnitToSave(String unit) { // FIXME
+		if (unit.equals("V") || unit.equals("W")) {
 			return "V";
-		} else if (unit.equals("|")) { // need to convert to milliamps
+		} else if (unit.equals("I") || unit.equals("J")) { // need to convert to milliamps
 			return "mA";
 		} else if (unit.equals("R")) { // need to convert to Ohm
 			return "Ohm";
@@ -178,7 +179,7 @@ public class ModifyMultimeterMeasurements {
 	 * @param yAxis
 	 *            the y-axis
 	 */
-	protected void convertMeasurementYUnit(String value, NumberAxis yAxis) {
+	protected void convertMeasurementYUnit(String value, NumberAxis yAxis) {//FIXME
 		String displayedYUnit = value;
 		System.out.println("Displayed Unit: " + displayedYUnit);
 
@@ -216,7 +217,7 @@ public class ModifyMultimeterMeasurements {
 			displayedYUnit = "";
 		}
 
-		//System.err.println("Displayed Unit: " + displayedYUnit); // FIXME
+		// System.err.println("Displayed Unit: " + displayedYUnit); // FIXME
 		yAxis.setLabel("Measurements [" + displayedYUnit + "]");
 	}
 	// public String getVoltageRange(double dataValue) {

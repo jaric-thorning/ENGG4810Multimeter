@@ -21,7 +21,7 @@ public class GuiModel {
 	private static final String NEW_LINE_SEPARATOR = "\n";
 
 	// The format for reading/writing files <x-value><y-value><y-value units><recorded time>
-	private static String[] fileHeaders = { "Time", "Value", "Units", "IsoTime" };
+	private static final String[] FILE_HEADERS = { "Time", "Value", "Units", "IsoTime" };
 
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
@@ -120,10 +120,10 @@ public class GuiModel {
 	 *             occurs when there is a problem with the buffered writer
 	 */
 	private void setupHeader(BufferedWriter bufferedWriter) throws IOException {
-		for (int i = 0; i < fileHeaders.length; i++) {
-			bufferedWriter.write(fileHeaders[i]);
+		for (int i = 0; i < FILE_HEADERS.length; i++) {
+			bufferedWriter.write(FILE_HEADERS[i]);
 
-			if (i != (fileHeaders.length - 1)) {
+			if (i != (FILE_HEADERS.length - 1)) {
 				bufferedWriter.write(DELIMITER);
 			} else {
 				bufferedWriter.write(NEW_LINE_SEPARATOR);
@@ -195,11 +195,17 @@ public class GuiModel {
 
 	/**
 	 * Saves mask data to a given file.
-	 * @param bufferedWriter the buffered writer needed to write data to the file
-	 * @param series the mask boundary area which holds the x/y data to save
-	 * @param yUnit the y-value units
-	 * @param seriesName name of mask boundary area (to determine which points belong to which mask)
-	 * @throws IOException occurs when there is a problem with the buffered writer
+	 * 
+	 * @param bufferedWriter
+	 *            the buffered writer needed to write data to the file
+	 * @param series
+	 *            the mask boundary area which holds the x/y data to save
+	 * @param yUnit
+	 *            the y-value units
+	 * @param seriesName
+	 *            name of mask boundary area (to determine which points belong to which mask)
+	 * @throws IOException
+	 *             occurs when there is a problem with the buffered writer
 	 */
 	public void saveMaskData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series, String yUnit,
 			String seriesName) throws IOException {

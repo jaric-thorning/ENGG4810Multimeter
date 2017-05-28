@@ -56,8 +56,8 @@ import javafx.stage.FileChooser.ExtensionFilter;
 public class GuiController implements Initializable {
 	public static GuiController instance;
 
-	private GuiModel model = new GuiModel();
-	private DataEvents event = new DataEvents();
+	private GuiModel model;
+	private DataEvents event;
 	private DataComparator compare = new DataComparator();
 	private ModifyMultimeterMeasurements modifyMeasurements = new ModifyMultimeterMeasurements();
 	private CheckOverlap checkingOverlap = new CheckOverlap();
@@ -238,6 +238,13 @@ public class GuiController implements Initializable {
 
 		this.quit = new AtomicBoolean(false);
 		this.serialTest = new SerialTest(quit);
+		
+		model = new GuiModel();
+		event = new DataEvents();
+		compare = new DataComparator();
+		modifyMeasurements = new ModifyMultimeterMeasurements();
+		checkingOverlap = new CheckOverlap();
+		startTime = null;
 	}
 
 	/**
@@ -347,39 +354,53 @@ public class GuiController implements Initializable {
 	@FXML
 	private void switchACDC() {
 		if (!isACMode) {
-			System.out.println("DATA IS AC");
-
 			isACMode = true;
-			acMode();
+			selectACDCBtn.setText("AC");
+
 		} else {
 			isACMode = false;
-			dcMode();
+			selectACDCBtn.setText("DC");
 		}
 	}
 
 	/**
-	 * A private helper function to 'switchACDC' to switch the text displayed to DC.
+	 * Changes the status of the 'selectACDCBtn' button to DC, as well as sets the AC flag
 	 */
-	private void dcMode() {
-		selectACDCBtn.setText("AC");
-		voltageBtn.setText("V [DC]");
-		currentBtn.setText("mA [DC]");
+	public void driveACMode() {
+		if (!Platform.isFxApplicationThread()) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					driveACMode();
+				}
+			});
+			return;
+		}
+
+		if (!isPaused) {
+			isACMode = true; // in AC mode
+			selectACDCBtn.setText("DC"); // Want to switch to DC
+		}
 	}
 
 	/**
-	 * A private helper function to 'switchACDC' to switch the text displayed to back to AC.
+	 * Changes the status of the 'selectACDCBtn' button to AC, as well as sets the AC flag
 	 */
-	private void acMode() {
-		selectACDCBtn.setText("DC");
-		voltageBtn.setText("V [AC]");
-		currentBtn.setText("mA [AC]");
-	}
+	public void driveDCMode() {
+		if (!Platform.isFxApplicationThread()) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					driveDCMode();
+				}
+			});
+			return;
+		}
 
-	public void driveACDCMode() {
-		System.out.println("DATA IS AC");
-		// selectACDCBtn.setText("H");
-		// isACMode = true;
-		// acMode();
+		if (!isPaused) {
+			isACMode = false; // in DC mode
+			selectACDCBtn.setText("AC"); // Want to switch to AC
+		}
 	}
 
 	/**
@@ -397,12 +418,6 @@ public class GuiController implements Initializable {
 	 */
 	protected void driveContinuity() {
 		System.out.println("Driving continuity");
-
-		voltage = false;
-		current = false;
-		resistance = false;
-		continuity = true;
-		logic = false;
 	}
 
 	/**
@@ -421,11 +436,6 @@ public class GuiController implements Initializable {
 	protected void driveLogic() {
 		System.out.println("Driving Logic");
 
-		voltage = false;
-		current = false;
-		resistance = false;
-		continuity = false;
-		logic = true;
 	}
 
 	/**
@@ -650,6 +660,7 @@ public class GuiController implements Initializable {
 		}
 
 		// Modify Plot Parts.
+		System.out.println("U------U:" + unit);
 		if (!modifyMeasurements.validateYAxisUnits(unit)) {
 			modifyPlotParts();
 		}
@@ -1324,8 +1335,6 @@ public class GuiController implements Initializable {
 		// FIXME
 		selectACDCBtn.setDisable(true);
 		isACMode = false;
-		voltageBtn.setText("V [AC]");
-		currentBtn.setText("mA [AC]");
 
 		// Reset the plot data
 		readingSeries.getData().clear();

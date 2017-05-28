@@ -32,22 +32,21 @@ import javafx.stage.Stage;
  *
  */
 public class GuiView extends Application {
-	DataEvents event = new DataEvents();
-
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
 	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
 	private static final Double STAGE_WIDTH = 1097D;
 	private static final Double STAGE_HEIGHT = 625D;
-
-	private String fxmlFileName = "/redesigned_gui.fxml";
-	private String GuiTitle = "Digital Multimeter Mark 9001";
-	private Stage stage = new Stage();
+	private static final String FXML_FILENAME = "/redesigned_gui.fxml";
+	private static final String GUI_TITLE = "Digital Multimeter Mark 9001";
 
 	private static GuiView instance;
+	private Stage stage;
 	private GuiController controller;
 
 	public GuiView() {
 		instance = this;
+		stage = new Stage();
+
 		System.out.println("Initialised GuiView");
 	}
 
@@ -87,7 +86,7 @@ public class GuiView extends Application {
 		stage = primaryStage;
 
 		// Load the FXML file
-		FXMLLoader loader = new FXMLLoader(this.getClass().getResource(fxmlFileName));
+		FXMLLoader loader = new FXMLLoader(this.getClass().getResource(FXML_FILENAME));
 
 		// Set up the scene and add it to the stage
 		Scene scene = new Scene(loader.load());
@@ -117,7 +116,7 @@ public class GuiView extends Application {
 		setupTabChange(controller);
 
 		// Set window title
-		primaryStage.setTitle(GuiTitle);
+		primaryStage.setTitle(GUI_TITLE);
 
 		// Display the GUI
 		primaryStage.show();

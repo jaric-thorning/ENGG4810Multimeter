@@ -24,9 +24,9 @@ public class SerialDataListener implements SerialPortDataListener {
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
 
 	// Whether the port connection has bugged out.
-	private boolean errored = false;
-	private String firstDisplay = "";
-	private String secondDisplay = "";
+	private boolean errored;
+	private String firstDisplay;
+	private String secondDisplay;
 
 	private AtomicBoolean quit;
 
@@ -35,6 +35,10 @@ public class SerialDataListener implements SerialPortDataListener {
 	public SerialDataListener(AtomicBoolean quit, SerialTest serialTest) {
 		this.quit = quit;
 		this.serialTest = serialTest;
+
+		errored = false;
+		firstDisplay = "";
+		secondDisplay = "";
 	}
 
 	/**
@@ -62,8 +66,8 @@ public class SerialDataListener implements SerialPortDataListener {
 			StringBuilder input = new StringBuilder();
 			serialTest.setReadFromSerial(sEvent.getSerialPort().getInputStream());
 
-			try { // Thread.sleep(20);
-					// FIXME: won't quit while -> closeport
+			try {
+				// FIXME: won't quit while -> closeport
 				while ((s = (char) serialTest.getReadFromSerial().read()) != 0 && !quit.get()) {
 
 					input.append(s);
@@ -71,7 +75,16 @@ public class SerialDataListener implements SerialPortDataListener {
 					if (s == '\n') {
 						String line = input.toString().trim();
 
-						getData(line);
+						// System.err.println("\"" + line + "\"");
+						// if (!serialTest.getIsFirst()) {
+						getData(line); // FIXME: check bit works + prints all at correct sample time.
+						// }
+
+						// if (serialTest.getIsFirst() && line.contains("D2")) {
+						// // line.contains("D2") ->
+						// serialTest.setIsFirst(false);
+						// }
+
 						input = new StringBuilder();
 					}
 				}
@@ -97,14 +110,14 @@ public class SerialDataListener implements SerialPortDataListener {
 	private void getData(String receivedData) {
 
 		if (isValidText(receivedData) && !checkReceivedDataEnds(receivedData)) {
-			//System.out.println("\"" + receivedData + "\"");
 
 			if (receivedData.charAt(1) == 'D') { // Change multimeter display
 
 				updateMultimeterDisplay(receivedData.substring(2));
 			} else if (receivedData.charAt(1) == 'V' || receivedData.charAt(1) == 'W' || receivedData.charAt(1) == 'I'
-					|| receivedData.charAt(1) == 'J' || receivedData.charAt(1) == 'R') { // Change values received
-				
+					|| receivedData.charAt(1) == 'J' || receivedData.charAt(1) == 'R' || receivedData.charAt(1) == 'L'
+					|| receivedData.charAt(1) == 'C') { // Change values received
+
 				sortMultimeterMeasurements(receivedData.substring(1));
 			} else {
 				// IGNORE
@@ -116,7 +129,7 @@ public class SerialDataListener implements SerialPortDataListener {
 				serialTest.setIsChecked(true);
 			} else if (receivedData.charAt(1) == 'S') {// Change multimeter settings
 
-				sortMultimeterCommand(receivedData);
+				// sortMultimeterCommand(receivedData);
 			} else {
 				System.err.println(".....something else");
 			}
@@ -207,13 +220,15 @@ public class SerialDataListener implements SerialPortDataListener {
 			if (!failedToDecode) {
 				String unit = "";
 
-				unit = Character.toString(receivedData.charAt(0));
+				if (!(receivedData.charAt(0) == 'L' || receivedData.charAt(0) == 'C')) {
+					unit = Character.toString(receivedData.charAt(0));
 
-				if (receivedData.charAt(0) == 'W' || receivedData.charAt(0) == 'J') {
-					GuiController.instance.driveACDCMode();
+					// Update AC/DC switch buttons
+					determineACDCMode(unit);
+
+					// Record and display updated results
+					GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
 				}
-				// Record and display updated results
-				GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
 			} else {
 				System.err.println("Failed to decode data:" + measurementDataValue);
 			}
@@ -223,61 +238,75 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * A private helper function for 'getData' which checks that the command to control the multimeter is valid and
-	 * executes it
+	 * Changes the displayed value of the AC/DC to the opposite of what it's currently receiving.
 	 * 
-	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
+	 * @param unit
+	 *            the received unit of the data
 	 */
-	private void sortMultimeterCommand(String receivedData) {
-
-		// Check for multimeter display commands.
-		String trimmedData = receivedData.substring(2, receivedData.length());
-
-		boolean failedToDecode = !isValidText(trimmedData);
-
-		char modeType = 0;
-
-		// System.err.println("H: " + trimmedData);
-
-		// // If data received from the serial connection was not the right type
-		// if (trimmedData.charAt(0) != MODE)
-		// failedToDecode = true;
-		//
-		// // If the next bits of data were not matching to any mode type
-		// if (!(trimmedData.charAt(2) == 'I' || trimmedData.charAt(2) == 'V' || trimmedData.charAt(2) == 'R'
-		// || trimmedData.charAt(2) == 'C' || trimmedData.charAt(2) == 'L')) {
-		// failedToDecode = true;
-		// } else {
-		// modeType = trimmedData.charAt(2);
-		// }
-		//
-		// // Change the mode to either resistance, current, voltage, logic or continuity
-		// if (!failedToDecode) {
-		// switch (modeType) {
-		// case 'I':
-		// GuiController.instance.driveCurrent();
-		// break;
-		// case 'V':
-		// GuiController.instance.driveVoltage();
-		// break;
-		// case 'R':
-		// GuiController.instance.driveResistance();
-		// break;
-		// case 'C':
-		// GuiController.instance.driveContinuity();
-		// break;
-		// case 'L':
-		// GuiController.instance.driveLogic();
-		// break;
-		// default:
-		// failedToDecode = true;
-		// break;
-		// }
-		// } else {
-		// System.out.println("******Failed to decode data:" + trimmedData);
-		// }
+	private void determineACDCMode(String unit) {
+		if (unit.equals("W") || unit.equals("J")) {
+			GuiController.instance.driveACMode();
+		} else {
+			GuiController.instance.driveDCMode();
+		}
 	}
+
+	// /**
+	// * A private helper function for 'getData' which checks that the command to control the multimeter is valid and
+	// * executes it
+	// *
+	// * @param receivedData
+	// * the data received from the input stream that's been stitched into a String
+	// */
+	// private void sortMultimeterCommand(String receivedData) {
+	//
+	// // Check for multimeter display commands.
+	// String trimmedData = receivedData.substring(2, receivedData.length());
+	//
+	// boolean failedToDecode = !isValidText(trimmedData);
+	//
+	// char modeType = 0;
+	//
+	// // System.err.println("H: " + trimmedData);
+	//
+	// // // If data received from the serial connection was not the right type
+	// // if (trimmedData.charAt(0) != MODE)
+	// // failedToDecode = true;
+	// //
+	// // // If the next bits of data were not matching to any mode type
+	// // if (!(trimmedData.charAt(2) == 'I' || trimmedData.charAt(2) == 'V' || trimmedData.charAt(2) == 'R'
+	// // || trimmedData.charAt(2) == 'C' || trimmedData.charAt(2) == 'L')) {
+	// // failedToDecode = true;
+	// // } else {
+	// // modeType = trimmedData.charAt(2);
+	// // }
+	// //
+	// // // Change the mode to either resistance, current, voltage, logic or continuity
+	// // if (!failedToDecode) {
+	// // switch (modeType) {
+	// // case 'I':
+	// // GuiController.instance.driveCurrent();
+	// // break;
+	// // case 'V':
+	// // GuiController.instance.driveVoltage();
+	// // break;
+	// // case 'R':
+	// // GuiController.instance.driveResistance();
+	// // break;
+	// // case 'C':
+	// // GuiController.instance.driveContinuity();
+	// // break;
+	// // case 'L':
+	// // GuiController.instance.driveLogic();
+	// // break;
+	// // default:
+	// // failedToDecode = true;
+	// // break;
+	// // }
+	// // } else {
+	// // System.out.println("******Failed to decode data:" + trimmedData);
+	// // }
+	// }
 
 	/**
 	 * A private helper function to 'determineValidText' which determines if the data received in valid.

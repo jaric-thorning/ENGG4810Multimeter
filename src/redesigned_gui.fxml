@@ -85,12 +85,12 @@
                                     <Insets left="210.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Button fx:id="currentBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureCurrent" prefHeight="28.0" prefWidth="96.0" text="mA [DC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                              <Button fx:id="currentBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureCurrent" prefHeight="28.0" prefWidth="96.0" text="mA" GridPane.rowIndex="4" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="110.0" top="10.0" />
                                  </GridPane.margin>
                               </Button>
-                              <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureVoltage" prefHeight="28.0" prefWidth="96.0" text="V [DC]" GridPane.rowIndex="4" GridPane.valignment="TOP">
+                              <Button fx:id="voltageBtn" disable="true" focusTraversable="false" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#measureVoltage" prefHeight="28.0" prefWidth="96.0" text="V" GridPane.rowIndex="4" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" top="10.0" />
                                  </GridPane.margin>

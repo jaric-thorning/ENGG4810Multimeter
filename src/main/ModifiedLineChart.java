@@ -25,6 +25,8 @@ import javafx.scene.shape.Polygon;
  * @modifier/@author dayakern
  */
 public class ModifiedLineChart extends LineChart<Number, Number> {
+	private static final double CHART_WIDTH = 645D;
+	private static final double CHART_HEIGHT = 518D;
 
 	// Stores the boundary mask polygons
 	private ArrayList<Polygon> polygonsLowerBoundary;
@@ -33,10 +35,7 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	private NumberAxis yAxis;
 	private NumberAxis xAxis;
 
-	private double chartWidth = 645D;
-	private double chartHeight = 518D;
-
-	DataEvents dataEvents = new DataEvents();
+	private DataEvents dataEvents;
 
 	public ModifiedLineChart(NumberAxis xAxis, NumberAxis yAxis) {
 		super(xAxis, yAxis);
@@ -45,6 +44,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 
 		polygonsLowerBoundary = new ArrayList<>();
 		polygonsHigherBoundary = new ArrayList<>();
+
+		dataEvents = new DataEvents();
 	}
 
 	/**
@@ -81,8 +82,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 		this.setHorizontalZeroLineVisible(false);
 		this.setLegendSide(Side.BOTTOM);
 
-		this.setWidth(chartWidth);
-		this.setHeight(chartHeight);
+		this.setWidth(CHART_WIDTH);
+		this.setHeight(CHART_HEIGHT);
 
 		this.getXAxis().setAutoRanging(false);
 		this.setAnimated(false);
