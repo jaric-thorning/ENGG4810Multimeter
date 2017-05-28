@@ -54,7 +54,7 @@
                                     <Font size="14.0" />
                                  </font>
                               </Label>
-                              <Button fx:id="refreshBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#refreshPorts" prefHeight="28.0" prefWidth="80.0" stylesheets="@../../TP1/Weather%20App/src/buttonstyle.css" text="Refresh" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                              <Button fx:id="refreshBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#refreshPorts" prefHeight="28.0" prefWidth="80.0" text="Refresh" GridPane.rowIndex="1" GridPane.valignment="TOP">
                                  <cursor>
                                     <Cursor fx:constant="HAND" />
                                  </cursor>
