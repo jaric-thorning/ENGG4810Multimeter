@@ -1888,7 +1888,7 @@ public class GuiController implements Initializable {
 
 		maskTestResults.appendText("------------------------------" + "\n");
 		maskTestResults.appendText("FAILED AMOUNT OF TIME: \n");
-		maskTestResults.appendText(determineFailedOverlapTime(overlappedIntervals) + "s\n");
+		maskTestResults.appendText( MEASUREMENT_DECIMAL.format(determineFailedOverlapTime(overlappedIntervals)) + "s\n");
 		maskTestResults.appendText("------------------------------" + "\n");
 	}
 
