@@ -9,7 +9,8 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 
 /**
- * The CheckOverlap class deals with methods that test for different cases of overlap between read in data, masks.
+ * The CheckOverlap class deals with methods that test for different cases of
+ * overlap between read in data, masks.
  * 
  * @author dayakern
  *
@@ -24,9 +25,11 @@ public class CheckOverlap {
 	 * Checks if overlap between the two mask boundaries has occurred.
 	 * 
 	 * @param newSeries
-	 *            the mask boundary which has not been set yet (low mask boundary)
+	 *            the mask boundary which has not been set yet (low mask
+	 *            boundary)
 	 * @param existingSeries
-	 *            the mask boundary which has already been set (high mask boundary)
+	 *            the mask boundary which has already been set (high mask
+	 *            boundary)
 	 * @return true if there is no overlap, false otherwise
 	 */
 	public boolean testMaskOverlap(XYChart.Series<Number, Number> newSeries,
@@ -38,7 +41,8 @@ public class CheckOverlap {
 					Data<Number, Number> currentNDataPoint = newSeries.getData().get(j);
 					Data<Number, Number> nextNDataPoint = newSeries.getData().get(j + 1);
 
-					// Create line between current and next new series data points.
+					// Create line between current and next new series data
+					// points.
 					Line2D checkIntersection = new Line2D();
 					Point2D currentNPoint = new Point2D(currentNDataPoint.getXValue().floatValue(),
 							currentNDataPoint.getYValue().floatValue());
@@ -46,7 +50,8 @@ public class CheckOverlap {
 							nextNDataPoint.getYValue().floatValue());
 					checkIntersection.setLine(currentNPoint, nextNPoint);
 
-					// Create lines between current and next existing series data points.
+					// Create lines between current and next existing series
+					// data points.
 					Data<Number, Number> currentDataPoint = existingSeries.getData().get(i);
 					Data<Number, Number> nextDataPoint = existingSeries.getData().get(i + 1);
 
@@ -68,8 +73,8 @@ public class CheckOverlap {
 	}
 
 	/**
-	 * Determines if the mask point to be added to the lower mask boundary will not overlap over areas of the high mask
-	 * boundary area.
+	 * Determines if the mask point to be added to the lower mask boundary will
+	 * not overlap over areas of the high mask boundary area.
 	 * 
 	 * @param lowMaskSeries
 	 *            the low mask boundary series
@@ -80,7 +85,8 @@ public class CheckOverlap {
 	 * @param coordY
 	 *            the v-value of the point to be added.
 	 * @param counter
-	 *            keeps track of where the new point is (before/after existing point)
+	 *            keeps track of where the new point is (before/after existing
+	 *            point)
 	 * @return true if there is no overlap. false otherwise.
 	 */
 	public boolean checkLowHighMaskOverlap(XYChart.Series<Number, Number> lowMaskSeries,
@@ -100,7 +106,9 @@ public class CheckOverlap {
 			Point2D existingPoint = new Point2D(existingX, existingY);
 
 			return checkIntersection(highMaskSeries, existingPoint, newPoint);
-		} else if (lowMaskSeries.getData().size() == 0) { // Check first-to-be data point position validity
+		} else if (lowMaskSeries.getData().size() == 0) { // Check first-to-be
+															// data point
+															// position validity
 			Data<Number, Number> firstPoint = new Data<>(coordX, coordY);
 			return GuiController.instance.lineChart.maskTestSinglePointOverlapCheck(firstPoint);
 		}
@@ -109,8 +117,8 @@ public class CheckOverlap {
 	}
 
 	/**
-	 * A private helper function to 'checkLowHighMaskOverlap' which determines which direction the line will be in
-	 * (right to left, or left to right).
+	 * A private helper function to 'checkLowHighMaskOverlap' which determines
+	 * which direction the line will be in (right to left, or left to right).
 	 * 
 	 * @param series
 	 *            the low boundary series
@@ -154,8 +162,8 @@ public class CheckOverlap {
 	}
 
 	/**
-	 * A private helper function to 'checkLowHighMaskOverlap' which determines if the point to be added would cause an
-	 * overlap if added.
+	 * A private helper function to 'checkLowHighMaskOverlap' which determines
+	 * if the point to be added would cause an overlap if added.
 	 * 
 	 * @param highMaskSeries
 	 *            the high mask boundary series

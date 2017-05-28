@@ -7,8 +7,9 @@ import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 
 /**
- * The SerialDataListener class is used for binding to the currently open serial port, and getting data from it. NOTE:
- * The concept of a separate class for the 'SerialPortDataListener' is modified off TP1 code which my team member
+ * The SerialDataListener class is used for binding to the currently open serial
+ * port, and getting data from it. NOTE: The concept of a separate class for the
+ * 'SerialPortDataListener' is modified off TP1 code which my team member
  * originally wrote.
  * 
  * @modifier/@author dayakern
@@ -19,12 +20,14 @@ public class SerialDataListener implements SerialPortDataListener {
 
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
+	private static final double TIME_OUT = 5e+8; // 1/2 a second
 
 	// Whether the port connection has bugged out.
 	private boolean errored;
 	private String firstDisplay;
 	private String secondDisplay;
-
+	private long initialTime;
+	private long time;
 	private AtomicBoolean quit;
 
 	private SerialTest serialTest;
@@ -36,10 +39,13 @@ public class SerialDataListener implements SerialPortDataListener {
 		errored = false;
 		firstDisplay = "";
 		secondDisplay = "";
+		initialTime = 0L;
+		time = 0L;
 	}
 
 	/**
-	 * Handles a listening event (LISTENING_EVENT_DATA_AVAILABLE) on the serial port. Reads the data and displays it.
+	 * Handles a listening event (LISTENING_EVENT_DATA_AVAILABLE) on the serial
+	 * port. Reads the data and displays it.
 	 */
 	@Override
 	public void serialEvent(SerialPortEvent sEvent) {
@@ -69,9 +75,23 @@ public class SerialDataListener implements SerialPortDataListener {
 
 					input.append(s);
 
+					if (!serialTest.getIsChecked()) {
+						initialTime = System.nanoTime(); // Current time
+					}
+
 					if (s == '\n') {
 						String line = input.toString().trim();
 
+						if (!serialTest.getIsChecked()) {
+							time = System.nanoTime() - initialTime;
+							checkData(line);
+
+							if (time > TIME_OUT && !serialTest.getIsChecked()) {
+								System.err.println("NO TWO WAY");
+							} else {
+
+							}
+						}
 						// System.err.println("\"" + line + "\"");
 
 						getData(line);
@@ -91,32 +111,44 @@ public class SerialDataListener implements SerialPortDataListener {
 		}
 	}
 
+	private void checkData(String receivedData) {
+
+		if (isValidText(receivedData) && !checkReceivedDataEnds(receivedData)) {
+			if (receivedData.charAt(1) == 'C' && receivedData.length() == 3) {
+				// TODO: add received C
+				serialTest.setIsChecked(true);
+			}
+		}
+	}
+
 	/**
-	 * Gets the data received from the input stream and uses it for it's intended purpose (i.e. multimeter display
-	 * text).
+	 * Gets the data received from the input stream and uses it for it's
+	 * intended purpose (i.e. multimeter display text).
 	 * 
 	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
+	 *            the data received from the input stream that's been stitched
+	 *            into a String
 	 */
 	private void getData(String receivedData) {
 
 		if (isValidText(receivedData) && !checkReceivedDataEnds(receivedData)) {
+			if (receivedData.charAt(1) == 'D') {
 
-			if (receivedData.charAt(1) == 'C') {
-				// TODO: add received C
-			} else if (receivedData.charAt(1) == 'D') { // Change multimeter display
-
+				// Change multimeter display
 				updateMultimeterDisplay(receivedData.substring(2));
 			} else if (receivedData.charAt(1) == 'V' || receivedData.charAt(1) == 'W' || receivedData.charAt(1) == 'I'
 					|| receivedData.charAt(1) == 'J' || receivedData.charAt(1) == 'R' || receivedData.charAt(1) == 'L'
-					|| receivedData.charAt(1) == 'C') { // Change values received
+					|| receivedData.charAt(1) == 'C') {
 
+				// Change values received
 				sortMultimeterMeasurements(receivedData.substring(1));
-			} else if (receivedData.charAt(1) == 'B') { // Change brightness levels
+			} else if (receivedData.charAt(1) == 'B') {
 
+				// Change brightness levels
 				selectBrightnessPercentage(receivedData.substring(1));
-			} else if (receivedData.charAt(1) == 'F') { // Change frequency rate levels
+			} else if (receivedData.charAt(1) == 'F') {
 
+				// Change frequency rate
 				selectFrequencyRate(receivedData.substring(1));
 			} else {
 				// IGNORE
@@ -125,10 +157,12 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * A private helper function for 'getData' which selects the frequency rate iff the given String is valid.
+	 * A private helper function for 'getData' which selects the frequency rate
+	 * iff the given String is valid.
 	 * 
 	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
+	 *            the data received from the input stream that's been stitched
+	 *            into a String
 	 */
 	private void selectFrequencyRate(String receivedData) {
 		boolean failedToDecode = false;
@@ -141,7 +175,8 @@ public class SerialDataListener implements SerialPortDataListener {
 				frequencyRate = Integer.parseInt(receivedData.substring(3, receivedData.length() - 1).trim());
 			} catch (NumberFormatException e) {
 
-				// If data received from the serial connection was not the right type
+				// If data received from the serial connection was not the right
+				// type
 				failedToDecode = true;
 			}
 
@@ -159,10 +194,12 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * A private helper function for 'getData' which selects the brightness display iff the given String is valid.
+	 * A private helper function for 'getData' which selects the brightness
+	 * display iff the given String is valid.
 	 * 
 	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
+	 *            the data received from the input stream that's been stitched
+	 *            into a String
 	 */
 	private void selectBrightnessPercentage(String receivedData) {
 		boolean failedToDecode = false;
@@ -175,7 +212,8 @@ public class SerialDataListener implements SerialPortDataListener {
 				brightnessLevel = Integer.parseInt(receivedData.substring(3, receivedData.length() - 1).trim());
 			} catch (NumberFormatException e) {
 
-				// If data received from the serial connection was not the right type
+				// If data received from the serial connection was not the right
+				// type
 				failedToDecode = true;
 			}
 
@@ -193,10 +231,12 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * A private helper function for 'getData' which updates the multimeter display iff the given String is valid.
+	 * A private helper function for 'getData' which updates the multimeter
+	 * display iff the given String is valid.
 	 * 
 	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
+	 *            the data received from the input stream that's been stitched
+	 *            into a String
 	 */
 	private void updateMultimeterDisplay(String receivedData) {
 		boolean failedToDecode = false;
@@ -215,7 +255,8 @@ public class SerialDataListener implements SerialPortDataListener {
 				failedToDecode = true;
 			}
 
-			// Update Multimeter display iif the values for the top and bottom lines have been found
+			// Update Multimeter display iif the values for the top and bottom
+			// lines have been found
 			if (!firstDisplay.isEmpty() && !secondDisplay.isEmpty()) {
 				GuiController.instance.multimeterDisplay.setText(firstDisplay + secondDisplay);
 
@@ -229,10 +270,12 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * Check that the first and last values of the received data has the expected value.
+	 * Check that the first and last values of the received data has the
+	 * expected value.
 	 * 
 	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
+	 *            the data received from the input stream that's been stitched
+	 *            into a String
 	 * @return false if the received data is valid, true if it isn't
 	 */
 	private boolean checkReceivedDataEnds(String receivedData) {
@@ -240,10 +283,12 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * A private helper function for 'getData' which updates the graph display iff the given String is valid.
+	 * A private helper function for 'getData' which updates the graph display
+	 * iff the given String is valid.
 	 * 
 	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
+	 *            the data received from the input stream that's been stitched
+	 *            into a String
 	 */
 	private void sortMultimeterMeasurements(String receivedData) {
 
@@ -258,7 +303,8 @@ public class SerialDataListener implements SerialPortDataListener {
 			} catch (NumberFormatException e) {
 				System.err.println("Failed to decode data:" + measurementDataValue);
 
-				// If data received from the serial connection was not the right type
+				// If data received from the serial connection was not the right
+				// type
 				failedToDecode = true;
 			}
 
@@ -277,7 +323,8 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * Sets up certain behaviours when in received Continuity/Logic values and when not
+	 * Sets up certain behaviours when in received Continuity/Logic values and
+	 * when not
 	 * 
 	 * @param unit
 	 *            the received unit of the data
@@ -301,7 +348,8 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * Changes the displayed value of the AC/DC to the opposite of what it's currently receiving.
+	 * Changes the displayed value of the AC/DC to the opposite of what it's
+	 * currently receiving.
 	 * 
 	 * @param unit
 	 *            the received unit of the data
@@ -315,11 +363,14 @@ public class SerialDataListener implements SerialPortDataListener {
 	}
 
 	/**
-	 * A private helper function to 'determineValidText' which determines if the data received in valid.
+	 * A private helper function to 'determineValidText' which determines if the
+	 * data received in valid.
 	 * 
 	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
-	 * @return whether or not the string is valid (true if it is valid, false if it isn't)
+	 *            the data received from the input stream that's been stitched
+	 *            into a String
+	 * @return whether or not the string is valid (true if it is valid, false if
+	 *         it isn't)
 	 */
 	private boolean isValidText(String receivedData) {
 		return receivedData != null && !receivedData.equalsIgnoreCase("");

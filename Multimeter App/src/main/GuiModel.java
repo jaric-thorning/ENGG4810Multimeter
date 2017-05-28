@@ -20,7 +20,8 @@ public class GuiModel {
 	private static final String DELIMITER = ",";
 	private static final String NEW_LINE_SEPARATOR = "\n";
 
-	// The format for reading/writing files <x-value><y-value><y-value units><recorded time>
+	// The format for reading/writing files <x-value><y-value><y-value
+	// units><recorded time>
 	private static final String[] FILE_HEADERS = { "Time", "Value", "Units", "IsoTime" };
 
 	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
@@ -30,8 +31,9 @@ public class GuiModel {
 	}
 
 	/**
-	 * Reads the contents of a selected .csv file and returns an array of the read data. If the filename is not found or
-	 * there is a problem with the buffered reader, exceptions will be caught.
+	 * Reads the contents of a selected .csv file and returns an array of the
+	 * read data. If the filename is not found or there is a problem with the
+	 * buffered reader, exceptions will be caught.
 	 * 
 	 * @param fileName
 	 *            the file to read the data from
@@ -44,7 +46,8 @@ public class GuiModel {
 		String line = "";
 
 		try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
-			bufferedReader.readLine(); // Get rid of the csv file's first line (column headers)
+			bufferedReader.readLine(); // Get rid of the csv file's first line
+										// (column headers)
 
 			while ((line = bufferedReader.readLine()) != null) {
 				String[] tokens = line.split(DELIMITER);
@@ -72,9 +75,11 @@ public class GuiModel {
 					System.err.println("There are no elements");
 				}
 			}
-		} catch (FileNotFoundException e1) { // The file name supplied was incorrect
+		} catch (FileNotFoundException e1) { // The file name supplied was
+												// incorrect
 			e1.printStackTrace();
-		} catch (IOException e1) { // There was a problem using the buffered reader
+		} catch (IOException e1) { // There was a problem using the buffered
+									// reader
 			e1.printStackTrace();
 		}
 
@@ -112,7 +117,8 @@ public class GuiModel {
 	}
 
 	/**
-	 * A private helper function to 'saveColumnData' which inserts the headers to be the first row of the .csv file.
+	 * A private helper function to 'saveColumnData' which inserts the headers
+	 * to be the first row of the .csv file.
 	 * 
 	 * @param bufferedWriter
 	 *            the buffered writer needed to write data to the file
@@ -132,14 +138,16 @@ public class GuiModel {
 	}
 
 	/**
-	 * A private helper function to 'saveColumnData' which writes the contents of the .csv file after the header.
+	 * A private helper function to 'saveColumnData' which writes the contents
+	 * of the .csv file after the header.
 	 * 
 	 * @param bufferedWriter
 	 *            the buffered writer needed to write data to the file
 	 * @param xValue
 	 *            is a single data value for time data values
 	 * @param yValue
-	 *            is a single data value for the voltage/current/resistant values
+	 *            is a single data value for the voltage/current/resistant
+	 *            values
 	 * @param yUnit
 	 *            is the unit value of the y-axis values
 	 * @param isoTime
@@ -162,8 +170,9 @@ public class GuiModel {
 	}
 
 	/**
-	 * Reads the contents of a selected mask data .csv file and returns an array of the read data. If the filename is
-	 * not found or there is a problem with the buffered reader, exceptions will be caught.
+	 * Reads the contents of a selected mask data .csv file and returns an array
+	 * of the read data. If the filename is not found or there is a problem with
+	 * the buffered reader, exceptions will be caught.
 	 * 
 	 * @param fileName
 	 *            the file to read the mask data from
@@ -184,9 +193,11 @@ public class GuiModel {
 					System.err.println("There are no elements");
 				}
 			}
-		} catch (FileNotFoundException e1) { // The file name supplied was incorrect
+		} catch (FileNotFoundException e1) { // The file name supplied was
+												// incorrect
 			e1.printStackTrace();
-		} catch (IOException e1) { // There was a problem using the buffered reader
+		} catch (IOException e1) { // There was a problem using the buffered
+									// reader
 			e1.printStackTrace();
 		}
 
@@ -203,7 +214,8 @@ public class GuiModel {
 	 * @param yUnit
 	 *            the y-value units
 	 * @param seriesName
-	 *            name of mask boundary area (to determine which points belong to which mask)
+	 *            name of mask boundary area (to determine which points belong
+	 *            to which mask)
 	 * @throws IOException
 	 *             occurs when there is a problem with the buffered writer
 	 */
@@ -219,7 +231,8 @@ public class GuiModel {
 	}
 
 	/**
-	 * A private helper function to 'saveMaskData' which writes the contents of the mask .csv file.
+	 * A private helper function to 'saveMaskData' which writes the contents of
+	 * the mask .csv file.
 	 * 
 	 * @param bufferedWriter
 	 *            the buffered writer needed to write data to the file
@@ -228,7 +241,8 @@ public class GuiModel {
 	 * @param xValue
 	 *            is a single data value for time data values
 	 * @param yValue
-	 *            is a single data value for the voltage/current/resistant values
+	 *            is a single data value for the voltage/current/resistant
+	 *            values
 	 * @param yUnit
 	 *            is the unit value of the y-axis values
 	 */

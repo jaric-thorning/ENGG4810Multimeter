@@ -7,7 +7,8 @@ import com.sun.javafx.geom.Line2D;
 import javafx.scene.chart.XYChart;
 
 /**
- * The DataComparator class houses custom comparators for sorting Line2D and XYChart.Data<Number, Number> values.
+ * The DataComparator class houses custom comparators for sorting Line2D and
+ * XYChart.Data<Number, Number> values.
  * 
  * @author dayakern
  *
@@ -18,11 +19,12 @@ public class DataComparator {
 	}
 
 	/**
-	 * A comparator used to determine the order-in increasing start point x values-of all line segments found to be
-	 * overlapping into the high/low mask regions.
+	 * A comparator used to determine the order-in increasing start point x
+	 * values-of all line segments found to be overlapping into the high/low
+	 * mask regions.
 	 * 
-	 * @return the value which determines if the line segment should stay where it is in the list or if it should be
-	 *         moved further down.
+	 * @return the value which determines if the line segment should stay where
+	 *         it is in the list or if it should be moved further down.
 	 */
 	protected Comparator<Line2D> sortOverlap() {
 
@@ -42,11 +44,11 @@ public class DataComparator {
 	}
 
 	/**
-	 * A comparator used to determine the order-in increasing x values-of all points added into the high/low mask
-	 * series.
+	 * A comparator used to determine the order-in increasing x values-of all
+	 * points added into the high/low mask series.
 	 * 
-	 * @return the value which determines if the point should stay where it is in the list or if it should be moved
-	 *         further down.
+	 * @return the value which determines if the point should stay where it is
+	 *         in the list or if it should be moved further down.
 	 */
 	protected Comparator<XYChart.Data<Number, Number>> sortChart() {
 

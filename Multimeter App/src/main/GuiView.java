@@ -51,7 +51,8 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * Enables other classes to access methods within this class, once the program has been launched.
+	 * Enables other classes to access methods within this class, once the
+	 * program has been launched.
 	 * 
 	 * @return an instance of the GuiView class
 	 */
@@ -123,7 +124,8 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * Determines what happens to the current tab's components when the other tab is selected.
+	 * Determines what happens to the current tab's components when the other
+	 * tab is selected.
 	 * 
 	 * @param controller
 	 *            the GUI Controller with components to access/modify
@@ -209,8 +211,8 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * A private function to 'setupLineChart' which sets up the necessary modifiers on the x and y axes of the line
-	 * chart.
+	 * A private function to 'setupLineChart' which sets up the necessary
+	 * modifiers on the x and y axes of the line chart.
 	 * 
 	 * @param xAxis
 	 *            the x-axis to be modified
@@ -240,7 +242,8 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * Adds a listener to the width property of the scene, and to some of the contained elements.
+	 * Adds a listener to the width property of the scene, and to some of the
+	 * contained elements.
 	 * 
 	 * @param scene
 	 *            the scene which has the width listener attached to it
@@ -263,7 +266,8 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * Adds a listener to the height property of the scene, and to some of the contained elements.
+	 * Adds a listener to the height property of the scene, and to some of the
+	 * contained elements.
 	 * 
 	 * @param scene
 	 *            the scene which has the height listener attached to it
@@ -285,8 +289,9 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * Displays customised pop-up dialog box to the user (i.e. when they are about to exit connected or disconnected
-	 * mode or save a file). Dialog box structure modified from TP1 code, which was modified from:
+	 * Displays customised pop-up dialog box to the user (i.e. when they are
+	 * about to exit connected or disconnected mode or save a file). Dialog box
+	 * structure modified from TP1 code, which was modified from:
 	 * http://code.makery.ch/blog/javafx-dialogs-official/.
 	 * 
 	 * @param title
@@ -296,7 +301,8 @@ public class GuiView extends Application {
 	 * @param errorType
 	 *            if the message should be a warning or error type
 	 * @param alertType
-	 *            the actual type of the alert box, (i.e. only displaying OK for an error alert)
+	 *            the actual type of the alert box, (i.e. only displaying OK for
+	 *            an error alert)
 	 * @return the status of the User's selection
 	 */
 	public Alert alertUser(String title, String context, String errorType, AlertType alertType) {
@@ -323,8 +329,8 @@ public class GuiView extends Application {
 	}
 
 	/**
-	 * Launches a warning message box to the user. This is to inform them that they cannot add the latest point to the
-	 * high/low mask boundaries.
+	 * Launches a warning message box to the user. This is to inform them that
+	 * they cannot add the latest point to the high/low mask boundaries.
 	 */
 	public void illegalMaskPoint() {
 

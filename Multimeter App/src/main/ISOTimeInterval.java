@@ -40,13 +40,15 @@ public class ISOTimeInterval {
 	}
 
 	/**
-	 * Converts the ISO formatted time the data points are received at to seconds. To be used as the x-value
+	 * Converts the ISO formatted time the data points are received at to
+	 * seconds. To be used as the x-value
 	 * 
 	 * @param startDate
 	 *            when the first data point is received
 	 * @param endDate
 	 *            when the last data point is received (continuously updates)
-	 * @return the number of seconds between the first point and the latest last point
+	 * @return the number of seconds between the first point and the latest last
+	 *         point
 	 */
 	public static Double xValue(LocalDateTime startDate, LocalDateTime endDate) {
 		Double seconds = 0D;
@@ -65,7 +67,8 @@ public class ISOTimeInterval {
 	}
 
 	/**
-	 * Parses a string to be a 'yyyy-MM-dd'T'HH:mm:ss.SSS' formatted ISO time interval.
+	 * Parses a string to be a 'yyyy-MM-dd'T'HH:mm:ss.SSS' formatted ISO time
+	 * interval.
 	 * 
 	 * @param stringToParse
 	 *            the string to be parsed

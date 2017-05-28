@@ -12,9 +12,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 /**
- * The SerialTest class handles serial communications between software/hardware/firmware. NOTE: The concept of binding
- * to the port, closing the ports and refreshing the ports is modified off TP1 code which my team member originally
- * wrote.
+ * The SerialTest class handles serial communications between
+ * software/hardware/firmware. NOTE: The concept of binding to the port, closing
+ * the ports and refreshing the ports is modified off TP1 code which my team
+ * member originally wrote.
  * 
  * @modifier/@author dayakern
  *
@@ -68,10 +69,20 @@ public class SerialTest {
 	 * Sets the value 'isChecked' to a new value.
 	 * 
 	 * @param newValue
-	 *            whether or not there's a two-way connection ( true if there's a two-way connection, false otherwise)
+	 *            whether or not there's a two-way connection ( true if there's
+	 *            a two-way connection, false otherwise)
 	 */
 	public void setIsChecked(boolean newValue) {
 		isChecked = newValue;
+	}
+
+	/**
+	 * Gets the 'isChecked' boolean value.
+	 * 
+	 * @return the value of the two-way flag
+	 */
+	public boolean getIsChecked() {
+		return isChecked;
 	}
 
 	/**
@@ -119,40 +130,46 @@ public class SerialTest {
 	}
 
 	/**
-	 * Handles the changing of the serial port selection. If there are ports (with valid names) it binds the serial port
-	 * (refreshes the port list if it didn't bind); otherwise is closes the open port.
+	 * Handles the changing of the serial port selection. If there are ports
+	 * (with valid names) it binds the serial port (refreshes the port list if
+	 * it didn't bind); otherwise is closes the open port.
 	 */
 	public void selectPort() {
 		System.out.println("Changed to this port: " + GuiController.instance.portsAvailable.getValue());
 
 		SerialPort[] ports = SerialPort.getCommPorts();
 		if (GuiController.instance.portsAvailable.getValue() != null
-				&& !GuiController.instance.portsAvailable.getValue().equalsIgnoreCase("")
-				&& !GuiController.instance.portsAvailable.getValue().equals("Ports")) {
+				&& !GuiController.instance.portsAvailable.getValue().equalsIgnoreCase("")) {
 			for (SerialPort serialPort : ports) {
 
 				// Within the list of ports, check the selected port
 				if (serialPort.getDescriptivePortName().equals(GuiController.instance.portsAvailable.getValue())) {
 					System.out.println("Opening Serial Port " + serialPort.getSystemPortName() + "...");
 
-					// Check if the port was opened and if it binded to the listener
+					// Check if the port was opened and if it binded to the
+					// listener
 					if (checkOpenPort(serialPort)) {
 						System.out.println("Success.");
 						GuiController.instance.setConnectedModeComponents(false);
 						GuiController.instance.setConnectedMultimeterComponents(false);
 
-						// if (checkConnection()) { // Check if there's a two-way connection
-						// GuiController.instance.setConnectedMultimeterComponents(false); // Enable Components
+						// if (checkConnection()) { // Check if there's a
+						// two-way connection
+						// GuiController.instance.setConnectedMultimeterComponents(false);
+						// // Enable Components
 						// } else {
-						// System.out.println("Failed to receive data from port");
-						// GuiController.instance.setConnectedMultimeterComponents(true); // Disable Components
+						// System.out.println("Failed to receive data from
+						// port");
+						// GuiController.instance.setConnectedMultimeterComponents(true);
+						// // Disable Components
 						// }
 
 						return;
 
 					} else {
 						System.out.println("Failed to open port.");
-						GuiController.instance.setConnectedMultimeterComponents(true); // Disable Components
+						// Disable components
+						GuiController.instance.setConnectedMultimeterComponents(true);
 						return;
 					}
 				}
@@ -163,19 +180,21 @@ public class SerialTest {
 	}
 
 	/**
-	 * A private helper function to 'selectPort' which opens the given port and adds a data listener to the port.
+	 * A private helper function to 'selectPort' which opens the given port and
+	 * adds a data listener to the port.
 	 * 
 	 * @param serialPort
 	 *            the port that will be opened
-	 * @return whether or not the serial port was opened and had a listener binded to it successfully (true it did,
-	 *         false it didn't)
+	 * @return whether or not the serial port was opened and had a listener
+	 *         binded to it successfully (true it did, false it didn't)
 	 */
 	private boolean checkOpenPort(SerialPort serialPort) {
 		closeOpenPort(); // Close any previously opened ports
 
 		if (!(serialPort.openPort() && bindListen(serialPort))) {
 
-			return false; // Port wasn't successful at opening and adding a listener
+			return false; // Port wasn't successful at opening and adding a
+							// listener
 		}
 
 		openSerialPort = serialPort;
@@ -184,11 +203,13 @@ public class SerialTest {
 	}
 
 	/**
-	 * A private helper function to 'checkOpenPort' which binds a listener to the serial port.
+	 * A private helper function to 'checkOpenPort' which binds a listener to
+	 * the serial port.
 	 * 
 	 * @param serialPort
 	 *            the port that needs to be binded to
-	 * @return whether or not the serial port was binded to successfully (true if it did, false if if didn't)
+	 * @return whether or not the serial port was binded to successfully (true
+	 *         if it did, false if if didn't)
 	 */
 	private boolean bindListen(SerialPort serialPort) {
 		System.out.println("Binding to Serial Port " + serialPort.getSystemPortName() + "...");
@@ -226,7 +247,8 @@ public class SerialTest {
 	}
 
 	/**
-	 * A private helper function for 'selectPort' which determines if there is a two-way connection (can write).
+	 * A private helper function for 'selectPort' which determines if there is a
+	 * two-way connection (can write).
 	 * 
 	 * @return true if there is a two-way connection, false otherwise
 	 */
@@ -254,7 +276,8 @@ public class SerialTest {
 	}
 
 	/**
-	 * Refreshes the existing ports list to include any new ports detected, as well as closes any open ports.
+	 * Refreshes the existing ports list to include any new ports detected, as
+	 * well as closes any open ports.
 	 */
 	public void refreshSelectablePortsList() {
 		if (!Platform.isFxApplicationThread()) {
@@ -267,7 +290,10 @@ public class SerialTest {
 			return;
 		}
 		closeOpenPort(); // Close any open ports
-		GuiController.instance.setConnectedMultimeterComponents(true); // Disable connected mode components
+		GuiController.instance.setConnectedMultimeterComponents(true); // Disable
+																		// connected
+																		// mode
+																		// components
 		GuiController.instance.setConnectedModeComponents(true);
 		portNames.clear();
 

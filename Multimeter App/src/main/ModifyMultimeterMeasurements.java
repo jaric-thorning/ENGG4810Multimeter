@@ -4,7 +4,8 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.RadioButton;
 
 /**
- * The ModifyMultimeterMeasurements class deals with checking and displaying any y-unit values.
+ * The ModifyMultimeterMeasurements class deals with checking and displaying any
+ * y-unit values.
  * 
  * @author dayakern
  *
@@ -17,8 +18,9 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * A private helper function for 'exportMaskData' which converts the selected y-unit value to the correct mask
-	 * export file format if there has been no data pre-loaded before this point.
+	 * A private helper function for 'exportMaskData' which converts the
+	 * selected y-unit value to the correct mask export file format if there has
+	 * been no data pre-loaded before this point.
 	 * 
 	 * @param maskVRBtn
 	 *            if voltage should be the saved y-unit of the mask
@@ -45,8 +47,8 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * A private helper function for 'exportMaskData' which converts the stored y-units to the correct mask export file
-	 * format.
+	 * A private helper function for 'exportMaskData' which converts the stored
+	 * y-units to the correct mask export file format.
 	 * 
 	 * @param unit
 	 *            the stored y-unit value of the y-axis value
@@ -85,7 +87,8 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * Determines if the y-value unit has changed to voltage if it's currently not voltage
+	 * Determines if the y-value unit has changed to voltage if it's currently
+	 * not voltage
 	 * 
 	 * @param unit
 	 *            the y-unit received in the data sent across
@@ -106,7 +109,8 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * Determines if the y-value unit has changed to current if it's currently not current
+	 * Determines if the y-value unit has changed to current if it's currently
+	 * not current
 	 * 
 	 * @param unit
 	 *            the y-unit received in the data sent across
@@ -127,7 +131,8 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * Determines if the y-value unit has changed to resistance if it's currently not resistance
+	 * Determines if the y-value unit has changed to resistance if it's
+	 * currently not resistance
 	 * 
 	 * @param unit
 	 *            the y-unit received in the data sent across
@@ -148,7 +153,8 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * Determines if the y-value unit has changed to logic if it's currently not logic
+	 * Determines if the y-value unit has changed to logic if it's currently not
+	 * logic
 	 * 
 	 * @param unit
 	 *            the y-unit received in the data sent across
@@ -170,7 +176,8 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * Determines if the y-value unit has changed to continuity if it's currently not continuity
+	 * Determines if the y-value unit has changed to continuity if it's
+	 * currently not continuity
 	 * 
 	 * @param unit
 	 *            the y-unit received in the data sent across
@@ -192,7 +199,8 @@ public class ModifyMultimeterMeasurements {
 	}
 
 	/**
-	 * Converts the y-unit received through the serial connection to the format it will appear when saved out to a file.
+	 * Converts the y-unit received through the serial connection to the format
+	 * it will appear when saved out to a file.
 	 * 
 	 * @param unit
 	 *            the y-unit to format
@@ -201,7 +209,8 @@ public class ModifyMultimeterMeasurements {
 	protected String getUnitToSave(String unit) {
 		if (unit.equals("V") || unit.equals("W")) {
 			return "V";
-		} else if (unit.equals("I") || unit.equals("J")) { // need to convert to milliamps
+		} else if (unit.equals("I") || unit.equals("J")) { // need to convert to
+															// milliamps
 			return "mA";
 		} else if (unit.equals("R")) { // need to convert to Ohm
 			return "Ohm"; // TODO: make sure that kOhm is saved out too?

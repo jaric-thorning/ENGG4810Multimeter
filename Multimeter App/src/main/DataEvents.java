@@ -13,8 +13,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Polygon;
 
 /**
- * The DataEvents class deals with events (i.e. mouse events) that affect the data points of the multimeter values or
- * high/low mask boundaries.
+ * The DataEvents class deals with events (i.e. mouse events) that affect the
+ * data points of the multimeter values or high/low mask boundaries.
  * 
  * @author dayakern
  *
@@ -26,7 +26,8 @@ public class DataEvents {
 	}
 
 	/**
-	 * An event handler for displaying the x/y values of the plotted data point when the mouse enters the data point
+	 * An event handler for displaying the x/y values of the plotted data point
+	 * when the mouse enters the data point
 	 * 
 	 * @param dataPoint
 	 *            the data point to attach this event to
@@ -41,7 +42,8 @@ public class DataEvents {
 	 * @param endTime
 	 *            when the last data point was recorded
 	 * @param isSD
-	 *            whether or not the data points have come from the software or the SD card
+	 *            whether or not the data points have come from the software or
+	 *            the SD card
 	 * @return the event handler
 	 */
 	protected EventHandler<MouseEvent> getDataXYValues(XYChart.Data<Number, Number> dataPoint, int index,
@@ -75,7 +77,8 @@ public class DataEvents {
 	}
 
 	/**
-	 * An event handler for clearing the displayed x/y values of plotted data when the mouse exits the data point.
+	 * An event handler for clearing the displayed x/y values of plotted data
+	 * when the mouse exits the data point.
 	 * 
 	 * @param xDataCoord
 	 *            the GUI label which displays the x values
@@ -96,8 +99,8 @@ public class DataEvents {
 	}
 
 	/**
-	 * An event handler to change the cursor type when hovering over a data point to help identify that these objects
-	 * can be interacted with.
+	 * An event handler to change the cursor type when hovering over a data
+	 * point to help identify that these objects can be interacted with.
 	 * 
 	 * @param dataPoint
 	 *            the data point to attach this event to
@@ -116,12 +119,14 @@ public class DataEvents {
 	}
 
 	/**
-	 * Deals with the deletion of data points from the high/low mask series (when the user has right clicked).
+	 * Deals with the deletion of data points from the high/low mask series
+	 * (when the user has right clicked).
 	 * 
 	 * @param dataPoint
 	 *            the data point to remove
 	 * @param series
-	 *            the specified high/low mask series which holds the to-be-removed data point
+	 *            the specified high/low mask series which holds the
+	 *            to-be-removed data point
 	 */
 	protected void removeMaskDataPoint(XYChart.Data<Number, Number> dataPoint, XYChart.Series<Number, Number> series) {
 		dataPoint.getNode().setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -143,11 +148,12 @@ public class DataEvents {
 	}
 
 	/**
-	 * Deals with the removal of mouse event listeners on the data points of the specified series.
+	 * Deals with the removal of mouse event listeners on the data points of the
+	 * specified series.
 	 * 
 	 * @param series
-	 *            the specified high/low mask series which needs to have it's data points cleared of specific mouse
-	 *            event listeners
+	 *            the specified high/low mask series which needs to have it's
+	 *            data points cleared of specific mouse event listeners
 	 */
 	protected void removeAllListeners(XYChart.Series<Number, Number> series) {
 		for (XYChart.Data<Number, Number> dataPoint : series.getData()) {
@@ -161,8 +167,8 @@ public class DataEvents {
 	}
 
 	/**
-	 * Creates an event handler to deal with the event when the user clicks on any space of the opposite mask boundary
-	 * area.
+	 * Creates an event handler to deal with the event when the user clicks on
+	 * any space of the opposite mask boundary area.
 	 * 
 	 * @param polygon
 	 *            the polygon that was clicked

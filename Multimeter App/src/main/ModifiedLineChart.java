@@ -15,12 +15,15 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 
 /**
- * The ModifiedLineChart class represents a modified version of the line chart class which adds the mask area to the
- * chart plot.
+ * The ModifiedLineChart class represents a modified version of the line chart
+ * class which adds the mask area to the chart plot.
  * 
- * PARTS MODIFIED FROM: http://stackoverflow.com/questions/38871202/how-to-add-shapes-on-javafx-linechart (the idea of
- * refreshing the chart background) & http://stackoverflow.com/questions/32601082/javafx-linechart-color-differences
- * (the idea of adding polygons to the background of the chart to fake area between the line and a boundary).
+ * PARTS MODIFIED FROM:
+ * http://stackoverflow.com/questions/38871202/how-to-add-shapes-on-javafx-
+ * linechart (the idea of refreshing the chart background) &
+ * http://stackoverflow.com/questions/32601082/javafx-linechart-color-
+ * differences (the idea of adding polygons to the background of the chart to
+ * fake area between the line and a boundary).
  * 
  * @modifier/@author dayakern
  */
@@ -52,7 +55,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	 * Gets the polygons belonging to high/low mask boundaries.
 	 * 
 	 * @param series
-	 *            the specified high/low mask series which will hold the polygons
+	 *            the specified high/low mask series which will hold the
+	 *            polygons
 	 * @return the list of polygons belonging to the specified mask series
 	 */
 	protected ArrayList<Polygon> getPolygonArray(XYChart.Series<Number, Number> series) {
@@ -123,7 +127,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	 * Creates the mask area.
 	 * 
 	 * @param series
-	 *            the specified high/low mask series which will hold the polygons
+	 *            the specified high/low mask series which will hold the
+	 *            polygons
 	 * @param seriesData
 	 *            the list of all the data points within the given series
 	 * @param polygonList
@@ -158,8 +163,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * A private helper function to 'createMaskArea' which changes the colour of the area under/over the mask boundary
-	 * lines.
+	 * A private helper function to 'createMaskArea' which changes the colour of
+	 * the area under/over the mask boundary lines.
 	 * 
 	 * @param seriesName
 	 *            the name of the mask series
@@ -175,11 +180,12 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * Sets up each polygon shape so that if the user tries to select a new point within the polygon's shape, the user
-	 * will be able to.
+	 * Sets up each polygon shape so that if the user tries to select a new
+	 * point within the polygon's shape, the user will be able to.
 	 * 
 	 * @param polygons
-	 *            the list of all the polygons which make up the mask boundary area under/over the line
+	 *            the list of all the polygons which make up the mask boundary
+	 *            area under/over the line
 	 */
 	private void setupBoundsCheck(ArrayList<Polygon> polygons) {
 		for (Polygon polygon : polygons) {
@@ -191,18 +197,21 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * A private helper function to 'setupBoundsCheck' which assigns a mouse clicked event handler to the given polygon.
+	 * A private helper function to 'setupBoundsCheck' which assigns a mouse
+	 * clicked event handler to the given polygon.
 	 * 
 	 * @param polygon
-	 *            a polygon belonging to either the low or high mask boundary areas
+	 *            a polygon belonging to either the low or high mask boundary
+	 *            areas
 	 */
 	private void setupPolygonListener(Polygon polygon) {
 		polygon.addEventHandler(MouseEvent.MOUSE_CLICKED, dataEvents.addWarning(polygon));
 	}
 
 	/**
-	 * Checks if the data points overlap anywhere over the high/low mask boundary area and augments the error count if
-	 * there are any overlaps. Also adds the two data points to a list of overlapped line segments.
+	 * Checks if the data points overlap anywhere over the high/low mask
+	 * boundary area and augments the error count if there are any overlaps.
+	 * Also adds the two data points to a list of overlapped line segments.
 	 * 
 	 * @param isHighMaskBoundary
 	 *            whether or not the mask is high/low
@@ -251,7 +260,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * Checks if the given data point overlap anywhere over the high/low mask boundary area.
+	 * Checks if the given data point overlap anywhere over the high/low mask
+	 * boundary area.
 	 * 
 	 * @param currentDataPoint
 	 *            current data point of low mask series
@@ -275,7 +285,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * Checks if the data points overlap anywhere over the high/low mask boundary area.
+	 * Checks if the data points overlap anywhere over the high/low mask
+	 * boundary area.
 	 * 
 	 * @param currentDataPoint
 	 *            current data point of low mask series
@@ -307,8 +318,9 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * Changes the 'look' of the line chart in order to distinctly separate standard mode (voltage, current resistance
-	 * measurements) and continuity/logic mode.
+	 * Changes the 'look' of the line chart in order to distinctly separate
+	 * standard mode (voltage, current resistance measurements) and
+	 * continuity/logic mode.
 	 */
 	protected void setContinuityMode() {
 		lookup(".chart-plot-background").setStyle("-fx-background-color: #000000;");
@@ -338,8 +350,8 @@ public class ModifiedLineChart extends LineChart<Number, Number> {
 	}
 
 	/**
-	 * A private helper function to 'updateMaskBoundaries' which updates the given series' upper and lower boundaries of
-	 * the x-axis.
+	 * A private helper function to 'updateMaskBoundaries' which updates the
+	 * given series' upper and lower boundaries of the x-axis.
 	 * 
 	 * @param series
 	 *            either high/low mask boundary
