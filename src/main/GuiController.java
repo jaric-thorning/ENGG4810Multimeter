@@ -894,7 +894,7 @@ public class GuiController implements Initializable {
 	 * If the units of the y-values change, then reset the x-axes bounds.
 	 */
 	private void resetXAxis() {
-		if (voltage || current || resistance) {
+		if (voltage || current || resistance || logic || continuity) {
 			xAxis.setLowerBound(X_LOWER_BOUND);
 			xAxis.setUpperBound(X_UPPER_BOUND);
 
@@ -1214,6 +1214,8 @@ public class GuiController implements Initializable {
 			isSD = true;
 		}
 
+		lineChart.getYAxis().setAutoRanging(false); //FIXME
+		
 		// Add data to series
 		addData(inputDataXValues, inputDataYValues, checkedIsoTime, checkedIsoTimes, isSD);
 	}

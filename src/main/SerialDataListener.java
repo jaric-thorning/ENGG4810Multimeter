@@ -219,21 +219,41 @@ public class SerialDataListener implements SerialPortDataListener {
 
 			if (!failedToDecode) {
 				String unit = "";
+				unit = Character.toString(receivedData.charAt(0));
 
-				if (!(receivedData.charAt(0) == 'L' || receivedData.charAt(0) == 'C')) {
-					unit = Character.toString(receivedData.charAt(0));
+				setupLogicContinuityBehaviours(unit);
 
-					// Update AC/DC switch buttons
-					determineACDCMode(unit);
-
-					// Record and display updated results
-					GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
-				}
+				// Record and display updated results
+				GuiController.instance.recordAndDisplayNewResult(measurementDataValue, unit);
 			} else {
 				System.err.println("Failed to decode data:" + measurementDataValue);
 			}
 		} else {
 			System.err.println("***Failed to decode data: " + receivedData);
+		}
+	}
+
+	/**
+	 * Sets up certain behaviours when in received Continuity/Logic values and when not
+	 * 
+	 * @param unit
+	 *            the received unit of the data
+	 */
+	private void setupLogicContinuityBehaviours(String unit) {
+
+		// Make sure plot looks ok.
+		if (unit.equals("L") || unit.equals("C")) {
+			GuiController.instance.yAxis.setAutoRanging(false);
+			GuiController.instance.yAxis.setUpperBound(1.5D);
+			GuiController.instance.yAxis.setLowerBound(-1.5D);
+			GuiController.instance.yAxis.setMinorTickCount(10);
+			GuiController.instance.yAxis.setTickUnit(5D);
+
+		} else { // when not in continuity/logic behaviour
+
+			// Update AC/DC switch buttons
+			determineACDCMode(unit);
+			GuiController.instance.yAxis.setAutoRanging(true);
 		}
 	}
 
