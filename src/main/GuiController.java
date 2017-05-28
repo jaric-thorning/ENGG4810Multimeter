@@ -54,15 +54,26 @@ import javafx.stage.FileChooser.ExtensionFilter;
  *
  */
 public class GuiController implements Initializable {
-	public static GuiController instance;
+	/* Constants */
+	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
+	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
+	private static final String ISO_FORMATTER = "yyyy-MM-dd'T'HH:mm:ss.S";
 
+	private static final String FILE_FORMAT_EXTENSION = "*.csv";
+	private static final String FILE_FORMAT_TITLE = "Comma Separated Files";
+
+	private static final double X_UPPER_BOUND = 20D;
+	private static final double X_LOWER_BOUND = 0D;
+	private static final double Y_UPPER_BOUND = 50D;
+	private static final double Y_LOWER_BOUND = -10D;
+
+	/* Other classes used */
 	private GuiModel model;
 	private DataEvents event;
-	private DataComparator compare = new DataComparator();
-	private ModifyMultimeterMeasurements modifyMeasurements = new ModifyMultimeterMeasurements();
-	private CheckOverlap checkingOverlap = new CheckOverlap();
-	private ISOTimeInterval startTime = null;
-
+	private DataComparator compare;
+	private ModifyMultimeterMeasurements modifyMeasurements;
+	private CheckOverlap checkingOverlap;
+	private ISOTimeInterval startTime;
 	private SerialTest serialTest;
 
 	/* Components required for resizing the GUI when maximising or resizing */
@@ -82,19 +93,19 @@ public class GuiController implements Initializable {
 	protected Tab connectedTab;
 
 	/* Components relating to which data to display */
-	private int dataPlotPosition = 0;
-	protected volatile boolean resistance = false;
-	protected volatile boolean voltage = false;
-	protected volatile boolean current = false;
-	protected volatile boolean continuity = false;
-	protected volatile boolean logic = false;
+	private int dataPlotPosition;
+	protected volatile boolean resistance;
+	protected volatile boolean voltage;
+	protected volatile boolean current;
+	protected volatile boolean continuity;
+	protected volatile boolean logic;
 
-	private volatile boolean isChanged = false;
+	private volatile boolean isChanged;
 
 	/* Components relating to the 'connected' mode */
 	@FXML
 	private Button pauseBtn;
-	private volatile boolean isPaused = false; // Flag for if pauseBtn has been clicked
+	private volatile boolean isPaused;// Flag for if pauseBtn has been clicked
 
 	@FXML
 	private Button saveBtn;
@@ -138,10 +149,10 @@ public class GuiController implements Initializable {
 	private RadioButton maskORBtn;
 	@FXML
 	private Button setHighBtn;
-	private boolean isHighBtnSelected = false; // Flag for if setHighBtn has been clicked
+	private boolean isHighBtnSelected; // Flag for if setHighBtn has been clicked
 	@FXML
 	private Button setLowBtn;
-	private boolean isLowBtnSelected = false; // Flag for if setLowBtn has been clicked
+	private boolean isLowBtnSelected;// Flag for if setLowBtn has been clicked
 
 	@FXML
 	private Button setMaskBtn;
@@ -154,11 +165,11 @@ public class GuiController implements Initializable {
 	private List<Line2D> overlappedIntervals;
 
 	// To keep track of the previous mask boundary point
-	int lowCounter = 0;
+	int lowCounter;
 
 	/* Line chart components */
-	NumberAxis xAxis = new NumberAxis();
-	NumberAxis yAxis = new NumberAxis();
+	NumberAxis xAxis;
+	NumberAxis yAxis;
 	ModifiedLineChart lineChart;
 	Node chartBackground; // Handle on chart background for getting lineChart coordinates
 
@@ -166,7 +177,7 @@ public class GuiController implements Initializable {
 	private XYChart.Series<Number, Number> highMaskBoundarySeries;
 	private XYChart.Series<Number, Number> lowMaskBoundarySeries;
 	private XYChart.Series<Number, Number> readingSeries;
-	private ArrayList<String> storedYUnits = new ArrayList<>(); // To store the displayed y-unit
+	private ArrayList<String> storedYUnits; // To store the displayed y-unit
 
 	// Components for shifting the line chart x-axis left and right
 	@FXML
@@ -193,7 +204,7 @@ public class GuiController implements Initializable {
 	// Components to switch between AC and DC
 	@FXML
 	private Button selectACDCBtn;
-	private boolean isACMode = false;
+	private boolean isACMode;
 	@FXML
 	private Label switchDCLabel;
 
@@ -201,50 +212,63 @@ public class GuiController implements Initializable {
 	private Label brightnessLabel;
 	@FXML
 	private ComboBox<Integer> brightnessLevel;
-	private ObservableList<Integer> brightnessLevels = FXCollections.observableArrayList();
+	private ObservableList<Integer> brightnessLevels;
 
 	@FXML
 	private ComboBox<String> sampleRate;
-	private ObservableList<String> sampleRates = FXCollections.observableArrayList();
+	private ObservableList<String> sampleRates;
 
 	/* Components relating to acquired data */
-	private ArrayList<Data<Number, Number>> totalAcquisitionData = new ArrayList<>();
-	private ArrayList<ISOTimeInterval> storedISOTimes = new ArrayList<>();
-	private ArrayList<ISOTimeInterval> pausedStoredISOTimeData = new ArrayList<>();
-	private ArrayList<String> pausedStoredYUnitData = new ArrayList<>();
-
-	/* Constants */
-	private static final DecimalFormat MEASUREMENT_DECIMAL = new DecimalFormat("0.000");
-	private static final DecimalFormat TIME_DECIMAL = new DecimalFormat("0.0");
-	private static final String ISO_FORMATTER = "yyyy-MM-dd'T'HH:mm:ss.S";
-
-	private static final String FILE_FORMAT_EXTENSION = "*.csv";
-	private static final String FILE_FORMAT_TITLE = "Comma Separated Files";
-
-	private static final double X_UPPER_BOUND = 20D;
-	private static final double X_LOWER_BOUND = 0D;
-	private static final double Y_UPPER_BOUND = 50D;
-	private static final double Y_LOWER_BOUND = -10D;
+	private ArrayList<Data<Number, Number>> totalAcquisitionData;
+	private ArrayList<ISOTimeInterval> storedISOTimes;
+	private ArrayList<ISOTimeInterval> pausedStoredISOTimeData;
+	private ArrayList<String> pausedStoredYUnitData;
 
 	private AtomicBoolean quit;
 
+	public static GuiController instance;
+
 	public GuiController() {
 		instance = this;
+		this.quit = new AtomicBoolean(false);
+		this.serialTest = new SerialTest(quit);
 
 		overlappedIntervals = new ArrayList<>();
 		highMaskBoundarySeries = new XYChart.Series<>();
 		lowMaskBoundarySeries = new XYChart.Series<>();
 		readingSeries = new XYChart.Series<>();
+		isLowBtnSelected = false;
+		isHighBtnSelected = false;
 
-		this.quit = new AtomicBoolean(false);
-		this.serialTest = new SerialTest(quit);
-		
+		totalAcquisitionData = new ArrayList<>();
+		storedISOTimes = new ArrayList<>();
+		pausedStoredISOTimeData = new ArrayList<>();
+		pausedStoredYUnitData = new ArrayList<>();
+		storedYUnits = new ArrayList<>();
+
 		model = new GuiModel();
 		event = new DataEvents();
 		compare = new DataComparator();
 		modifyMeasurements = new ModifyMultimeterMeasurements();
 		checkingOverlap = new CheckOverlap();
 		startTime = null;
+
+		lowCounter = 0;
+		dataPlotPosition = 0;
+		resistance = false;
+		voltage = false;
+		current = false;
+		continuity = false;
+		logic = false;
+		isChanged = false;
+		isPaused = false;
+		isACMode = false;
+
+		xAxis = new NumberAxis();
+		yAxis = new NumberAxis();
+
+		sampleRates = FXCollections.observableArrayList();
+		brightnessLevels = FXCollections.observableArrayList();
 	}
 
 	/**
