@@ -179,7 +179,7 @@ public class DataEvents {
 
 			@Override
 			public void handle(MouseEvent event) {
-				System.err.println("MM: ");
+				
 				// Display warning
 				GuiView.getInstance().illegalMaskPoint();
 			}
