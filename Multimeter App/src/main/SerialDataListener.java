@@ -20,7 +20,7 @@ public class SerialDataListener implements SerialPortDataListener {
 
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
-	private static final double TIME_OUT = 500000000;// 5e+8; // 1/2 a second
+	private static final double TIME_OUT = 500000000; // 1/2 a second
 
 	// Whether the port connection has bugged out.
 	private boolean errored;
@@ -65,11 +65,14 @@ public class SerialDataListener implements SerialPortDataListener {
 				if (!serialTest.getIsChecked()) {
 					initialTime = System.nanoTime(); // Current time
 				}
-				
+
 				// Every second send out the write code
 				while ((s = (char) serialTest.getReadFromSerial().read()) != -1 && !quit.get()) {
 					input.append(s);
 
+					if (input.toString().trim().length() > 50) {
+						input = new StringBuilder();
+					}
 					if (s == '\n') {
 						String line = input.toString().trim();
 
@@ -98,13 +101,17 @@ public class SerialDataListener implements SerialPortDataListener {
 		}
 	}
 
+	/**
+	 * Checks if the data received is the two-way check
+	 * 
+	 * @param receivedData
+	 *            the data received from the input stream that's been stitched
+	 *            into a String
+	 */
 	private void checkData(String receivedData) {
 
-		if (isValidText(receivedData)) {// &&
-										// !checkReceivedDataEnds(receivedData))
-										// {
+		if (isValidText(receivedData)) {
 			if (receivedData.charAt(1) == 'C' && receivedData.length() == 3) {
-				System.err.println("RECEIVED C");
 				serialTest.setIsChecked(true);
 				GuiController.instance.setConnectedMultimeterComponents(false);
 			}
@@ -141,7 +148,7 @@ public class SerialDataListener implements SerialPortDataListener {
 				// Change frequency rate
 				selectFrequencyRate(receivedData.substring(1));
 			} else {
-				// IGNORE
+				// Nothing
 			}
 		}
 	}
@@ -240,7 +247,7 @@ public class SerialDataListener implements SerialPortDataListener {
 			} else if (receivedData.charAt(0) == '2' && !GuiController.instance.multimeterDisplay.isDisabled()) {
 				receivedData = receivedData.replace(";", OHM_SYMBOL);
 
-				secondDisplay = receivedData.substring(2, receivedData.length() - 1).trim() + "\n";
+				secondDisplay = receivedData.substring(2, receivedData.length() - 1).trim();
 			} else {
 				failedToDecode = true;
 			}

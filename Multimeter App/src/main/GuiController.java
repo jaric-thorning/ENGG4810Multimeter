@@ -350,8 +350,8 @@ public class GuiController implements Initializable {
 	 *            enabled (false)
 	 */
 	protected void setConnectedMultimeterComponents(boolean status) {
-		 sampleRate.setDisable(status);
-		 brightnessLevel.setDisable(status);
+		sampleRate.setDisable(status);
+		brightnessLevel.setDisable(status);
 
 		voltageBtn.setDisable(status);
 		currentBtn.setDisable(status);
@@ -465,10 +465,8 @@ public class GuiController implements Initializable {
 		String code = "";
 
 		if (!isACMode) { // DC
-			System.err.println("-----");
 			code = MultimeterCodes.VOLTAGE.getCode();
 		} else { // AC
-			System.err.println("++++");
 			code = MultimeterCodes.VOLTAGE_RMS.getCode();
 		}
 		serialTest.writeCode(code);
@@ -482,10 +480,8 @@ public class GuiController implements Initializable {
 		String code = "";
 
 		if (!isACMode) { // DC
-			System.err.println("====");
 			code = MultimeterCodes.CURRENT.getCode();
 		} else { // AC
-			System.err.println("*****");
 			code = MultimeterCodes.CURRENT_RMS.getCode();
 		}
 
@@ -682,7 +678,6 @@ public class GuiController implements Initializable {
 	private void updateMultimeterDisplay(Double multimeterDataValue, String unit) {
 
 		// Modify Plot Parts.
-		System.out.println("U------U:" + unit);
 		if (!modifyMeasurements.validateYAxisUnits(unit)) {
 			modifyPlotParts();
 		}
@@ -985,9 +980,6 @@ public class GuiController implements Initializable {
 
 		lowCounter = 0;
 		startTime = null;
-
-		System.out.println(isHighBtnSelected);
-		System.out.println("LC " + lowCounter);
 	}
 
 	/**
@@ -999,8 +991,6 @@ public class GuiController implements Initializable {
 
 			// Reset the data
 			revertMaskTestingComponents();
-
-			System.out.println("DATA DISCARDED");
 		}
 	}
 
@@ -1038,10 +1028,6 @@ public class GuiController implements Initializable {
 	private void pauseDataAcquisition() {
 
 		if (!isPaused) {
-			System.out.println("DATA IS PAUSED");
-			// System.out.println("PAUSED RS: " + readingSeries.getData().size()
-			// + ", " + yUnits.size());
-
 			isPaused = true;
 			pauseBtn.setText("Unpause");
 
@@ -1058,7 +1044,6 @@ public class GuiController implements Initializable {
 			logicBtn.setDisable(true);
 			continuityBtn.setDisable(true);
 		} else {
-			System.out.println("DATA IS UNPAUSED");
 
 			resumedDataAcquisition();
 		}
@@ -1101,7 +1086,6 @@ public class GuiController implements Initializable {
 
 		// Only if file exists extract information from it
 		if (selectedFile != null) {
-			System.out.println("FILE NAME: " + selectedFile.getPath());
 
 			// Set boundaries if they haven't already been set
 			setBoundariesInStone();
@@ -1201,7 +1185,6 @@ public class GuiController implements Initializable {
 		boolean isSD = false;
 
 		try { // Software mode
-			System.out.println("SOFTWARE");
 
 			ISOTimeInterval firstPointXValue = ISOTimeInterval.parseISOTime(isoTimes.get(0));
 			checkedIsoTime = firstPointXValue.toString();
@@ -1212,7 +1195,6 @@ public class GuiController implements Initializable {
 			displayDateStamp(isoTimes.get(0), isoTimes.get(isoTimes.size() - 1));
 		} catch (DateTimeParseException e) { // SD mode
 
-			System.out.println("SD");
 			checkedIsoTime = inputDataXValues.get(0).toString();
 
 			for (Double d : inputDataXValues) {
@@ -1221,8 +1203,6 @@ public class GuiController implements Initializable {
 
 			isSD = true;
 		}
-
-		// lineChart.getYAxis().setAutoRanging(false); //FIXME
 
 		// Add data to series
 		addData(inputDataXValues, inputDataYValues, checkedIsoTime, checkedIsoTimes, isSD);
@@ -1316,18 +1296,13 @@ public class GuiController implements Initializable {
 			File selectedFile = saveFileOptions.showSaveDialog(GuiView.getInstance().getStage());
 
 			if (selectedFile != null) {
-				System.out.println("Saving file name in directory: " + selectedFile.getPath());
 
 				// Save the data to a file
 				try (BufferedWriter bw = new BufferedWriter(new FileWriter(selectedFile.getPath()))) {
-					System.out.println("SIZES: " + readingSeries.getData().size() + ", " + pausedStoredYUnitData.size()
-							+ ", " + pausedStoredISOTimeData.size());
 					model.saveColumnData(bw, readingSeries, pausedStoredYUnitData, pausedStoredISOTimeData);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-
-				System.out.println("Saving Data");
 			}
 		}
 	}
@@ -1693,7 +1668,6 @@ public class GuiController implements Initializable {
 		double xBounds = 0D; // upper / lower bounds of the x-axis
 
 		if (boundaryPoint.getXValue().intValue() == 0) { // Lower bound
-			System.out.println("LOW B");
 
 			xBounds = 0D;
 			insertBoundaryPosition = 0;
@@ -1701,7 +1675,6 @@ public class GuiController implements Initializable {
 			finalBoundaryDataPosition = 1;
 			isLowerBoundary = true;
 		} else { // Upper bound
-			System.out.println("HIGH B");
 
 			xBounds = xAxis.getUpperBound();
 			insertBoundaryPosition = existingSeries.getData().size();
@@ -1756,8 +1729,6 @@ public class GuiController implements Initializable {
 	private boolean getMax(XYChart.Data<Number, Number> dataPoint, XYChart.Series<Number, Number> existingSeries,
 			boolean isLowerBoundary) {
 		ArrayList<XYChart.Data<Number, Number>> subList = new ArrayList<>();
-
-		System.out.println(dataPoint.toString());
 
 		// Only deal with points to the left or right of the data point
 		for (int i = 0; i < existingSeries.getData().size(); i++) {
@@ -1816,8 +1787,6 @@ public class GuiController implements Initializable {
 
 				setLowBtn.setDisable(true);
 				isLowBtnSelected = false;
-			} else {
-				System.out.println("NOT YET");
 			}
 		}
 
@@ -1846,8 +1815,6 @@ public class GuiController implements Initializable {
 
 		isHighBtnSelected = true;
 		isLowBtnSelected = false;
-
-		System.out.println("high was selected");
 	}
 
 	/**
@@ -1857,8 +1824,6 @@ public class GuiController implements Initializable {
 	private void setLowBoundary() {
 		isHighBtnSelected = false;
 		isLowBtnSelected = true;
-
-		System.out.println("low was selected");
 	}
 
 	/**
@@ -1866,7 +1831,6 @@ public class GuiController implements Initializable {
 	 */
 	@FXML
 	private void runMaskTest() {
-		System.out.println("RUN MASK TESTING");
 		int counter = 0;
 		int errorCounter = 0;
 
@@ -1897,7 +1861,7 @@ public class GuiController implements Initializable {
 				maskTestResults.setText("TEST PASSED" + "\n");
 			}
 		} else {
-			System.out.println("Either high/low/reading isn't loaded properly");
+			System.err.println("Either high, low mask boundary areas & reading has not loaded properly");
 		}
 	}
 
@@ -1914,11 +1878,6 @@ public class GuiController implements Initializable {
 
 		// Set up text display of failed regions.
 		int failedRegionStart = 0;
-
-		for (Line2D l : overlappedIntervals) {
-			String overlap = ("(" + l.x1 + ", " + l.x2 + ")");
-			System.out.println(overlap);
-		}
 
 		// Display intervals where overlapping occurred (excluding final
 		// region).
@@ -2071,7 +2030,6 @@ public class GuiController implements Initializable {
 
 		// Only if file exists extract information from it
 		if (selectedFile != null) {
-			System.out.println("NAME: " + selectedFile.getPath());
 
 			setHighBtn.setDisable(true);
 			setMaskBtn.setDisable(true);
@@ -2136,7 +2094,6 @@ public class GuiController implements Initializable {
 	private boolean revertModifiedMaskUnit(String maskYUnit, String dataYUnit) {
 		if ((maskYUnit.equals("V") && dataYUnit.contains(maskYUnit))
 				|| (maskYUnit.contains("A") && (dataYUnit.contains(maskYUnit)))) {
-			System.out.println("Y");
 			return true;
 		}
 
@@ -2228,8 +2185,6 @@ public class GuiController implements Initializable {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
-			System.out.println("Saving Data");
 		}
 	}
 

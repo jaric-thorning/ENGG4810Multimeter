@@ -159,6 +159,7 @@ public class SerialTest {
 
 					} else {
 						System.out.println("Failed to open port.");
+						
 						// Disable components
 						GuiController.instance.setConnectedMultimeterComponents(true);
 						return;
