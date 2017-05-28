@@ -8,6 +8,12 @@ import com.sun.javafx.geom.Point2D;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 
+/**
+ * The CheckOverlap class deals with methods that test for different cases of overlap between read in data, masks.
+ * 
+ * @author dayakern
+ *
+ */
 public class CheckOverlap {
 
 	public CheckOverlap() {

@@ -145,7 +145,7 @@
                                     <Insets left="10.0" top="30.0" />
                                  </GridPane.margin>
                               </ComboBox>
-                              <Label fx:id="brightnessLabel" text="Brightness:" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                              <Label fx:id="brightnessLabel" text="Brightness %:" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" top="10.0" />
                                  </GridPane.margin>

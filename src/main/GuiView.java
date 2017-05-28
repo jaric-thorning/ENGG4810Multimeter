@@ -135,7 +135,6 @@ public class GuiView extends Application {
 			@Override
 			public void changed(ObservableValue<? extends Tab> observable, Tab otherTab, Tab newlySelectedTab) {
 				if (newlySelectedTab.equals(controller.connectedTab)) {
-					System.out.println("LEAVING DISCON"); // TODO:REMOVE
 
 					controller.yAxis.setAutoRanging(true);
 
@@ -144,7 +143,6 @@ public class GuiView extends Application {
 				}
 
 				if (newlySelectedTab.equals(controller.disconnectedTab)) {
-					System.out.println("LEAVING CONN"); // TODO:REMOVE
 
 					controller.yAxis.setAutoRanging(false);
 

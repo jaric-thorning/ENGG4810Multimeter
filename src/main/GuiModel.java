@@ -98,7 +98,7 @@ public class GuiModel {
 	public void saveColumnData(BufferedWriter bufferedWriter, XYChart.Series<Number, Number> series,
 			ArrayList<String> yUnits, ArrayList<ISOTimeInterval> isoTimes) throws IOException {
 
-		// TODO: check that yUnits is always the correct value...
+		// TODO: REMOVE ME check that yUnits is always the correct value...
 		System.out.println(yUnits.size() + ", " + series.getData().size() + ", " + isoTimes.size());
 
 		// Add a file header

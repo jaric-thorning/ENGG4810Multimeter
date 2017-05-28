@@ -1,6 +1,5 @@
 package main;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -17,8 +16,6 @@ import com.fazecast.jSerialComm.SerialPortEvent;
  */
 public class SerialDataListener implements SerialPortDataListener {
 	private static final String PACKET_BOUNDARIES = "|";
-	private static final String PACKET_OPEN = "[";
-	private static final String PACKET_CLOSE = "]";
 
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
@@ -67,7 +64,7 @@ public class SerialDataListener implements SerialPortDataListener {
 			serialTest.setReadFromSerial(sEvent.getSerialPort().getInputStream());
 
 			try {
-				// FIXME: won't quit while -> closeport
+
 				while ((s = (char) serialTest.getReadFromSerial().read()) != 0 && !quit.get()) {
 
 					input.append(s);
@@ -76,14 +73,8 @@ public class SerialDataListener implements SerialPortDataListener {
 						String line = input.toString().trim();
 
 						// System.err.println("\"" + line + "\"");
-						// if (!serialTest.getIsFirst()) {
-						getData(line); // FIXME: check bit works + prints all at correct sample time.
-						// }
 
-						// if (serialTest.getIsFirst() && line.contains("D2")) {
-						// // line.contains("D2") ->
-						// serialTest.setIsFirst(false);
-						// }
+						getData(line);
 
 						input = new StringBuilder();
 					}
@@ -111,6 +102,9 @@ public class SerialDataListener implements SerialPortDataListener {
 
 		if (isValidText(receivedData) && !checkReceivedDataEnds(receivedData)) {
 
+			// TODO: add received C
+			// TODO: check for frequency
+			// TODO: check for brightness
 			if (receivedData.charAt(1) == 'D') { // Change multimeter display
 
 				updateMultimeterDisplay(receivedData.substring(2));
@@ -119,21 +113,22 @@ public class SerialDataListener implements SerialPortDataListener {
 					|| receivedData.charAt(1) == 'C') { // Change values received
 
 				sortMultimeterMeasurements(receivedData.substring(1));
+			} else if (receivedData.charAt(1) == 'F') {
+
+				selectBrightnessPercentage(receivedData.substring(1));
 			} else {
 				// IGNORE
 			}
-		} else if (isValidText(receivedData) && !checkReceivedCommands(receivedData)) {
-
-			// Check if there's two-way connection
-			if (receivedData.length() == 3 && receivedData.substring(1, 1).equals("C")) {
-				serialTest.setIsChecked(true);
-			} else if (receivedData.charAt(1) == 'S') {// Change multimeter settings
-
-				// sortMultimeterCommand(receivedData);
-			} else {
-				System.err.println(".....something else");
-			}
 		}
+	}
+
+	/**
+	 * A private helper function for 'getData' which selects the brightness display iff the given String is valid.
+	 * 
+	 * @param receivedData the data received from the input stream that's been stitched into a String
+	 */
+	private void selectBrightnessPercentage(String receivedData) {
+
 	}
 
 	/**
@@ -158,12 +153,11 @@ public class SerialDataListener implements SerialPortDataListener {
 			} else {
 				failedToDecode = true;
 			}
-			// System.out.println("\"" + firstDisplay + "\"");
-			// System.out.println("\"" + secondDisplay + "\"");
 
 			// Update Multimeter display iif the values for the top and bottom lines have been found
 			if (!firstDisplay.isEmpty() && !secondDisplay.isEmpty()) {
 				GuiController.instance.multimeterDisplay.setText(firstDisplay + secondDisplay);
+
 				firstDisplay = "";
 				secondDisplay = "";
 			}
@@ -182,17 +176,6 @@ public class SerialDataListener implements SerialPortDataListener {
 	 */
 	private boolean checkReceivedDataEnds(String receivedData) {
 		return !receivedData.startsWith(PACKET_BOUNDARIES) && !receivedData.endsWith(PACKET_BOUNDARIES);
-	}
-
-	/**
-	 * Check that the first and last values of the received data has the expected value.
-	 * 
-	 * @param receivedData
-	 *            the data received from the input stream that's been stitched into a String
-	 * @return false if the received data is valid, true if it isn't
-	 */
-	private boolean checkReceivedCommands(String receivedData) {
-		return !receivedData.startsWith(PACKET_OPEN) && !receivedData.endsWith(PACKET_CLOSE);
 	}
 
 	/**
@@ -241,7 +224,7 @@ public class SerialDataListener implements SerialPortDataListener {
 	 */
 	private void setupLogicContinuityBehaviours(String unit) {
 
-		// Make sure plot looks ok.
+		// Make sure plot looks OK.
 		if (unit.equals("L") || unit.equals("C")) {
 			GuiController.instance.yAxis.setAutoRanging(false);
 			GuiController.instance.yAxis.setUpperBound(1.5D);
@@ -270,63 +253,6 @@ public class SerialDataListener implements SerialPortDataListener {
 			GuiController.instance.driveDCMode();
 		}
 	}
-
-	// /**
-	// * A private helper function for 'getData' which checks that the command to control the multimeter is valid and
-	// * executes it
-	// *
-	// * @param receivedData
-	// * the data received from the input stream that's been stitched into a String
-	// */
-	// private void sortMultimeterCommand(String receivedData) {
-	//
-	// // Check for multimeter display commands.
-	// String trimmedData = receivedData.substring(2, receivedData.length());
-	//
-	// boolean failedToDecode = !isValidText(trimmedData);
-	//
-	// char modeType = 0;
-	//
-	// // System.err.println("H: " + trimmedData);
-	//
-	// // // If data received from the serial connection was not the right type
-	// // if (trimmedData.charAt(0) != MODE)
-	// // failedToDecode = true;
-	// //
-	// // // If the next bits of data were not matching to any mode type
-	// // if (!(trimmedData.charAt(2) == 'I' || trimmedData.charAt(2) == 'V' || trimmedData.charAt(2) == 'R'
-	// // || trimmedData.charAt(2) == 'C' || trimmedData.charAt(2) == 'L')) {
-	// // failedToDecode = true;
-	// // } else {
-	// // modeType = trimmedData.charAt(2);
-	// // }
-	// //
-	// // // Change the mode to either resistance, current, voltage, logic or continuity
-	// // if (!failedToDecode) {
-	// // switch (modeType) {
-	// // case 'I':
-	// // GuiController.instance.driveCurrent();
-	// // break;
-	// // case 'V':
-	// // GuiController.instance.driveVoltage();
-	// // break;
-	// // case 'R':
-	// // GuiController.instance.driveResistance();
-	// // break;
-	// // case 'C':
-	// // GuiController.instance.driveContinuity();
-	// // break;
-	// // case 'L':
-	// // GuiController.instance.driveLogic();
-	// // break;
-	// // default:
-	// // failedToDecode = true;
-	// // break;
-	// // }
-	// // } else {
-	// // System.out.println("******Failed to decode data:" + trimmedData);
-	// // }
-	// }
 
 	/**
 	 * A private helper function to 'determineValidText' which determines if the data received in valid.

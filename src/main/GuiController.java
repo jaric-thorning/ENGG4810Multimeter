@@ -1214,8 +1214,8 @@ public class GuiController implements Initializable {
 			isSD = true;
 		}
 
-		lineChart.getYAxis().setAutoRanging(false); //FIXME
-		
+		// lineChart.getYAxis().setAutoRanging(false); //FIXME
+
 		// Add data to series
 		addData(inputDataXValues, inputDataYValues, checkedIsoTime, checkedIsoTimes, isSD);
 	}
@@ -1358,7 +1358,6 @@ public class GuiController implements Initializable {
 		continuity = false;
 		logic = false;
 
-		// FIXME
 		selectACDCBtn.setDisable(true);
 		isACMode = false;
 
@@ -2042,7 +2041,7 @@ public class GuiController implements Initializable {
 			setHighBtn.setDisable(true);
 			setMaskBtn.setDisable(true);
 
-			// FIXME? If you reload files, reload the units
+			// If you reload files, reload the existing masks
 			if (highMaskBoundarySeries.getData().size() > 0) {
 				highMaskBoundarySeries.getData().clear();
 			}
