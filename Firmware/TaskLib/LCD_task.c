@@ -20,10 +20,9 @@
 
 #include "LCD_task.h"
 
-#include "stdlib.h"
+//#include "xxx.h"
 //LCD INCLUDES
 
-#include "display_functions.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
@@ -95,7 +94,8 @@ void update_display(int line, char * text){
   screen[sizeof(screen)] =
 }*/
 
-void format_read_value(char type, int range, int value, int decimal, char ** line1, char ** line2){
+void format_read_value(char type, int range, int value, int decimal,
+                       int overlimit, int negative, char ** line1, char ** line2){
   char value_buf[10];
   char range_buf[10];
   char decimal_buf[10];
@@ -144,29 +144,35 @@ void format_read_value(char type, int range, int value, int decimal, char ** lin
     strcat(build1, "k)");
   }
 
-  if(set_negative){
-    strcat(build2, "-");
-  }
-  strcat(build2, value_buf);
-  strcat(build2, ".");
-  strcat(build2, decimal_buf);
-
-  if(type == 'V'){
-    strcat(build2, "V");
-  } else if(type == 'W'){
-    strcat(build2, "V (RMS)");
-  } else if(type == 'I'){
-    strcat(build2, "mA");
-  } else if(type == 'J'){
-    strcat(build2, "mA (RMS)");
-  } else if(type == 'R'){
-    strcat(build2, "k;");
-  } else if(type == 'C'){
-    strcat(build2, "C");
-  } else if (type == 'L'){
-    strcat(build2, "L");
+  if(overlimit){
+    strcat(build2, "OL");
   } else {
-    strcat(build2, "U");
+    if(set_negative){
+      strcat(build2, "-");
+    } else if(value == 0 && negative){
+      strcat(build2, "-");
+    }
+    strcat(build2, value_buf);
+    strcat(build2, ".");
+    strcat(build2, decimal_buf);
+
+    if(type == 'V'){
+      strcat(build2, "V");
+    } else if(type == 'W'){
+      strcat(build2, "V (RMS)");
+    } else if(type == 'I'){
+      strcat(build2, "mA");
+    } else if(type == 'J'){
+      strcat(build2, "mA (RMS)");
+    } else if(type == 'R'){
+      strcat(build2, "k;");
+    } else if(type == 'C'){
+      strcat(build2, "C");
+    } else if (type == 'L'){
+      strcat(build2, "L");
+    } else {
+      strcat(build2, "U");
+    }
   }
 
   strcat(build1, "\0");
@@ -315,7 +321,7 @@ LCDTask(void *pvParameters)
           UARTprintf("|%c: %d.%d|\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
           //displayOffLCD();
 
-          format_read_value(lcd_message.type, lcd_message.range, lcd_message.value, lcd_message.decimal, &lcd_line_1, &lcd_line_2);
+          format_read_value(lcd_message.type, lcd_message.range, lcd_message.value, lcd_message.decimal, lcd_message.overlimit, lcd_message.negative_value, &lcd_line_1, &lcd_line_2);
 
           //UARTprintf("A1: %s\n\r", lcd_line_1);
           //UARTprintf("A2: %s\n\r", lcd_line_2);

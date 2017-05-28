@@ -25,7 +25,7 @@
 #include "utils/ustdlib.h"
 
 #include "LCD_task.h"
-#include "stdlib.h"
+///#include "xxx.h"
 #include "mswitch_task.h"
 #include "ADC_task.h"
 #include "buzzer_task.h"
@@ -33,6 +33,17 @@
 #include "inc/hw_hibernate.h"
 #include "driverlib/hibernate.h"
 #include "switch_task.h"
+
+#define POWER_PIN GPIO_PIN_1
+#define POWER_PORT GPIO_PORTF_BASE
+#define POWER_PERIPH_GPIO SYSCTL_PERIPH_GPIOF
+
+#define LED1_PIN GPIO_PIN_6
+#define LED2_PIN GPIO_PIN_7
+#define LED1_PORT GPIO_PORTA_BASE
+#define LED2_PORT GPIO_PORTA_BASE
+#define LED1_PERIPH_GPIO SYSCTL_PERIPH_GPIOA
+#define LED2_PERIPH_GPIO SYSCTL_PERIPH_GPIOA
 
 #define BUTTON3_PIN GPIO_PIN_3
 #define BUTTON4_PIN GPIO_PIN_3
@@ -89,18 +100,40 @@ SwitchTask(void *pvParameters)
 
     int menu_on = 0;
 
+    int power_on = 1;
+    int power_rec = 0;
+
     while(1)
     {
-
       if(xQueueReceive(g_pSWITCHQueue, &switch_message, 0) == pdPASS)
       {
-        if(switch_message.setting = 'M'){
+        if(switch_message.setting == 'M'){
           if(switch_message.menu_on == 1){
             menu_on = 1;
           } else{
             menu_on = 0;
           }
         }
+        if(switch_message.setled1){
+          if(switch_message.led1){
+            GPIOPinWrite(LED1_PORT,LED1_PIN,LED1_PIN);
+          } else{
+            GPIOPinWrite(LED1_PORT,LED1_PIN,0);
+          }
+        }
+        if(switch_message.setled2){
+          if(switch_message.led2){
+            GPIOPinWrite(LED2_PORT,LED2_PIN,LED2_PIN);
+          } else{
+            GPIOPinWrite(LED2_PORT,LED2_PIN,0);
+          }
+        }
+        if(switch_message.power){
+          power_rec = 1;
+          switch_message.power = 0;
+        }
+        //switch_message.setled1 = 0;
+        //switch_message.setled2 = 0;
       }
         ui8CurButtonState = ButtonsPoll(0, 0);
 
@@ -111,8 +144,6 @@ SwitchTask(void *pvParameters)
 
         currentTime = xTaskGetTickCount();
         if((button3 == BUTTON3_PIN) && (button3_time + 200 < currentTime)){
-          UARTprintf("BUTTON3 is HIGH!\n\r");
-
           button3_time = currentTime;
             menu_on = 1;
             lcd_message.mode = 'M';
@@ -121,7 +152,7 @@ SwitchTask(void *pvParameters)
                pdPASS){
                  UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
                }
-          }
+        }
         else if((button4 == BUTTON4_PIN) && (button4_time + 200 < currentTime)){
           UARTprintf("BUTTON4 is HIGH!\n\r");
           button4_time = currentTime;
@@ -138,7 +169,7 @@ SwitchTask(void *pvParameters)
 
           } else{
 
-            mswitch_message.ui32Value = 0; //doesn't matter
+            mswitch_message.value = 0; //doesn't matter
             mswitch_message.type = 'M'; //sending M for mode
             mswitch_message.mode = 'U'; //sending I to increment mode
 
@@ -151,11 +182,12 @@ SwitchTask(void *pvParameters)
         else if((button5 == BUTTON5_PIN) && (button5_time + 200 < currentTime)){
 
           //BUZZER TEST CODE
-          /*buzzer_message.frequency = 1000;
+          buzzer_message.frequency = 1000;
+          buzzer_message.sound = 1;
           if(xQueueSend(g_pBuzzerQueue, &buzzer_message, portMAX_DELAY) !=
              pdPASS){
                UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
-             }*/
+             }
 
 
           if(menu_on){
@@ -169,7 +201,7 @@ SwitchTask(void *pvParameters)
 
           } else{
 
-                mswitch_message.ui32Value = 0; //doesn't matter
+                mswitch_message.value = 0; //doesn't matter
                 mswitch_message.type = 'R'; //sending M for mode
 
                 if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
@@ -203,8 +235,16 @@ SwitchTask(void *pvParameters)
              }*/
           button5_time = currentTime;
         }
-        else if((button6 == BUTTON6_PIN) && (button6_time + 200 < currentTime)){
-
+        else if((button6 != BUTTON6_PIN) && (button6_time + 200 < currentTime)){
+            power_rec = 0;
+            //UARTprintf("Power bit is: %d", power_on);
+            if(power_on){
+              GPIOPinWrite(POWER_PORT,GPIO_PIN_1,0);
+              power_on = 0;
+            } else{
+              GPIOPinWrite(POWER_PORT,GPIO_PIN_1,GPIO_PIN_1);
+              power_on = 1;
+            }
            //HIBERNATION CODE -> DO NOT REMOVE
            /*if(HibernateIsActive()){
              UARTprintf("Hibernation Active.\n\r");
@@ -218,16 +258,20 @@ SwitchTask(void *pvParameters)
              {
                  UARTprintf("RESET\n\r");
              }
-           }
-           HibernateRTCSet(0);
-           HibernateRTCEnable();
-           HibernateRTCMatchSet(0, 5);
+           }*/
 
-           HibernateWakeSet(HIBERNATE_WAKE_PIN | HIBERNATE_WAKE_RTC);
-
+           HibernateWakeSet(HIBERNATE_WAKE_PIN);
+           int last_flash = 0;
            HibernateRequest();
-           SysCtlDelay(1000);
-           UARTprintf("Hibernation Failed.\n\r");*/
+           while(1){
+             if(xTaskGetTickCount() > last_flash + 1500){
+               GPIOPinWrite(LED1_PORT,LED1_PIN,LED1_PIN);
+               if(xTaskGetTickCount() > last_flash + 1800){
+                 GPIOPinWrite(LED1_PORT,LED1_PIN,0);
+                 last_flash = xTaskGetTickCount();
+               }
+             }
+           }
 
           button6_time = currentTime;
         }
@@ -310,6 +354,30 @@ SwitchTaskInit(void)
     //
     // Enable the Hibernation module.
     //
+
+    SysCtlPeripheralEnable(POWER_PERIPH_GPIO);
+    while(!SysCtlPeripheralReady(POWER_PERIPH_GPIO))
+	  {
+	  }
+    GPIOPinTypeGPIOOutput(POWER_PORT, GPIO_PIN_1);
+
+    GPIOPinWrite(POWER_PORT,GPIO_PIN_1,GPIO_PIN_1);
+
+
+    SysCtlPeripheralEnable(LED1_PERIPH_GPIO);
+    while(!SysCtlPeripheralReady(LED1_PERIPH_GPIO))
+	  {
+	  }
+    GPIOPinTypeGPIOOutput(LED1_PORT, GPIO_PIN_6);
+
+    GPIOPinWrite(LED1_PORT,LED1_PIN,LED1_PIN);
+
+    SysCtlPeripheralEnable(LED2_PERIPH_GPIO);
+    while(!SysCtlPeripheralReady(LED2_PERIPH_GPIO))
+	  {
+	  }
+    GPIOPinTypeGPIOOutput(LED2_PORT, GPIO_PIN_7);
+
     SysCtlPeripheralEnable(SYSCTL_PERIPH_HIBERNATE);
 
     //External Button Init
@@ -337,7 +405,6 @@ SwitchTaskInit(void)
 	  }
     GPIOPinTypeGPIOInput(BUTTON6_PORT, BUTTON6_PIN);
 
-    UARTprintf("GOT HERE 4\n\r");
     if(xTaskCreate(SwitchTask, (signed portCHAR *)"Switch",
                    SWITCHTASKSTACKSIZE, NULL, tskIDLE_PRIORITY +
                    PRIORITY_SWITCH_TASK, NULL) != pdTRUE)

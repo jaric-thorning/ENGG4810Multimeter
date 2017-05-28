@@ -13,20 +13,20 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-#include "math.h"
+//#include "math.h"
 
 #include "spi_adc.h"
 
 #include "ADC_task.h"
 
-#include "stdlib.h"
+//#include "xxx.h"
 //ADC INCLUDES
 
-#include "display_functions.h"
 #include "driverlib/rom.h"
+#include "driverlib/adc.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
-#include "driverlib/adc.h"
+//#include "driverlib/adc.h"
 
 #include "display.h"
 
@@ -37,7 +37,8 @@
 #define ADC_ITEM_SIZE           sizeof(struct adc_queue_message)
 #define ADC_QUEUE_SIZE          5
 
-#define ADC_REFRESH_TIME 100
+#define ADC_REFRESH_TIME 500
+#define RMS_TIMEOUT 1000
 
 uint32_t ui32Value;
 
@@ -61,9 +62,10 @@ ADCTask(void *pvParameters)
     uint8_t control;
 
     char adc_mode = 'N';
+    uint8_t slow_command = 0b10000111;
+    uint8_t fast_command = 0b10000111;
 
-    uint8_t command = 0b10000111;
-    send_command(command); //Self Calibrate
+    send_command(fast_command); //Self Calibrate
 
     //write_byte(0b11000010, 0b00000000);
 
@@ -94,203 +96,209 @@ ADCTask(void *pvParameters)
     int integer;
     int decimal;
 
+    int getting_rms = 1;
+
     float converted;
 
-    portTickType period, start_time, start_calc_time;
+    portTickType period, start_time, start_calc_time, rms_start_time, read_timeout;
+
+
     while(1)
     {
+      if(adc_mode == 'R'){
+        getting_rms = 1;
+        rms_start_time = xTaskGetTickCount();
+        while(getting_rms && (xTaskGetTickCount() < rms_start_time + RMS_TIMEOUT)){
 
-      send_command(command); //Self Calibrate
-      SysCtlDelay(10);
-      //send_command(command);
-      //send_command(command); //Self Calibrate
-      /*status = read_byte(0b11000001);
+          send_command(fast_command); //Self Calibrate
+          SysCtlDelay(1);
 
-      UARTprintf("   Status: ", status);
-      for(int i = 7; i >= 0; i--){
-        UARTprintf("%d", (status >> i) & 1);
-      }
-      UARTprintf("\n\r");
+          read_timeout = xTaskGetTickCount();
+          do{
+            status = read_byte(0b11000001);
+
+            /*UARTprintf("   Status: ", status);
+            for(int i = 7; i >= 0; i--){
+              UARTprintf("%d", (status >> i) & 1);
+            }
+            UARTprintf("\n\r");*/
+          } while(!(status  & 1) && (xTaskGetTickCount() < read_timeout + 10));
+
+          if(!(status  & 1)){
+            UARTprintf("Warning - ADC timeout.\n\r");
+          }
+            data = read_data();
+            converted = data/5756991.0 * 3.3;
+
+            //UARTprintf("ADC: %d.%d\n\r", (int)converted, ((int)(converted * 1000))%1000);
+          if(getting_max){
+
+            if(converted > max_value){
+              max_value = converted;
+            }
+            else{
+              rms_start_time = xTaskGetTickCount();
+              getting_max = 0;
+              getting_min = 1;
+              UARTprintf("Got max %d.%d\n\r", (int)max_value, ((int)(max_value * 1000))%1000);
+            }
+          } else if (getting_min){
+
+            if(converted < min_value){
+              min_value = converted;
+            }
+            else{
+              rms_start_time = xTaskGetTickCount();
+              getting_min = 0;
+              half_way = (max_value + min_value)/2.0;
+              getting_period = 1;
+              UARTprintf("Got min %d.%d\n\r", (int)min_value, ((int)(min_value * 1000))%1000);
+            }
+          } else if (getting_period){
+            if(last_was_below_half && (converted > half_way)){
+              //crosssed
+              crossed = 1;
+            } else if (!last_was_below_half && (converted < half_way)){
+              //crossed
+              crossed = 1;
+            } else if (converted > half_way){
+              last_was_below_half = 0;
+            } else if ( converted < half_way){
+              last_was_below_half = 1;
+            }
+
+            if(crossed){
+              cross_count++;
+              if(started_timer){
+                if(cross_count >= 3){
+                  rms_start_time = xTaskGetTickCount();
+                  period = xTaskGetTickCount() - start_time;
+                  getting_period = 0;
+                  calculating_rms = 1;
+                  //UARTprintf("Got period %d\n\r", period);
+                }
+              } else{
+                started_timer = 1;
+                start_time = xTaskGetTickCount();
+              }
+            }
+
+          } else if (calculating_rms){
+            //UARTprintf("Calculating\n\r");
+            if(started_calculation){
+              if(xTaskGetTickCount() > (start_calc_time + period)){
+                //done
+                //rms = sqrt(sum_square_rms/rms_count)  - 1.65;
+
+                integer = (int)rms;
+                decimal = ((int)(rms*100000))%100000;
+                if(decimal < 0){
+                  decimal *= -1;
+                }
+                UARTprintf("RMS: %d.%d\n\r", integer, decimal);
 
 
+                mswitch_message.max_value = max_value;
+                mswitch_message.value = rms;
+                //mswitch_message.ui32Value = data;
+                mswitch_message.type = 'V'; //sending V for value
 
-      control = read_byte(0b11000011);
+                if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
+                   pdPASS){
+                     UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+                   }
 
-      UARTprintf("Control 1: ", control);
-      for(int i = 7; i >= 0; i--){
-        UARTprintf("%d", (control >> i) & 1);
-      }
-      UARTprintf("\n\r");
+                //reset all values:
+                getting_max = 1;
+                calculating_rms = 0;
 
-      control = read_byte(0b11000101);
+                getting_min = 0;
+                getting_period = 0;
+                calculating_rms = 0;
 
-      UARTprintf("Control 2: ", control);
-      for(int i = 7; i >= 0; i--){
-        UARTprintf("%d", (control >> i) & 1);
-      }
-      UARTprintf("\n\r");
+                max_value = 0;
+                min_value = 3.3;
+                last_was_below_half = 1;
+                started_timer = 0;
+                half_way = 0;
 
-      control = read_byte(0b11000111);
+                crossed = 0;
+                cross_count = 0;
 
-      UARTprintf("Control 3: ", control);
-      for(int i = 7; i >= 0; i--){
-        UARTprintf("%d", (control >> i) & 1);
-      }
-      UARTprintf("\n\r");*/
+                started_calculation = 0;
 
-      //write_byte(0b11000010, 0b1100100);
+                average_rms = 0;
+                sum_square_rms = 0;
+                rms_count = 0;
+                rms = 0;
+                getting_rms = 0;
 
+              } else{
+                sum_square_rms += (converted * converted);
+                rms_count++;
+              }
+            } else{
+              start_calc_time = xTaskGetTickCount();
+              started_calculation = 1;
+            }
+          }
+          //vTaskDelayUntil(&ui32WakeTime, 10 / portTICK_RATE_MS);
+        }
+      } else{
 
-      if(1){ //Conversion ready
-        data = read_data();
-        converted = data/5756991.0 * 3.3;
+        send_command(slow_command); //Self Calibrate
 
-        //converted -= 1.65;
-        integer = (int)converted;
+        //send_command(command);
+        //send_command(command); //Self Calibrate
+
+        read_timeout = xTaskGetTickCount();
+        do{
+          status = read_byte(0b11000001);
+
+          /*UARTprintf("   Status: ", status);
+          for(int i = 7; i >= 0; i--){
+            UARTprintf("%d", (status >> i) & 1);
+          }
+          UARTprintf("\n\r");*/
+        } while(!(status  & 1) && (xTaskGetTickCount() < read_timeout + 10));
+
+        if(!(status  & 1)){
+          UARTprintf("Warning - ADC timeout.\n\r");
+        }
+          data = read_data();
+          converted = data/5664672.0;
+
+        /*ADCProcessorTrigger(ADC0_BASE, 0);
+    		while(!ADCIntStatus(ADC0_BASE, 0, false))
+    		{
+    		}
+    		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);*/
+
+        /*integer = (int)converted;
         decimal = ((int)(converted*100000))%100000;
         if(decimal < 0){
           decimal *= -1;
         }
+        UARTprintf("ADC: %d.%d\n\r", integer, decimal);*/
 
-        /*if( xSemaphoreTake(g_pUARTSemaphore,portMAX_DELAY) == pdTRUE )
-        {
-        UARTprintf("External ADC: %d.%d\n\r", integer, decimal);
-        }
-        xSemaphoreGive(g_pUARTSemaphore);*/
-        /*UARTprintf("External ADC read: ");
-        for(int i = 23; i >= 0; i--){
-          UARTprintf("%d", (data >> i) & 1);
-        }
-        UARTprintf("\n\r");*/
-      } else { //conversion not ready
-        UARTprintf("Data not ready.\n\r");
-      }
-
-      if(0){//adc_mode == 'R'){
-        if(getting_max){
-
-          if(converted > max_value){
-            max_value = converted;
-          }
-          else{
-            getting_max = 0;
-            getting_min = 1;
-            //UARTprintf("Got max\n\r");
-          }
-        } else if (getting_min){
-
-          if(converted < min_value){
-            min_value = converted;
-          }
-          else{
-            getting_min = 0;
-            half_way = (max_value + min_value)/2.0;
-            getting_period = 1;
-            //UARTprintf("Got min\n\r");
-          }
-        } else if (getting_period){
-          if(last_was_below_half && (converted > half_way)){
-            //crosssed
-            crossed = 1;
-          } else if (!last_was_below_half && (converted < half_way)){
-            //crossed
-            crossed = 1;
-          } else if (converted > half_way){
-            last_was_below_half = 0;
-          } else if ( converted < half_way){
-            last_was_below_half = 1;
-          }
-
-          if(crossed){
-            cross_count++;
-            if(started_timer){
-              if(cross_count >= 3){
-                period = xTaskGetTickCount() - start_time;
-                getting_period = 0;
-                calculating_rms = 1;
-                //UARTprintf("Got period\n\r");
-              }
-            } else{
-              started_timer = 1;
-              start_time = xTaskGetTickCount();
-            }
-          }
-
-        } else if (calculating_rms){
-          //UARTprintf("Calculating\n\r");
-          if(started_calculation){
-            if(xTaskGetTickCount() > (start_calc_time + period)){
-              //done
-              rms = sqrt(sum_square_rms/rms_count);
-
-              integer = (int)rms;
-              decimal = ((int)(rms*100000))%100000;
-              if(decimal < 0){
-                decimal *= -1;
-              }
-              UARTprintf("RMS: %d.%d\n\r", integer, decimal);
-              vTaskDelayUntil(&ui32WakeTime, 1000 / portTICK_RATE_MS);
-              //reset all values:
-              getting_max = 1;
-              calculating_rms = 0;
-
-              getting_min = 0;
-              getting_period = 0;
-              calculating_rms = 0;
-
-              max_value = 0;
-              min_value = 3.3;
-              last_was_below_half = 1;
-              started_timer = 0;
-              half_way = 0;
-
-              crossed = 0;
-              cross_count = 0;
-
-              started_calculation = 0;
-
-              average_rms = 0;
-              sum_square_rms = 0;
-              rms_count = 0;
-              rms = 0;
-
-            } else{
-              sum_square_rms += (converted * converted);
-              rms_count++;
-            }
-          } else{
-            start_calc_time = xTaskGetTickCount();
-            started_calculation = 1;
-          }
-
-        }
-      } else{
-
-        ADCProcessorTrigger(ADC0_BASE, 0);
-    		while(!ADCIntStatus(ADC0_BASE, 0, false))
-    		{
-    		}
-    		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);
-
-        //UARTprintf("ADC : %dw")
         //
-        mswitch_message.ui32Value = ui32Value;
-        //mswitch_message.ui32Value = data;
+        mswitch_message.value = converted;
         mswitch_message.type = 'V'; //sending V for value
+
 
         if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
            pdPASS){
              UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
            }
       }
+
       if(xQueueReceive(g_pADCQueue, &adc_message, 0) == pdPASS)
       {
           if(adc_message.mode == 'R'){
             adc_mode = 'R';
-            ui32ADCRefreshTime = 50;
           } else if ( adc_message.mode == 'N'){
             adc_mode = 'N';
-            ui32ADCRefreshTime = 1000;
+
           } else if(adc_message.mode == 'F'){
             if( adc_message.frequency > 0){
               ui32ADCRefreshTime = adc_message.frequency/2;
@@ -314,62 +322,6 @@ ADCTaskInit(void)
 
     spi_adc_init();
 
-
-
-    /*UARTprintf(" ------------ On Load SPI Characteristics ----\n\r");
-
-    status = read_byte(0b11000001);
-
-    UARTprintf("Status: ", status);
-    for(int i = 7; i >= 0; i--){
-      UARTprintf("%d", (status >> i) & 1);
-    }
-    UARTprintf("\n\r");
-
-    control1 = read_byte(0b11000011);
-
-    UARTprintf("Control 1: ", control1);
-    for(int i = 7; i >= 0; i--){
-      UARTprintf("%d", (control1 >> i) & 1);
-    }
-    UARTprintf("\n\r");
-
-    UARTprintf(" ------------ On Load ADC Characteristics ----\n\r");
-
-
-    UARTprintf("Calibrating ADC....\n\r");
-
-    uint8_t command = 0b10010000;
-    send_command(command); //Self Calibrate
-
-
-    command = 0b10000111;
-    send_command(command);
-
-    write_byte(0b11000010, 0b0000000);
-
-
-    UARTprintf(" ------------ Post Calibration ADC Characteristics ----n\r");
-
-    status = read_byte(0b11000001);
-
-    UARTprintf("Status: ", status);
-    for(int i = 7; i >= 0; i--){
-      UARTprintf("%d", (status >> i) & 1);
-    }
-    UARTprintf("\n\r");
-
-    control1 = read_byte(0b11000011);
-
-    UARTprintf("Control 1: ", control1);
-    for(int i = 7; i >= 0; i--){
-      UARTprintf("%d", (control1 >> i) & 1);
-    }
-    UARTprintf("\n\r");
-
-    UARTprintf(" ------------ Post Calibration ADC Characteristics ----\n\r");
-    */
-
   	//
   	// Enable the ADC0 module.
   	//
@@ -384,7 +336,7 @@ ADCTaskInit(void)
   	// Enable the first sample sequencer to capture the value of channel 0 when
   	// the processor trigger occurs.
   	//
-  	ADCSequenceConfigure(ADC0_BASE, 0, ADC_TRIGGER_PROCESSOR, 0);
+  	/*ADCSequenceConfigure(ADC0_BASE, 0, ADC_TRIGGER_PROCESSOR, 0);
   	ADCSequenceStepConfigure(ADC0_BASE, 0, 0,
   							 ADC_CTL_IE | ADC_CTL_END | ADC_CTL_CH0);
   	ADCSequenceEnable(ADC0_BASE, 0);
@@ -401,7 +353,7 @@ ADCTaskInit(void)
   	//
   	// Read the value from the ADC.
   	//
-  	ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);
+  	ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);*/
 
     if(xTaskCreate(ADCTask, (signed portCHAR *)"ADC", ADCTASKSTACKSIZE, NULL,
                    tskIDLE_PRIORITY + PRIORITY_ADC_TASK, NULL) != pdTRUE)

@@ -85,11 +85,10 @@ vApplicationStackOverflowHook(xTaskHandle *pxTask, char *pcTaskName)
     }
 }
 
-//*****************************************************************************
-//
-// Initialize FreeRTOS and start the initial set of tasks.
-//
-//*****************************************************************************
+/**
+ * Main startup function, creates each of the FreeRTOS tasks
+ * Enables required functionality
+ */
 int
 main(void)
 {
@@ -107,7 +106,7 @@ main(void)
     UARTprintf("     T L' /\\ 'J T\n\r");
     UARTprintf("      \\  /XX\\  /       ENGG4810 Team Project 2017\n\r");
     UARTprintf("   @\\_ '______' _/@       Jaric Thorning\n\r");
-    UARTprintf("   \\_X\\_ ____ _/X_/       Yin Wu\n\r");
+    UARTprintf("   \\_X\\_ ____ _/X_/       Chia-Yin Wu\n\r");
     UARTprintf("     \\=/\\----/\\=/         Daya Kern\n\r");
     UARTprintf("\n\r===============================================================\n\r");
     UARTprintf("\n\r---------------------------------------------------------------\n\r");
@@ -129,7 +128,10 @@ main(void)
 
     UARTprintf("Enabling Power...\n\r");*/
 
-    // Create the LED task.
+
+    /**
+    * Creates LED Task
+    */
     if(LEDTASK){
     if(LEDTaskInit() != 0)
       {

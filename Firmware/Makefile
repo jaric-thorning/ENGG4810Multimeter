@@ -76,7 +76,6 @@ IPATH+=$(ROOT)/third_party/bget
 IPATH+=$(ROOT)/third_party/fatfs
 IPATH+=$(ROOT)/third_party/fatfs/src
 
-
 #
 # The default rule, which causes the FreeRTOS example to be built.
 #
@@ -134,7 +133,6 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/cmdline.o
 #--------GENERAL--------#
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/bget.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/display.o
-${COMPILER}/$(PROJECT).axf: ${COMPILER}/display_functions.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uart.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/general_functions.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/sd_card.o
@@ -158,4 +156,4 @@ ifneq (${MAKECMDGOALS},clean)
 endif
 
 prog:
-	$(HOME)/lm4tools-master/lm4flash/lm4flash gcc/$(PROJECT).bin
+	$(HOME)/lm4tools-master/lm4flash/lm4flash -v gcc/$(PROJECT).bin

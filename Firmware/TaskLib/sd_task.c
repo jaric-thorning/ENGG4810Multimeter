@@ -18,10 +18,9 @@
 #include "sd_task.h"
 #include "lcd_task.h"
 
-#include "stdlib.h"
+///#include "xxx.h"
 //SD INCLUDES
 
-#include "display_functions.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"

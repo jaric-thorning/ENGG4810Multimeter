@@ -18,6 +18,8 @@ extern struct lcd_queue_message {
   int range;
   int value;
   int decimal;
+  int overlimit;
+  int negative_value;
 } lcd_queue_message;
 
 xQueueHandle g_pLCDQueue;

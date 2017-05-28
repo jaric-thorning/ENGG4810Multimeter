@@ -39,14 +39,16 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include "lcd_task.h"
+#include "ADC_task.h"
 
 //LCD INCLUDES
 
-#include "LIB/display_functions.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
 #include "mswitch_task.h"
+#include "switch_task.h"
 
 //*****************************************************************************
 //
@@ -62,8 +64,6 @@
 //*****************************************************************************
 #define COMM_ITEM_SIZE           sizeof(uint8_t)
 #define COMM_QUEUE_SIZE          5
-
-
 
 #define COMM_REFRESH_TIME 100
 //*****************************************************************************
@@ -89,6 +89,9 @@ CommTask(void *pvParameters)
     ui32COMMRefreshTime = COMM_REFRESH_TIME;
 
     struct mswitch_queue_message mswitch_message;
+    struct lcd_queue_message lcd_message;
+    struct adc_queue_message adc_message;
+    struct switch_queue_message switch_message;
 
     //
     // Get the current tick count.
@@ -132,78 +135,117 @@ CommTask(void *pvParameters)
       xSemaphoreGive(g_pUARTSemaphore);*/
 
 
-      mswitch_message.ui32Value = 0; //doesn't matter
+
+      mswitch_message.value = 0; //doesn't matter
       received_valid = 0;
 
-      if((buffer[0] == '[') && (buffer[1] == 'C') && (buffer[2] == ']')){
-        UARTprintf("[C]\n\r");
-      } else if((buffer[0] == '[') && (buffer[6] == ']')){
-        if(buffer[1] == 'S'){
-          if(buffer[3] == 'M'){
-            mswitch_message.type = 'M'; //sending M for mode
-            if(buffer[5] == 'V'){
-              mswitch_message.mode = 'V'; //sending V to for voltage
-              received_valid = 1;
-            } else if(buffer[5] == 'I'){
-              mswitch_message.mode = 'I'; //sending I to for current
-              received_valid = 1;
-            } else if(buffer[5] == 'R'){
-              mswitch_message.mode = 'R'; //sending R to for resistance
-              received_valid = 1;
-            } else if(buffer[5] == 'C'){
-              mswitch_message.mode = 'C'; //sending C to for resistance
-              received_valid = 1;
-            } else if(buffer[5] == 'L'){
-              mswitch_message.mode = 'L'; //sending L to for resistance
-              received_valid = 1;
-            } else {
-              UARTprintf("{UNKNOWN MODE RECEIVED}\n\r");
-            }
-          } else if (buffer[3] == 'F'){ //Recieved Frequency
-            if(buffer[5] == 'A'){
-              mswitch_message.mode = 'A'; //sending V to for voltage
-              received_valid = 1;
-            } else if(buffer[5] == 'B'){
-              mswitch_message.mode = 'B'; //sending I to for current
-              received_valid = 1;
-            } else if(buffer[5] == 'C'){
-              mswitch_message.mode = 'C'; //sending R to for resistance
-              received_valid = 1;
-            } else if(buffer[5] == 'D'){
-              mswitch_message.mode = 'D'; //sending C to for resistance
-              received_valid = 1;
-            } else if(buffer[5] == 'E'){
-              mswitch_message.mode = 'E'; //sending L to for resistance
-              received_valid = 1;
-            } else if(buffer[5] == 'F'){
-              mswitch_message.mode = 'F'; //sending C to for resistance
-              received_valid = 1;
-            } else if(buffer[5] == 'G'){
-              mswitch_message.mode = 'G'; //sending L to for resistance
-              received_valid = 1;
-            } else if(buffer[5] == 'H'){
-              mswitch_message.mode = 'H'; //sending L to for resistance
-              received_valid = 1;
-            }
-            else {
-              UARTprintf("{UNKNOWN MODE RECEIVED}\n\r");
-            }
+      if(buffer[1] == 'C'){
+        if( xSemaphoreTake(g_pUARTSemaphore,portMAX_DELAY) == pdTRUE )
+        {
+          UARTprintf("[C]\n\r");
+          xSemaphoreGive(g_pUARTSemaphore);
+        }
+      } else if(buffer[1] == 'S'){
+        if(buffer[3] == 'M'){
+          mswitch_message.type = 'M'; //sending M for mode
+          if(buffer[5] == 'V'){
+            mswitch_message.mode = 'V'; //sending V to for voltage
+            received_valid = 1;
+          } else if(buffer[5] == 'I'){
+            mswitch_message.mode = 'I'; //sending I to for current
+            received_valid = 1;
+          } else if(buffer[5] == 'R'){
+            mswitch_message.mode = 'R'; //sending R to for resistance
+            received_valid = 1;
+          } else if(buffer[5] == 'C'){
+            mswitch_message.mode = 'C'; //sending C to for resistance
+            received_valid = 1;
+          } else if(buffer[5] == 'L'){
+            mswitch_message.mode = 'L'; //sending L to for resistance
+            received_valid = 1;
+          } else {
+            UARTprintf("{UNKNOWN MODE RECEIVED}\n\r");
+          }
+        } else if (buffer[1] == 'F'){ //Recieved Frequency
+          adc_message.mode = 'F';
+          if(buffer[3] == 'A'){
+            adc_message.frequency = 500;
+            received_valid = 1;
+          } else if(buffer[3] == 'B'){
+            adc_message.frequency = 1000;
+            received_valid = 1;
+          } else if(buffer[3] == 'C'){
+            adc_message.frequency = 2000;
+            received_valid = 1;
+          } else if(buffer[3] == 'D'){
+            adc_message.frequency = 5000;
+            received_valid = 1;
+          } else if(buffer[3] == 'E'){
+            adc_message.frequency = 10000;
+            received_valid = 1;
+          } else if(buffer[3] == 'F'){
+            adc_message.frequency = 60000;
+            received_valid = 1;
+          } else if(buffer[3] == 'G'){
+            adc_message.frequency = 120000;
+            received_valid = 1;
+          } else if(buffer[3] == 'H'){
+            adc_message.frequency = 300000;
+            received_valid = 1;
+          } else if(buffer[3] == 'I'){
+            adc_message.frequency = 600000;
+            received_valid = 1;
           } else{
             UARTprintf("{UNKNOWN SETTING RECEIVED}\n\r");
           }
-        } else{
-          UARTprintf("{UNKNOWN COMMAND RECEIVED}\n\r");
+          if(received_valid == 1){
+            if(xQueueSend(g_pADCQueue, &adc_message, portMAX_DELAY) !=
+               pdPASS){
+                 UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+               }
+          }
         }
+
+        if(received_valid){
+          if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
+             pdPASS){
+               UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+             }
+        }
+
+      } else if (buffer[1] == 'B'){
+         lcd_message.setting = 1;
+         if(buffer[3] == '4'){
+           lcd_message.brightness = 4;
+         } else if(buffer[3] == '3'){
+           lcd_message.brightness = 3;
+         } else if(buffer[3] == '2'){
+           lcd_message.brightness = 2;
+         } else if(buffer[3] == '1'){
+           lcd_message.brightness = 1;
+         } else if(buffer[3] == '0'){
+           lcd_message.brightness = 0;
+         }
+         //Send to LCD Queue
+         if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
+            pdPASS){
+              UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+          }
+      } else if (buffer[1] == 'H'){
+
+        //switch_message.power = 1;
+         //Send to LCD Queue
+         if(xQueueSend(g_pSWITCHQueue, &switch_message, portMAX_DELAY) !=
+            pdPASS){
+              UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+          }
+          switch_message.power = 0;
       } else{
-        UARTprintf("{INCORRECTLY FORMATTED MESSAGE RECIEVED}\n\r");
-        UARTprintf("RECIEVED: %s\n\r", buffer);
+          UARTprintf("{UNKNOWN COMMAND RECEIVED}\n\r");
+          UARTprintf("RECIEVED: %s\n\r", buffer);
       }
-      if(received_valid){
-        if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
-           pdPASS){
-             UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
-           }
-      }
+
+
       //
       // Wait for the required amount of time.
       //
