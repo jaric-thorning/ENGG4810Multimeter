@@ -56,14 +56,6 @@ public class SerialDataListener implements SerialPortDataListener {
 		// Reading data
 		if (sEvent.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {
 
-			if (sEvent.getSerialPort().bytesAvailable() < 0) {
-				this.errored = true;
-				System.err.println("Error reading from port");
-				serialTest.closeOpenPort();
-
-				return;
-			}
-
 			// Getting the data from input stream
 			char s = 0;
 			StringBuilder input = new StringBuilder();
@@ -75,7 +67,7 @@ public class SerialDataListener implements SerialPortDataListener {
 				}
 				
 				// Every second send out the write code
-				while ((s = (char) serialTest.getReadFromSerial().read()) != 0 && !quit.get()) {
+				while ((s = (char) serialTest.getReadFromSerial().read()) != -1 && !quit.get()) {
 					input.append(s);
 
 					if (s == '\n') {
@@ -83,12 +75,9 @@ public class SerialDataListener implements SerialPortDataListener {
 
 						// Check for two-way connection
 						if (!serialTest.getIsChecked() && (time < TIME_OUT)) {
-							System.out.println("1");
 							time = System.nanoTime() - initialTime;
 							GuiController.instance.setConnectedMultimeterComponents(true);
 							checkData(line);
-							System.err.println(line);
-							System.out.println("T: " + time + " < TO: " + TIME_OUT);
 						} else {
 							System.err.println("\"" + line + "\"");
 							getData(line);
