@@ -218,6 +218,8 @@ public class GuiController implements Initializable {
 	private ObservableList<Integer> brightnessLevels;
 
 	@FXML
+	private Label sampleRateLabel;
+	@FXML
 	private ComboBox<String> sampleRate;
 	private ObservableList<String> sampleRates;
 
@@ -357,6 +359,7 @@ public class GuiController implements Initializable {
 
 		switchDCLabel.setDisable(status);
 		brightnessLabel.setDisable(status);
+		sampleRateLabel.setDisable(status);
 		selectACDCBtn.setDisable(status);
 
 		modeLabel.setDisable(status);
@@ -635,10 +638,12 @@ public class GuiController implements Initializable {
 
 			String code = MultimeterCodes.SAMPLE_RATE_H.getCode();
 			serialTest.writeCode(code);
-		} else {
+		} else if (sampleRate.getSelectionModel().getSelectedIndex() == 8) {
 
 			String code = MultimeterCodes.SAMPLE_RATE_I.getCode();
 			serialTest.writeCode(code);
+		} else {
+			// Do nothing
 		}
 	}
 
@@ -911,8 +916,10 @@ public class GuiController implements Initializable {
 
 		resetAxesGraphDetails();
 
-		// TODO: Make sure this is set at some point
-		// sampleRate.setValue(sampleRate.getPromptText());
+		// Reset combo boxes
+		sampleRate.getSelectionModel().clearSelection();
+		brightnessLevel.getSelectionModel().clearSelection();
+		portsAvailable.getSelectionModel().clearSelection();
 
 		// Reset displayed multimeter display
 		multimeterDisplay.setText("");

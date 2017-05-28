@@ -41,7 +41,7 @@
                                     <Insets left="10.0" top="10.0" />
                                  </GridPane.margin>
                               </Label>
-                              <ComboBox fx:id="portsAvailable" minHeight="-Infinity" minWidth="-Infinity" onAction="#changePorts" prefHeight="28.0" prefWidth="190.0" promptText="Ports" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                              <ComboBox fx:id="portsAvailable" minHeight="-Infinity" minWidth="-Infinity" onAction="#changePorts" prefHeight="28.0" prefWidth="190.0" GridPane.rowIndex="1" GridPane.valignment="TOP">
                                  <cursor>
                                     <Cursor fx:constant="HAND" />
                                  </cursor>
@@ -62,7 +62,7 @@
                                     <Insets left="210.0" top="35.0" />
                                  </GridPane.margin>
                               </Button>
-                              <ComboBox fx:id="sampleRate" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectSampleRate" prefHeight="28.0" prefWidth="190.0" promptText="Sample Rate" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                              <ComboBox fx:id="sampleRate" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectSampleRate" prefHeight="28.0" prefWidth="190.0" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="125.0" top="30.0" />
                                  </GridPane.margin>
@@ -140,7 +140,7 @@
                                     <Insets left="81.0" top="15.0" />
                                  </GridPane.margin>
                               </Button>
-                              <ComboBox fx:id="brightnessLevel" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectBrightnessLevel" prefHeight="28.0" prefWidth="113.0" promptText="Brightness" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                              <ComboBox fx:id="brightnessLevel" minHeight="-Infinity" minWidth="-Infinity" onAction="#selectBrightnessLevel" prefHeight="28.0" prefWidth="113.0" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" top="30.0" />
                                  </GridPane.margin>
@@ -148,6 +148,11 @@
                               <Label fx:id="brightnessLabel" text="Brightness %:" GridPane.rowIndex="3" GridPane.valignment="TOP">
                                  <GridPane.margin>
                                     <Insets left="10.0" top="10.0" />
+                                 </GridPane.margin>
+                              </Label>
+                              <Label fx:id="sampleRateLabel" text="Sample Rate:" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                                 <GridPane.margin>
+                                    <Insets left="125.0" top="10.0" />
                                  </GridPane.margin>
                               </Label>
                            </children>
