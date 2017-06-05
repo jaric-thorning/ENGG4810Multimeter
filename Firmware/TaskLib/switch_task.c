@@ -236,7 +236,6 @@ SwitchTask(void *pvParameters)
           button5_time = currentTime;
         }
         else if((button6 != BUTTON6_PIN) && (button6_time + 200 < currentTime)){
-            power_rec = 0;
             //UARTprintf("Power bit is: %d", power_on);
             if(power_on){
               GPIOPinWrite(POWER_PORT,GPIO_PIN_1,0);
@@ -260,10 +259,10 @@ SwitchTask(void *pvParameters)
              }
            }*/
 
-           HibernateWakeSet(HIBERNATE_WAKE_PIN);
+           /*HibernateWakeSet(HIBERNATE_WAKE_PIN);
            int last_flash = 0;
-           HibernateRequest();
-           while(1){
+           HibernateRequest();*/
+           /*while(1){
              if(xTaskGetTickCount() > last_flash + 1500){
                GPIOPinWrite(LED1_PORT,LED1_PIN,LED1_PIN);
                if(xTaskGetTickCount() > last_flash + 1800){
@@ -271,7 +270,7 @@ SwitchTask(void *pvParameters)
                  last_flash = xTaskGetTickCount();
                }
              }
-           }
+           }*/
 
           button6_time = currentTime;
         }

@@ -98,7 +98,7 @@ ADCTask(void *pvParameters)
 
     int getting_rms = 1;
 
-    float converted;
+    double converted;
 
     portTickType period, start_time, start_calc_time, rms_start_time, read_timeout;
 
@@ -128,7 +128,7 @@ ADCTask(void *pvParameters)
             UARTprintf("Warning - ADC timeout.\n\r");
           }
             data = read_data();
-            converted = data/5756991.0 * 3.3;
+            converted = data/5691091.0;
 
             //UARTprintf("ADC: %d.%d\n\r", (int)converted, ((int)(converted * 1000))%1000);
           if(getting_max){
@@ -274,12 +274,12 @@ ADCTask(void *pvParameters)
     		}
     		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);*/
 
-        /*integer = (int)converted;
-        decimal = ((int)(converted*100000))%100000;
+        integer = (int)converted;
+        decimal = ((int)(converted*1000000))%1000000;
         if(decimal < 0){
-          decimal *= -1;
+          //decimal *= -1;
         }
-        UARTprintf("ADC: %d.%d\n\r", integer, decimal);*/
+        UARTprintf("ADC: %d.%d\n\r", integer, decimal);
 
         //
         mswitch_message.value = converted;

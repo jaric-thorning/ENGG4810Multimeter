@@ -145,54 +145,54 @@ CommTask(void *pvParameters)
           UARTprintf("[C]\n\r");
           xSemaphoreGive(g_pUARTSemaphore);
         }
-      } else if(buffer[1] == 'S'){
-        if(buffer[3] == 'M'){
+      } else if(buffer[0] == 'S'){
+        if(buffer[2] == 'M'){
           mswitch_message.type = 'M'; //sending M for mode
-          if(buffer[5] == 'V'){
+          if(buffer[4] == 'V'){
             mswitch_message.mode = 'V'; //sending V to for voltage
             received_valid = 1;
-          } else if(buffer[5] == 'I'){
+          } else if(buffer[4] == 'I'){
             mswitch_message.mode = 'I'; //sending I to for current
             received_valid = 1;
-          } else if(buffer[5] == 'R'){
+          } else if(buffer[4] == 'R'){
             mswitch_message.mode = 'R'; //sending R to for resistance
             received_valid = 1;
-          } else if(buffer[5] == 'C'){
+          } else if(buffer[4] == 'C'){
             mswitch_message.mode = 'C'; //sending C to for resistance
             received_valid = 1;
-          } else if(buffer[5] == 'L'){
+          } else if(buffer[4] == 'L'){
             mswitch_message.mode = 'L'; //sending L to for resistance
             received_valid = 1;
           } else {
             UARTprintf("{UNKNOWN MODE RECEIVED}\n\r");
           }
-        } else if (buffer[1] == 'F'){ //Recieved Frequency
+        } else if (buffer[0] == 'F'){ //Recieved Frequency
           adc_message.mode = 'F';
-          if(buffer[3] == 'A'){
+          if(buffer[2] == 'A'){
             adc_message.frequency = 500;
             received_valid = 1;
-          } else if(buffer[3] == 'B'){
+          } else if(buffer[2] == 'B'){
             adc_message.frequency = 1000;
             received_valid = 1;
-          } else if(buffer[3] == 'C'){
+          } else if(buffer[2] == 'C'){
             adc_message.frequency = 2000;
             received_valid = 1;
-          } else if(buffer[3] == 'D'){
+          } else if(buffer[2] == 'D'){
             adc_message.frequency = 5000;
             received_valid = 1;
-          } else if(buffer[3] == 'E'){
+          } else if(buffer[2] == 'E'){
             adc_message.frequency = 10000;
             received_valid = 1;
-          } else if(buffer[3] == 'F'){
+          } else if(buffer[2] == 'F'){
             adc_message.frequency = 60000;
             received_valid = 1;
-          } else if(buffer[3] == 'G'){
+          } else if(buffer[2] == 'G'){
             adc_message.frequency = 120000;
             received_valid = 1;
-          } else if(buffer[3] == 'H'){
+          } else if(buffer[2] == 'H'){
             adc_message.frequency = 300000;
             received_valid = 1;
-          } else if(buffer[3] == 'I'){
+          } else if(buffer[2] == 'I'){
             adc_message.frequency = 600000;
             received_valid = 1;
           } else{
@@ -213,17 +213,17 @@ CommTask(void *pvParameters)
              }
         }
 
-      } else if (buffer[1] == 'B'){
+      } else if (buffer[0] == 'B'){
          lcd_message.setting = 1;
-         if(buffer[3] == '4'){
+         if(buffer[2] == '4'){
            lcd_message.brightness = 4;
-         } else if(buffer[3] == '3'){
+         } else if(buffer[2] == '3'){
            lcd_message.brightness = 3;
-         } else if(buffer[3] == '2'){
+         } else if(buffer[2] == '2'){
            lcd_message.brightness = 2;
-         } else if(buffer[3] == '1'){
+         } else if(buffer[2] == '1'){
            lcd_message.brightness = 1;
-         } else if(buffer[3] == '0'){
+         } else if(buffer[2] == '0'){
            lcd_message.brightness = 0;
          }
          //Send to LCD Queue
@@ -231,7 +231,7 @@ CommTask(void *pvParameters)
             pdPASS){
               UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
           }
-      } else if (buffer[1] == 'H'){
+      } else if (buffer[0] == 'H'){
 
         //switch_message.power = 1;
          //Send to LCD Queue

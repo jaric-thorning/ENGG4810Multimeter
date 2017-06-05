@@ -65,8 +65,6 @@ void update_display(int line, char * text){
     num_chars++;
 	}
 
-  //UARTprintf("%d : %s\n\r", num_chars, text);
-
   if(num_chars > 16){
     num_chars = 16;
   }
@@ -318,8 +316,9 @@ LCDTask(void *pvParameters)
             }
           }
         } else if(mode == 'D'){
-          UARTprintf("|%c: %d.%d|\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
-          //displayOffLCD();
+
+          //UARTprintf("|%c: %d.%d|\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
+
 
           format_read_value(lcd_message.type, lcd_message.range, lcd_message.value, lcd_message.decimal, lcd_message.overlimit, lcd_message.negative_value, &lcd_line_1, &lcd_line_2);
 
@@ -353,10 +352,10 @@ LCDTask(void *pvParameters)
 
         if( xSemaphoreTake(g_pUARTSemaphore,portMAX_DELAY) == pdTRUE )
         {
-          UARTprintf("\n\r ------------------ \n\r");
+          /*UARTprintf("\n\r ------------------ \n\r");
           UARTprintf("|D1 %s|\n\r", lcd_line_1);
           UARTprintf("|D2 %s|\n\r", lcd_line_2);
-          UARTprintf(" ------------------ \n\r\n\r");
+          UARTprintf(" ------------------ \n\r\n\r");*/
         }
         xSemaphoreGive(g_pUARTSemaphore);
 

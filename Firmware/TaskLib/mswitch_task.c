@@ -79,7 +79,7 @@
 
 uint8_t shift_reg = 0x00;
 
-int mode = DC_VOLTAGE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
+int mode = DC_CURRENT; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13; //V
 int range_current = 200; //mA
 int range_resistance = 1000; //kOhm
@@ -122,8 +122,8 @@ MSWITCHTask(void *pvParameters)
     lastledflash = 0;
     int integer = 0;
     int decimal = 0;
-    float value = 0;
-    float convert = 0;
+    double value = 0;
+    double convert = 0;
 
     int logging = 0;
     int ledison = 1;
@@ -211,18 +211,31 @@ MSWITCHTask(void *pvParameters)
             //UARTprintf("Value: %d.%d\n\r", (int)value, ((int)value * 1000)%1000);
             lcd_message.type = 'V';
             lcd_message.range = range;
-            //lcd_message.overlimit = check_voltage_range(value, mode);
+            //lcd_message.overlimit = check_voltage_range(0.8, mode);
             lcd_message.overlimit = check_voltage_range(value, mode);
           } else if (mode == AC_VOLTAGE){
             //TODO CHANGE THIS
             lcd_message.type = 'W';
-            value = mswitch_message.value/3.3 * range * 2 - range;
+            value = mswitch_message.value * range * 2 - range;
             float max_range = mswitch_message.max_value/3.3 * range * 2 - range;
 
             lcd_message.overlimit = check_voltage_range(max_range, mode);
 
           } else if(mode == DC_CURRENT){ //current
-            value = mswitch_message.value/(5664672.0) * 2 * range_current - range_current;
+
+            value = mswitch_message.value * 2 * range_current - range_current;
+
+            if(range_current == 200){
+              value -= 5;
+              if(value > 6 && value < 8){
+                value += 2;
+              }
+            } else if(range_current == 10){
+              value -= 3.8;
+              if(value > 6){
+                value += (value - 5.6) * 6;
+              }
+            }
             //UARTprintf("Recieved uValue = %d", mswitch_message.ui32Value);
             //UARTprintf("    Current range = %d\n\r", range_current);
             lcd_message.type = 'I';
@@ -234,12 +247,12 @@ MSWITCHTask(void *pvParameters)
 
       		} else if(mode == RESISTANCE){ //resistance
 
-            value = mswitch_message.value/(5664672.0)* range_resistance;
+            value = mswitch_message.value * range_resistance;
             lcd_message.type = 'R';
             lcd_message.range = range_resistance;
             lcd_message.overlimit = check_resistance_range(value);
       		} else if (mode == CONTINUITY){
-            value = 0;
+            value = mswitch_message.value * range_resistance;
             lcd_message.type = 'C';
             lcd_message.overlimit = check_resistance_range(value);
 
@@ -626,7 +639,7 @@ int check_voltage_range(float value, int mode){
       }
 		}
 	} else if ( range == 5){
-		if( value >= 4.9){
+		if( value >= 4.98){
 			//UARTprintf("Switching to 12V resolution\n");
 			range = 13;
       if(mode == AC_VOLTAGE){
@@ -676,14 +689,14 @@ int check_current_range(float value){
       change_current(200);
       range_current = 200;
       return 1;
-		} else if( value < 8){
+		} else if( value < 9.8){
 			UARTprintf("Switching to 10mA resolution\n");
       //Switch Down
       range_current = 10;
       change_current(10);
 		}
 	} else if ( range_current == 10){
-		if( value >= 9){
+		if( value >= 9.8){
 			UARTprintf("Switching to 200mA resolution\n");
 			range_current = 200;
 			change_current(200);

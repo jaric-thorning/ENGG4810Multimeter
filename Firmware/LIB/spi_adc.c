@@ -39,7 +39,6 @@
 #define DELAY_TIME 1000
 
 void pulse_sclk(void){
-	//UARTprintf("Pulsing\n\r");
 	GPIOPinWrite(SCLK_PORT_BASE, SCLK_PIN, 0);
 	SysCtlDelay(DELAY_TIME);
 	GPIOPinWrite(SCLK_PORT_BASE, SCLK_PIN, SCLK_PIN);
@@ -154,15 +153,12 @@ uint8_t read_byte(uint8_t address){
 uint32_t read_data(void){
 	uint32_t data = 0;
 	uint8_t address = 0b11001001;
-	//UARTprintf("Reading Command\n\r");
-
 	set_cs(LOW);
 	//send command + address
 	for(int i = 7; i >= 0; i--){
 		set_di((address >> i) & 1);
 		pulse_sclk();
 	}
-
 	//read byte
 	for(int i = 23; i >= 0; i--){
 		if(get_do()){
@@ -170,10 +166,8 @@ uint32_t read_data(void){
 		}
 		pulse_sclk();
 	}
-
 	set_cs(HIGH);
 	pulse_sclk();
-
 	return data;
 }
 

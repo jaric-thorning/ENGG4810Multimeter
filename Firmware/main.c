@@ -28,20 +28,15 @@
 #include "uart.h"
 
 
-#define POWER_PIN GPIO_PIN_1
-#define POWER_PORT GPIO_PORTF_BASE
-#define POWER_GPIO SYSCTL_PERIPH_GPIOF
-
 
 // --------------- TASK CONTROL ------------------
 
 #define LEDTASK         1
 #define SWITCHTASK      1
-
-#define LCDTASK         1 //works
+#define LCDTASK         1
 #define COMMTASK        1
-#define ADCTASK         1 //works
-#define MSWITCHTASK     1 //works
+#define ADCTASK         1
+#define MSWITCHTASK     1
 #define SDTASK          1
 #define BUZZERTASK      1
 
