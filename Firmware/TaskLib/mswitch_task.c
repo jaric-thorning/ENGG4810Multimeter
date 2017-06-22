@@ -79,7 +79,7 @@
 
 uint8_t shift_reg = 0x00;
 
-int mode = DC_CURRENT; //0 -> Current, 1 -> Voltage, 2 -> Resistance
+int mode = RESISTANCE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13; //V
 int range_current = 200; //mA
 int range_resistance = 1000; //kOhm
@@ -120,8 +120,8 @@ MSWITCHTask(void *pvParameters)
     ui32WakeTime = xTaskGetTickCount();
     value_acquired = 0;
     lastledflash = 0;
-    int integer = 0;
-    int decimal = 0;
+    double integer = 0;
+    double decimal = 0;
     double value = 0;
     double convert = 0;
 
@@ -206,7 +206,19 @@ MSWITCHTask(void *pvParameters)
 
           if(mode == DC_VOLTAGE){ //voltage
 
-            value = mswitch_message.value * range * 2 - range;
+            value = mswitch_message.value * range;
+
+            int integer = (int)mswitch_message.value;
+            int decimal = ((int)(mswitch_message.value*1000000))%1000000;
+            UARTprintf("AD2: %d.%d\n\n\r", integer, decimal);
+
+            integer = (int)value;
+            decimal = ((int)(value*1000000))%1000000;
+            UARTprintf("AD3: %d.%d\n\n\r", integer, decimal);
+
+            integer = (int)(mswitch_message.value * range);
+            decimal = ((int)((mswitch_message.value * range)*1000000))%1000000;
+            UARTprintf("AD4: %d.%d\n\n\r", integer, decimal);
 
             //UARTprintf("Value: %d.%d\n\r", (int)value, ((int)value * 1000)%1000);
             lcd_message.type = 'V';
@@ -246,13 +258,30 @@ MSWITCHTask(void *pvParameters)
             lcd_message.type = 'J';
 
       		} else if(mode == RESISTANCE){ //resistance
+            if(range_resistance == 1000){
+              value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0 * range_resistance;
 
-            value = mswitch_message.value * range_resistance;
-            lcd_message.type = 'R';
+              if(value < 200){
+                value -= 10;
+              }
+            } else if (range_resistance == 100){
+              value = (((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0)/2 * range_resistance;
+            } else if (range_resistance == 10){
+              value = (((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0)/2 * range_resistance;
+            }
+
+            if(value > 2 * range_resistance){
+              value = 0;
+              lcd_message.overlimit = check_resistance_range(50);
+            } else {
+              lcd_message.overlimit = check_resistance_range(value);
+            }
+
             lcd_message.range = range_resistance;
-            lcd_message.overlimit = check_resistance_range(value);
+            lcd_message.type = 'R';
+
       		} else if (mode == CONTINUITY){
-            value = mswitch_message.value * range_resistance;
+            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0 * range_resistance;
             lcd_message.type = 'C';
             lcd_message.overlimit = check_resistance_range(value);
 
@@ -472,7 +501,7 @@ void set_mode(int new_mode){
     set_shift_pin(S3_B_PIN, 0);
     set_shift_pin(S3_A_PIN, 1);
 
-  } else if ( new_mode == AC_VOLTAGE){
+  } else if (new_mode == AC_VOLTAGE){
     set_shift_pin(S1_C_PIN, 1);
     set_shift_pin(S1_B_PIN, 0);
     set_shift_pin(S1_A_PIN, 1);
@@ -507,8 +536,8 @@ void set_mode(int new_mode){
     set_shift_pin(S1_A_PIN, 0);
 
     //write S2 to 1MOhm (11) and IHN to 0 (on)
-    set_shift_pin(S2_B_PIN, 1);
-    set_shift_pin(S2_A_PIN, 1);
+    set_shift_pin(S2_B_PIN, 0);
+    set_shift_pin(S2_A_PIN, 0);
     set_shift_pin(S2_I_PIN, 0);
 
     //write S3 to resistance mode (10)

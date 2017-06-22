@@ -266,20 +266,25 @@ ADCTask(void *pvParameters)
           UARTprintf("Warning - ADC timeout.\n\r");
         }
           data = read_data();
-          converted = data/5664672.0;
+          converted = (data * 2 - 5664672.0)/5664672.0;
 
         /*ADCProcessorTrigger(ADC0_BASE, 0);
     		while(!ADCIntStatus(ADC0_BASE, 0, false))
     		{
     		}
     		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);*/
-
+        UARTprintf("BIN: ");
+        for(int i = 32; i >= 0; i--){
+          UARTprintf("%d", (data >> i) & 1);
+        }
+        UARTprintf("\n");
+        UARTprintf("RAW: %d\n\r", data);
         integer = (int)converted;
         decimal = ((int)(converted*1000000))%1000000;
         if(decimal < 0){
           //decimal *= -1;
         }
-        UARTprintf("ADC: %d.%d\n\r", integer, decimal);
+        UARTprintf("ADC: %d.%d\n\n\r", integer, decimal);
 
         //
         mswitch_message.value = converted;

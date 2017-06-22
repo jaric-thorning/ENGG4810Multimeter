@@ -126,7 +126,7 @@ BuzzerTaskInit(void)
 
   // Turn on the Output pins
   //PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_2_BIT | PWM_OUT_4_BIT | PWM_OUT_5_BIT | PWM_OUT_6_BIT | PWM_OUT_7_BIT, true);
-  PWMOutputState(PWM0_BASE, PWM_OUT_2_BIT, false);
+  PWMOutputState(PWM0_BASE, PWM_OUT_2_BIT, 0);
 
   if(xTaskCreate(BuzzerTask, (signed portCHAR *)"BUZZER", BUZZERTASKSTACKSIZE, NULL,
                tskIDLE_PRIORITY + PRIORITY_BUZZER_TASK, NULL) != pdTRUE)
