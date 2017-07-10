@@ -37,6 +37,7 @@
 
 #include "switch_task.h"
 #include "buzzer_task.h"
+#include "sd_card.h"
 
 
 #define MSWITCHTASKSTACKSIZE        512
@@ -130,6 +131,13 @@ MSWITCHTask(void *pvParameters)
     int led2ison = 0;
     int flash_reset = 1;
 
+    int filename_count = 0;
+
+    char sd_write_line[64];
+
+    char integer_buf[10];
+    char decimal_buf[10];
+
     while(1)
     {
       //
@@ -183,9 +191,24 @@ MSWITCHTask(void *pvParameters)
           if(logging == 0){
             UARTprintf("Recording to SD....\n\r");
             logging = 1;
+
+            char temp_filename[64];
+            char temp_type[2];
+            char counter_buf[10];
+
+            do {
+              strcpy(temp_filename,"logfile\0");
+              int2str(filename_count++, counter_buf, 10);
+              strcat(temp_filename, counter_buf);
+              strcat(temp_filename, ".csv\0");
+
+            } while(check_filename(temp_filename));
+
+            sd_message.filename = temp_filename;
             static char header_text[64];
-            strcpy(header_text, "Time,Value,Units,IsoTime\n");
+            strcpy(header_text, "Time,Value,Units,IsoTime\n\0");
             sd_message.text = header_text;
+            UARTprintf("Found valid filname: %s\n\r", sd_message.filename);
             if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=
                pdPASS){
                  UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
@@ -353,11 +376,8 @@ MSWITCHTask(void *pvParameters)
               UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
             }
 
-        char sd_write_line[64];
-
-        char integer_buf[10];
-        char decimal_buf[10];
-
+        memset(decimal_buf, 0, 10);
+        memset(integer_buf, 0, 10);
         memset(sd_write_line, 0, 64);
         //memset(sd_message.text, 0, sizeof(sd_message.text));
         //sd_message.text = "TEST";
@@ -365,7 +385,7 @@ MSWITCHTask(void *pvParameters)
         int2str(ticks_seconds / 1000, integer_buf, 10);
         int2str(ticks_seconds % 1000, decimal_buf, 10);
 
-        strcpy(sd_write_line, integer_buf);
+        strncpy(sd_write_line, integer_buf, 10);
         strcat(sd_write_line, ".");
         strcat(sd_write_line, decimal_buf);
         strcat(sd_write_line, ",");
@@ -399,7 +419,7 @@ MSWITCHTask(void *pvParameters)
            }
 
         if(logging){
-          UARTprintf("Logging...\n\r");
+          //UARTprintf("Logging...\n\r");
           if(xTaskGetTickCount() > lastledflash + 250){
             if(ledison){
               switch_message.led1 = 0;
@@ -419,11 +439,11 @@ MSWITCHTask(void *pvParameters)
             lastledflash = xTaskGetTickCount();
           }
 
-          UARTprintf("BUILT: ");
+          /*UARTprintf("BUILT: ");
           for(int i = 0; i < 64; i++){
             UARTprintf("%c", sd_write_line[i]);
           }
-          UARTprintf("\n\r");
+          UARTprintf("\n\r");*/
 
           sd_message.text = sd_write_line;
           if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=

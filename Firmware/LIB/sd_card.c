@@ -160,6 +160,23 @@ extern void initialise_sd_card(void){
 
 }
 
+extern int check_filename(char * filename){
+
+  int iFResult;
+  //UARTprintf("Opening file: %s\n\r", filename);
+  iFResult = f_open(&g_sFileObject, filename, FA_OPEN_EXISTING);
+
+  if(iFResult == FR_OK){
+    //File exists already -> fail
+    f_close(&g_sFileObject);
+    return 1;
+  } else{
+    UARTprintf("Passed because: %s\n\r", StringFromFResult(iFResult));
+    f_close(&g_sFileObject);
+    return 0;
+  }
+}
+
 extern int append_to_file(char * filename, char * text){
 
         //UARTprintf("APPENDING TO FILE\n\r");
@@ -179,14 +196,16 @@ extern int append_to_file(char * filename, char * text){
         //
         // Open the file for reading.
         //
-        iFResult = f_open(&g_sFileObject, "logfile.csv", FA_WRITE | FA_OPEN_ALWAYS);
+        //UARTprintf("Attempting to open: %s\n\r", filename);
+
+        iFResult = f_open(&g_sFileObject, filename, FA_WRITE | FA_OPEN_ALWAYS | FA_READ);
 
         //
         // If there was some problem opening the file, then return an error.
         //
         if(iFResult != FR_OK)
         {
-            UARTprintf("COULDN'T OPEN LOG FILE\n\r");
+            UARTprintf("COULDN'T OPEN LOG FILE -> %s\n\r", StringFromFResult(iFResult));
             return iFResult;
         }
         //UARTprintf("OPENED LOG  FILE\n\r");
@@ -201,7 +220,7 @@ extern int append_to_file(char * filename, char * text){
 
         //UARTprintf("SEEKED TO END OF LOG  FILE\n\r");
 
-        UARTprintf("APPEND WRITE: %s", text);
+        UARTprintf("Writing to SD: %s", text);
         iFResult = f_write(&g_sFileObject, text, 64, &bytes_written);
         //
         // If there was some problem writing the file, then return an error.
