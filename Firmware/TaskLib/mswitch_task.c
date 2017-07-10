@@ -79,7 +79,7 @@
 
 uint8_t shift_reg = 0x00;
 
-int mode = RESISTANCE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
+int mode = DC_VOLTAGE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13; //V
 int range_current = 200; //mA
 int range_resistance = 1000; //kOhm
@@ -108,8 +108,8 @@ MSWITCHTask(void *pvParameters)
     struct buzzer_queue_message buzzer_message;
     struct switch_queue_message switch_message;
 
-    //sd_message.filename = (char*)bgetz(16 * sizeof(char));
-    //sd_message.text = (char*)bgetz(16 * sizeof(char));
+    sd_message.filename = (char*)bgetz(64 * 2 * sizeof(char));
+    sd_message.text = (char*)bgetz(64 * 2 * sizeof(char));
 
 
     //sd_message.filename  = "ltest.txt";
@@ -183,6 +183,14 @@ MSWITCHTask(void *pvParameters)
           if(logging == 0){
             UARTprintf("Recording to SD....\n\r");
             logging = 1;
+            static char header_text[64];
+            strcpy(header_text, "Time,Value,Units,IsoTime\n");
+            sd_message.text = header_text;
+            if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=
+               pdPASS){
+                 UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
+               }
+
           } else{
             UARTprintf("Recording done.\n\r");
             logging = 0;
@@ -210,15 +218,15 @@ MSWITCHTask(void *pvParameters)
 
             int integer = (int)mswitch_message.value;
             int decimal = ((int)(mswitch_message.value*1000000))%1000000;
-            UARTprintf("AD2: %d.%d\n\n\r", integer, decimal);
+            //UARTprintf("AD2: %d.%d\n\n\r", integer, decimal);
 
             integer = (int)value;
             decimal = ((int)(value*1000000))%1000000;
-            UARTprintf("AD3: %d.%d\n\n\r", integer, decimal);
+            //UARTprintf("AD3: %d.%d\n\n\r", integer, decimal);
 
             integer = (int)(mswitch_message.value * range);
             decimal = ((int)((mswitch_message.value * range)*1000000))%1000000;
-            UARTprintf("AD4: %d.%d\n\n\r", integer, decimal);
+            //UARTprintf("AD4: %d.%d\n\n\r", integer, decimal);
 
             //UARTprintf("Value: %d.%d\n\r", (int)value, ((int)value * 1000)%1000);
             lcd_message.type = 'V';
@@ -345,24 +353,45 @@ MSWITCHTask(void *pvParameters)
               UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
             }
 
-        static char buffer2[16 * sizeof(char)];
+        char sd_write_line[64];
 
         char integer_buf[10];
         char decimal_buf[10];
 
-
+        memset(sd_write_line, 0, 64);
         //memset(sd_message.text, 0, sizeof(sd_message.text));
-        sd_message.text = "TEST";
+        //sd_message.text = "TEST";
+        int ticks_seconds = xTaskGetTickCount();
+        int2str(ticks_seconds / 1000, integer_buf, 10);
+        int2str(ticks_seconds % 1000, decimal_buf, 10);
+
+        strcpy(sd_write_line, integer_buf);
+        strcat(sd_write_line, ".");
+        strcat(sd_write_line, decimal_buf);
+        strcat(sd_write_line, ",");
+
+        if(integer < 0){
+          integer *= -1;
+          strcat(sd_write_line, "-");
+        }
+        int2str(integer, integer_buf, 10);
+        int2str(decimal, decimal_buf, 10);
+
+        strcat(sd_write_line, integer_buf);
+        strcat(sd_write_line, ".");
+        strcat(sd_write_line, decimal_buf);
+        strcat(sd_write_line, ",");
 
         if(lcd_message.type == 'V'){
-          strcpy(buffer2, "[V: ");
+          strcat(sd_write_line, "V,");
         } else if (lcd_message.type == 'C'){
-          strcpy(buffer2, "[C: ");
+          strcat(sd_write_line, "C,");
         } else if (lcd_message.type == 'R'){
-          strcpy(buffer2, "[R: ");
+          strcat(sd_write_line, "R,");
         } else{
-          strcpy(buffer2, "[U: ");
+          strcat(sd_write_line, "U,");
         }
+        strcat(sd_write_line, "N\n");
 
         if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
            pdPASS){
@@ -370,7 +399,7 @@ MSWITCHTask(void *pvParameters)
            }
 
         if(logging){
-
+          UARTprintf("Logging...\n\r");
           if(xTaskGetTickCount() > lastledflash + 250){
             if(ledison){
               switch_message.led1 = 0;
@@ -390,22 +419,13 @@ MSWITCHTask(void *pvParameters)
             lastledflash = xTaskGetTickCount();
           }
 
-          if(integer < 0){
-            integer *= -1;
-            strcat(buffer2, "-");
+          UARTprintf("BUILT: ");
+          for(int i = 0; i < 64; i++){
+            UARTprintf("%c", sd_write_line[i]);
           }
-          int2str(integer, integer_buf, 10);
-          int2str(decimal, decimal_buf, 10);
+          UARTprintf("\n\r");
 
-          strcat(buffer2, integer_buf);
-          strcat(buffer2, ".");
-          strcat(buffer2, decimal_buf);
-          strcat(buffer2, "]\n\r");
-
-          sd_message.text = buffer2;
-
-          //UARTprintf("Logging Data on SD...\n\r");
-
+          sd_message.text = sd_write_line;
           if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=
              pdPASS){
                UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");

@@ -154,7 +154,7 @@ SwitchTask(void *pvParameters)
                }
         }
         else if((button4 == BUTTON4_PIN) && (button4_time + 200 < currentTime)){
-          UARTprintf("BUTTON4 is HIGH!\n\r");
+          //UARTprintf("BUTTON4 is HIGH!\n\r");
           button4_time = currentTime;
 
           if(menu_on){

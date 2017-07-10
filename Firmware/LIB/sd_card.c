@@ -155,28 +155,31 @@ extern void initialise_sd_card(void){
   if(iFResult != FR_OK)
   {
       UARTprintf("f_mount error: %s\n", StringFromFResult(iFResult));
-      return(1);
+      return;
   }
 
 }
 
 extern int append_to_file(char * filename, char * text){
-        FRESULT iFResult;
+
+        //UARTprintf("APPENDING TO FILE\n\r");
+        int iFResult;
         int bytes_written;
 
         // Copy the current path to the temporary buffer so it can be manipulated.
         //
-        strcpy(g_pcTmpBuf, "/");
+        //strcpy(g_pcTmpBuf, "/");
 
         //
         // Now finally, append the file name to result in a fully specified file.
         //
-        strcat(g_pcTmpBuf, filename);
+        //strcat(g_pcTmpBuf, filename);
 
+        //UARTprintf("OPENING FILE\n\r");
         //
         // Open the file for reading.
         //
-        iFResult = f_open(&g_sFileObject, g_pcTmpBuf, FA_WRITE | FA_OPEN_ALWAYS);
+        iFResult = f_open(&g_sFileObject, "logfile.csv", FA_WRITE | FA_OPEN_ALWAYS);
 
         //
         // If there was some problem opening the file, then return an error.
@@ -186,16 +189,19 @@ extern int append_to_file(char * filename, char * text){
             UARTprintf("COULDN'T OPEN LOG FILE\n\r");
             return iFResult;
         }
-
+        //UARTprintf("OPENED LOG  FILE\n\r");
         //seek to end of file to append
         iFResult = f_lseek(&g_sFileObject, f_size(&g_sFileObject));
+
 
         if (iFResult != FR_OK){
             UARTprintf("COULDN'T MOVE TO END OF FILE\n\r");
             return iFResult;
         }
 
-        //UARTprintf("APPEND WRITE: %s", text);
+        //UARTprintf("SEEKED TO END OF LOG  FILE\n\r");
+
+        UARTprintf("APPEND WRITE: %s", text);
         iFResult = f_write(&g_sFileObject, text, 64, &bytes_written);
         //
         // If there was some problem writing the file, then return an error.
@@ -205,7 +211,7 @@ extern int append_to_file(char * filename, char * text){
             UARTprintf("COULDN'T WRITE TO LOG FILE : %d\n\r", iFResult);
             return iFResult;
         }
-
+        //UARTprintf("WROTE TO LOG  FILE\n\r");
         //
         // Close the file.
         //
@@ -220,5 +226,6 @@ extern int append_to_file(char * filename, char * text){
             return iFResult;
         }
 
+        //UARTprintf("CLOSED LOG  FILE\n\r");
         return 0;
 }

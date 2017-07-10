@@ -273,7 +273,7 @@ ADCTask(void *pvParameters)
     		{
     		}
     		ADCSequenceDataGet(ADC0_BASE, 0, &ui32Value);*/
-        UARTprintf("BIN: ");
+        /*UARTprintf("BIN: ");
         for(int i = 32; i >= 0; i--){
           UARTprintf("%d", (data >> i) & 1);
         }
@@ -284,7 +284,7 @@ ADCTask(void *pvParameters)
         if(decimal < 0){
           //decimal *= -1;
         }
-        UARTprintf("ADC: %d.%d\n\n\r", integer, decimal);
+        UARTprintf("ADC: %d.%d\n\n\r", integer, decimal);*/
 
         //
         mswitch_message.value = converted;

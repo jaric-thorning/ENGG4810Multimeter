@@ -317,7 +317,7 @@ LCDTask(void *pvParameters)
           }
         } else if(mode == 'D'){
 
-          //UARTprintf("|%c: %d.%d|\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
+          UARTprintf("|%c: %d.%d|\n\r", lcd_message.type, lcd_message.value, lcd_message.decimal);
 
 
           format_read_value(lcd_message.type, lcd_message.range, lcd_message.value, lcd_message.decimal, lcd_message.overlimit, lcd_message.negative_value, &lcd_line_1, &lcd_line_2);
