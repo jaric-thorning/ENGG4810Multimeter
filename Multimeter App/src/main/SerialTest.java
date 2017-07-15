@@ -270,5 +270,9 @@ public class SerialTest {
 
 		GuiController.instance.portsAvailable.setItems(portNames);
 		GuiController.instance.portsAvailable.setVisibleRowCount(portCounter + 1);
+		
+		// Just to have the controls already set.
+		GuiController.instance.setConnectedMultimeterComponents(false);
+		GuiController.instance.setConnectedModeComponents(false);
 	}
 }
