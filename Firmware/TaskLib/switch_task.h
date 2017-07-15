@@ -6,6 +6,11 @@
 extern struct switch_queue_message {
   char setting;
   int menu_on;
+  int setled1;
+  int setled2;
+  int led1;
+  int led2;
+  int power;
 };
 
 xQueueHandle g_pSWITCHQueue;

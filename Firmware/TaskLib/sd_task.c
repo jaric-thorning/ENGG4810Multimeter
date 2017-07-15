@@ -18,10 +18,9 @@
 #include "sd_task.h"
 #include "lcd_task.h"
 
-#include "stdlib.h"
+///#include "xxx.h"
 //SD INCLUDES
 
-#include "display_functions.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
@@ -70,23 +69,15 @@ SDTask(void *pvParameters)
 
     while(1)
     {
-      //
       // Read the next message, if available on queue.
-      //
       if(xQueueReceive(g_pSDQueue, &sd_message, 0) == pdPASS)
       {
-
-        //UARTprintf("Writing to SD: %s\n\r",sd_message.text);
         result = append_to_file(sd_message.filename, sd_message.text);
-
         if(result != 0){
           UARTprintf("FAILED TO POST TO LOG\n\r");
         }
       }
-
-      //
       // Wait for the required amount of time.
-      //
       vTaskDelayUntil(&ui32WakeTime, ui32SDRefreshTime / portTICK_RATE_MS);
     }
 }

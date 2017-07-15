@@ -12,8 +12,9 @@
 extern struct mswitch_queue_message {
   char type;
   char mode;
-  int frequency; 
-  uint32_t ui32Value;
+  int frequency;
+  float max_value;
+  double value;
 };
 
 xQueueHandle g_pMSWITCHQueue;

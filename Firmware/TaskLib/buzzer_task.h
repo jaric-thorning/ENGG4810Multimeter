@@ -4,13 +4,12 @@
  *
  */
 
-
-
 #ifndef __BUZZER_TASK_H__
 #define __BUZZER_TASK_H__
 
 extern struct buzzer_queue_message {
   int frequency;
+  int sound;
 };
 
 xQueueHandle g_pBuzzerQueue;

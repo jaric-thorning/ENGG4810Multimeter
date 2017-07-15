@@ -18,10 +18,9 @@
 
 #include "buzzer_task.h"
 
-#include "stdlib.h"
+//#include "xxx.h"
 //Buzzer INCLUDES
 
-#include "display_functions.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
@@ -68,12 +67,11 @@ BuzzerTask(void *pvParameters)
       {
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
 
-        state = !state;
+        state = buzzer_message2.sound;
+        pwmNow = buzzer_message2.frequency/10.0 * period;
 
         PWMPulseWidthSet(PWM0_BASE, PWM_OUT_2,pwmNow);
         PWMOutputState(PWM0_BASE, PWM_OUT_2_BIT, state);
-
-        UARTprintf("Buzzer sounding\n\r");
 
         xSemaphoreGive(g_pUARTSemaphore);
       }
@@ -128,7 +126,7 @@ BuzzerTaskInit(void)
 
   // Turn on the Output pins
   //PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_2_BIT | PWM_OUT_4_BIT | PWM_OUT_5_BIT | PWM_OUT_6_BIT | PWM_OUT_7_BIT, true);
-  PWMOutputState(PWM0_BASE, PWM_OUT_2_BIT, false);
+  PWMOutputState(PWM0_BASE, PWM_OUT_2_BIT, 0);
 
   if(xTaskCreate(BuzzerTask, (signed portCHAR *)"BUZZER", BUZZERTASKSTACKSIZE, NULL,
                tskIDLE_PRIORITY + PRIORITY_BUZZER_TASK, NULL) != pdTRUE)

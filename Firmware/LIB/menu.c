@@ -20,10 +20,9 @@
 
 #include "LCD_task.h"
 
-#include "stdlib.h"
+//#include "xxx.h"
 //LCD INCLUDES
 
-#include "display_functions.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
 #include "driverlib/pin_map.h"
@@ -180,7 +179,7 @@ int do_action(int selection, int item){
 		} else{
 			UARTprintf("No action found\n\r");
 			//Set to default frequency
-			adc_message.frequency = 600000;
+			adc_message.frequency = 1000;
 		}
 
 		if(xQueueSend(g_pADCQueue, &adc_message, portMAX_DELAY) !=
@@ -191,7 +190,7 @@ int do_action(int selection, int item){
 	} else if (selection == 2){
 		struct lcd_queue_message lcd_message;
 		lcd_message.setting = 1;
-		
+
 		if(item == 0){ //100 % brightness
 			lcd_message.brightness = 4;
 		} else if (item == 1 ){ //75 % brightness
