@@ -20,15 +20,13 @@ public class SerialDataListener implements SerialPortDataListener {
 
 	private static final String OHM_SYMBOL = Character.toString((char) 8486);
 	private static final String PLUS_MINUS_SYMBOL = Character.toString((char) 177);
-	private static final double TIME_OUT = 500000000; // 1/2 a second
 
 	// Whether the port connection has bugged out.
 	private boolean errored;
 	private String firstDisplay;
 	private String secondDisplay;
-	private long initialTime;
-	private long time;
 	private AtomicBoolean quit;
+	private String line;
 
 	private SerialTest serialTest;
 
@@ -39,8 +37,7 @@ public class SerialDataListener implements SerialPortDataListener {
 		errored = false;
 		firstDisplay = "";
 		secondDisplay = "";
-		initialTime = 0L;
-		time = 0L;
+		line="";
 	}
 
 	/**
@@ -62,29 +59,23 @@ public class SerialDataListener implements SerialPortDataListener {
 			serialTest.setReadFromSerial(sEvent.getSerialPort().getInputStream());
 
 			try {
-				if (!serialTest.getIsChecked()) {
-					initialTime = System.nanoTime(); // Current time
-				}
-
-				// Every second send out the write code
 				while ((s = (char) serialTest.getReadFromSerial().read()) != -1 && !quit.get()) {
 					input.append(s);
 
+					// Reset the string if number of characters exceed 50.
 					if (input.toString().trim().length() > 50) {
 						input = new StringBuilder();
 					}
-					if (s == '\n') {
-						String line = input.toString().trim();
 
-						// Check for two-way connection
-						if (!serialTest.getIsChecked() && (time < TIME_OUT)) {
-							time = System.nanoTime() - initialTime;
-							GuiController.instance.setConnectedMultimeterComponents(true);
-							checkData(line);
-						} else {
-							System.err.println("\"" + line + "\"");
-							getData(line);
-						}
+					// If the string character is equal to a newline,
+					// check the value of the combined characters up to that
+					// point without the newline
+					if (s == '\n') {
+						line = input.toString().trim();
+						
+						// No check here for the time being
+						System.err.println("\"" + line + "\"");
+						getData(line);
 
 						input = new StringBuilder();
 					}
@@ -109,9 +100,9 @@ public class SerialDataListener implements SerialPortDataListener {
 	 *            into a String
 	 */
 	private void checkData(String receivedData) {
-
-		if (isValidText(receivedData)) {
-			if (receivedData.charAt(1) == 'C' && receivedData.length() == 3) {
+		
+		if (isValidText(receivedData)) { // 5 -> [,C, ,C,]
+			if (receivedData.charAt(1) == 'C' && receivedData.charAt(3) == 'C' && receivedData.length() == 5) {
 				serialTest.setIsChecked(true);
 				GuiController.instance.setConnectedMultimeterComponents(false);
 			}
@@ -149,6 +140,7 @@ public class SerialDataListener implements SerialPortDataListener {
 				selectFrequencyRate(receivedData.substring(1));
 			} else {
 				// Nothing
+				checkData(receivedData);
 			}
 		}
 	}
@@ -178,7 +170,7 @@ public class SerialDataListener implements SerialPortDataListener {
 			}
 
 			// Check for valid index number
-			failedToDecode = !(0 <= frequencyRate && frequencyRate <= 9);
+			failedToDecode = !(0 <= frequencyRate && frequencyRate < 9);
 
 			if (!failedToDecode) {
 

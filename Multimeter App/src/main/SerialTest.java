@@ -150,16 +150,17 @@ public class SerialTest {
 					// listener
 					if (checkOpenPort(serialPort)) {
 						System.out.println("Success.");
+						
+						// Left as enabled for now
 						GuiController.instance.setConnectedModeComponents(false);
 
-						// Send code for two-way check
-						writeCode(MultimeterCodes.TWO_WAY_CHECK.getCode());
-
+						// TODO: send the check bit code, and check a second later if
+						// it's been received repeat this every minute
 						return;
 
 					} else {
 						System.out.println("Failed to open port.");
-						
+
 						// Disable components
 						GuiController.instance.setConnectedMultimeterComponents(true);
 						return;
@@ -253,7 +254,7 @@ public class SerialTest {
 			return;
 		}
 		closeOpenPort(); // Close any open ports
-		
+
 		// Disable connected mode components
 		GuiController.instance.setConnectedMultimeterComponents(true);
 		GuiController.instance.setConnectedModeComponents(true);

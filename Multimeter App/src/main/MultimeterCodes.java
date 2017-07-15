@@ -10,18 +10,18 @@ package main;
 public enum MultimeterCodes {
 
 	// Measurement modes
-	VOLTAGE("S M V"), VOLTAGE_RMS("S M W"), CURRENT("S M I"), CURRENT_RMS("S M J"), RESISTANCE("S M R"), CONTINUITY(
-			"S M C"), LOGIC("S M L"),
+	VOLTAGE("[M V]"), VOLTAGE_RMS("[M W]"), CURRENT("[M I]"), CURRENT_RMS("[M J]"), RESISTANCE("[M R]"), CONTINUITY(
+			"[M C]"), LOGIC("[M L]"),
 
 	// Sample rates
-	SAMPLE_RATE_A("F A"), SAMPLE_RATE_B("F B"), SAMPLE_RATE_C("F C"), SAMPLE_RATE_D("F D"), SAMPLE_RATE_E(
-			"F E"), SAMPLE_RATE_F("F F"), SAMPLE_RATE_G("F G"), SAMPLE_RATE_H("F H"), SAMPLE_RATE_I("F I"),
+	SAMPLE_RATE_A("[F A]"), SAMPLE_RATE_B("[F B]"), SAMPLE_RATE_C("[F C]"), SAMPLE_RATE_D("[F D]"), SAMPLE_RATE_E(
+			"[F E]"), SAMPLE_RATE_F("[F F]"), SAMPLE_RATE_G("[F G]"), SAMPLE_RATE_H("[F H]"), SAMPLE_RATE_I("[F I]"),
 
 	// Brightness percentage
-	BRIGHTNESS_0("B 0"), BRIGHTNESS_1("B 1"), BRIGHTNESS_2("B 2"), BRIGHTNESS_3("B 3"), BRIGHTNESS_4("B 4"),
+	BRIGHTNESS_0("[B 0]"), BRIGHTNESS_1("[B 1]"), BRIGHTNESS_2("[B 2]"), BRIGHTNESS_3("[B 3]"), BRIGHTNESS_4("[B 4]"),
 
 	// Check that writing works
-	TWO_WAY_CHECK("[C]");
+	TWO_WAY_CHECK("[C C]");
 
 	private final String code; // Code to write across serial comms
 
