@@ -11,7 +11,7 @@ extern struct switch_queue_message {
   int led1;
   int led2;
   int power;
-};
+}switch_queue_message;
 
 xQueueHandle g_pSWITCHQueue;
 

@@ -10,7 +10,7 @@
 extern struct adc_queue_message {
   int frequency;
   char mode;
-};
+}adc_queue_message;
 
 xQueueHandle g_pADCQueue;
 

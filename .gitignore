@@ -26,5 +26,6 @@ obj_srf06-cc26xx
 
 .svn
 .depend
+.DS_Store
 
 gcc

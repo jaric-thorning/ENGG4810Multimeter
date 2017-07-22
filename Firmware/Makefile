@@ -118,7 +118,13 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/general_functions.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/sd_card.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/spi_adc.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/menu.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/ac.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/mswitch_helper.o
 
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/voltage.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/current.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/resistance.o
+${COMPILER}/$(PROJECT).axf: ${COMPILER}/mode_functions.o
 
 ${COMPILER}/$(PROJECT).axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
 ${COMPILER}/$(PROJECT).axf: $(PROJECT).ld

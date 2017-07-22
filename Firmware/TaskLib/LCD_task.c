@@ -343,9 +343,9 @@ LCDTask(void *pvParameters)
 
       setCursorPositionLCD(0,15);
 
-      if(brightness != 0){
+      /*if(brightness != 0){
         sendByte(brightness + 1, TRUE);
-      }
+      }*/
 
 
       if(xTaskGetTickCount()  > last_display + DISPLAY_RATE){
@@ -419,7 +419,7 @@ LCDTaskInit(void)
     //PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_2_BIT | PWM_OUT_4_BIT | PWM_OUT_5_BIT | PWM_OUT_6_BIT | PWM_OUT_7_BIT, true);
     PWMOutputState(PWM0_BASE, PWM_OUT_3_BIT, true);
 
-    printLCD("Starting LCD...");
+    printLCD("LCD Initialising...");
 
     if(xTaskCreate(LCDTask, (signed portCHAR *)"LCD", LCDTASKSTACKSIZE, NULL,
                    tskIDLE_PRIORITY + PRIORITY_LCD_TASK, NULL) != pdTRUE)
