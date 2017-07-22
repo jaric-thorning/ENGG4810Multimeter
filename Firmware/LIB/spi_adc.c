@@ -36,7 +36,7 @@
 #define LOW 0
 #define HIGH 1
 
-#define DELAY_TIME 1000
+#define DELAY_TIME 10
 
 void pulse_sclk(void){
 	GPIOPinWrite(SCLK_PORT_BASE, SCLK_PIN, 0);

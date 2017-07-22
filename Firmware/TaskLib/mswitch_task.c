@@ -80,7 +80,7 @@
 
 uint8_t shift_reg = 0x00;
 
-int mode = DC_VOLTAGE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
+int mode = RESISTANCE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13; //V
 int range_current = 200; //mA
 int range_resistance = 1000; //kOhm
@@ -258,11 +258,12 @@ MSWITCHTask(void *pvParameters)
             lcd_message.overlimit = check_voltage_range(value, mode);
           } else if (mode == AC_VOLTAGE){
             //TODO CHANGE THIS
+
             lcd_message.type = 'W';
             value = mswitch_message.value * range * 2 - range;
             float max_range = mswitch_message.max_value/3.3 * range * 2 - range;
 
-            lcd_message.overlimit = check_voltage_range(max_range, mode);
+            lcd_message.overlimit = check_voltage_range(12, mode);
 
           } else if(mode == DC_CURRENT){ //current
 
