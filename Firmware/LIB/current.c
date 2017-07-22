@@ -59,7 +59,7 @@ double adjust_current_value(double value, int range){
   //adjust value
   double new_value = value;
   if(range == 200){
-    new_value = value - 5;
+    new_value = value - value/10;
     if(value > 6 && value < 8){
       new_value = value + 2;
     }

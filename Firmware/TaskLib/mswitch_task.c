@@ -189,10 +189,9 @@ MSWITCHTask(void *pvParameters)
           } else if(mode == DC_CURRENT){ //current
 
             value = mswitch_message.value * range_current; //convert to value
-            adjust_current_value(value, range_current); //adjust value to correct
             range_current = check_current_range(value, range_current); // update range
             value = mswitch_message.value * range_current; //re-evalutate value
-            adjust_current_value(value, range_current); //adjust value to correct
+            value = adjust_current_value(value, range_current); //adjust value to correct
 
             if(value > 200){
               lcd_message.overlimit = 1;
