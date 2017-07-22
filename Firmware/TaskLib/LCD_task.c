@@ -352,10 +352,10 @@ LCDTask(void *pvParameters)
 
         if( xSemaphoreTake(g_pUARTSemaphore,portMAX_DELAY) == pdTRUE )
         {
-          UARTprintf("\n\r ------------------ \n\r");
+          /*UARTprintf("\n\r ------------------ \n\r");
           UARTprintf("|D1 %s|\n\r", lcd_line_1);
           UARTprintf("|D2 %s|\n\r", lcd_line_2);
-          UARTprintf(" ------------------ \n\r\n\r");
+          UARTprintf(" ------------------ \n\r\n\r");*/
         }
         xSemaphoreGive(g_pUARTSemaphore);
 

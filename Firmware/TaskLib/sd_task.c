@@ -70,13 +70,18 @@ SDTask(void *pvParameters)
     while(1)
     {
       // Read the next message, if available on queue.
-      if(xQueueReceive(g_pSDQueue, &sd_message, 0) == pdPASS)
+      if( xSemaphoreTake(g_pUARTSemaphore,portMAX_DELAY) == pdTRUE )
       {
-        result = append_to_file(sd_message.filename, sd_message.text);
-        if(result != 0){
-          UARTprintf("FAILED TO POST TO LOG\n\r");
+        if(xQueueReceive(g_pSDQueue, &sd_message, 0) == pdPASS)
+        {
+          //UARTprintf("Recieved filename: %s\n\r", sd_message.filename);
+          result = append_to_file(sd_message.filename, sd_message.text);
+          if(result != 0){
+            UARTprintf("FAILED TO POST TO LOG\n\r");
+          }
         }
-      }
+     xSemaphoreGive(g_pUARTSemaphore);
+    }
       // Wait for the required amount of time.
       vTaskDelayUntil(&ui32WakeTime, ui32SDRefreshTime / portTICK_RATE_MS);
     }

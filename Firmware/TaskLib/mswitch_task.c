@@ -1,5 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
+
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
@@ -13,8 +15,6 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-
-#include <string.h>
 
 #include "mswitch_task.h"
 #include "lcd_task.h"
@@ -38,6 +38,7 @@
 #include "switch_task.h"
 #include "buzzer_task.h"
 #include "sd_card.h"
+#include "LIB/mswitch_helper.h"
 
 
 #define MSWITCHTASKSTACKSIZE        512
@@ -133,10 +134,6 @@ MSWITCHTask(void *pvParameters)
 
     int filename_count = 0;
 
-    char sd_write_line[64];
-
-    char integer_buf[10];
-    char decimal_buf[10];
 
     while(1)
     {
@@ -148,29 +145,7 @@ MSWITCHTask(void *pvParameters)
         //UARTprintf("MSWITCH RECIEVED TYPE: %c\n\r", mswitch_message.type);
         if(mswitch_message.type == 'M'){
 
-          if(mswitch_message.mode == 'V'){
-
-            mode = DC_VOLTAGE;
-          } else if(mswitch_message.mode == 'W'){
-            mode = AC_VOLTAGE;
-          } else if(mswitch_message.mode == 'I'){
-            mode = DC_CURRENT;
-          } else if(mswitch_message.mode == 'J'){
-            mode = AC_CURRENT;
-          } else if(mswitch_message.mode == 'R'){
-            mode = RESISTANCE;
-          } else if(mswitch_message.mode == 'C'){
-            mode = CONTINUITY;
-          } else if(mswitch_message.mode == 'L'){
-            mode = LOGIC;
-          } else if(mswitch_message.mode == 'U'){
-            mode = (mode + 1) % NUM_MODES;
-          }
-          else if(mswitch_message.mode == 'D'){
-            mode = (mode - 1) % NUM_MODES;
-          } else{
-            UARTprintf("WARNING - ATTEMPTED TO SWITCH TO UNKNOWN MODE\n\r");
-          }
+          mode = next_mode(mode, mswitch_message.mode);
 
           if(mode == AC_VOLTAGE || mode == AC_CURRENT){
             adc_message.mode = 'R';
@@ -188,36 +163,8 @@ MSWITCHTask(void *pvParameters)
 
 
         } else if(mswitch_message.type == 'R'){
-          if(logging == 0){
-            UARTprintf("Recording to SD....\n\r");
-            logging = 1;
 
-            char temp_filename[64];
-            char temp_type[2];
-            char counter_buf[10];
-
-            do {
-              strcpy(temp_filename,"logfile\0");
-              int2str(filename_count++, counter_buf, 10);
-              strcat(temp_filename, counter_buf);
-              strcat(temp_filename, ".csv\0");
-
-            } while(check_filename(temp_filename));
-
-            sd_message.filename = temp_filename;
-            static char header_text[64];
-            strcpy(header_text, "Time,Value,Units,IsoTime\n\0");
-            sd_message.text = header_text;
-            UARTprintf("Found valid filname: %s\n\r", sd_message.filename);
-            if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=
-               pdPASS){
-                 UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
-               }
-
-          } else{
-            UARTprintf("Recording done.\n\r");
-            logging = 0;
-          }
+          logging = trigger_sd_logging(logging, &sd_message, filename_count);
 
         } else if(mswitch_message.type == 'V'){
           //UARTprintf("ADC 1 : %d\n\r", mswitch_message.ui32Value);
@@ -372,12 +319,22 @@ MSWITCHTask(void *pvParameters)
 
          }
 
-         if(xQueueSend(g_pBuzzerQueue, &buzzer_message, portMAX_DELAY) !=
-            pdPASS){
-              UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
-            }
+        if(xQueueSend(g_pBuzzerQueue, &buzzer_message, portMAX_DELAY) !=
+          pdPASS){
+            UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
+          }
 
-        memset(decimal_buf, 0, 10);
+        if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
+          pdPASS){
+            UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
+         }
+
+        if( xSemaphoreTake(g_pUARTSemaphore,portMAX_DELAY) == pdTRUE )
+        {
+            record_to_sd(logging, integer, decimal, lcd_message.type, &sd_message);
+        }
+        xSemaphoreGive(g_pUARTSemaphore);
+        /*memset(decimal_buf, 0, 10);
         memset(integer_buf, 0, 10);
         memset(sd_write_line, 0, 64);
         //memset(sd_message.text, 0, sizeof(sd_message.text));
@@ -412,12 +369,9 @@ MSWITCHTask(void *pvParameters)
         } else{
           strcat(sd_write_line, "U,");
         }
-        strcat(sd_write_line, "N\n");
+        strcat(sd_write_line, "N\n");*/
 
-        if(xQueueSend(g_pLCDQueue, &lcd_message, portMAX_DELAY) !=
-           pdPASS){
-             UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
-           }
+
 
         if(logging){
           //UARTprintf("Logging...\n\r");
@@ -439,18 +393,6 @@ MSWITCHTask(void *pvParameters)
                }
             lastledflash = xTaskGetTickCount();
           }
-
-          /*UARTprintf("BUILT: ");
-          for(int i = 0; i < 64; i++){
-            UARTprintf("%c", sd_write_line[i]);
-          }
-          UARTprintf("\n\r");*/
-
-          sd_message.text = sd_write_line;
-          if(xQueueSend(g_pSDQueue, &sd_message, portMAX_DELAY) !=
-             pdPASS){
-               UARTprintf("FAILED TO SEND TO LCD QUEUE\n\r");
-             }
         }
       }
     }
