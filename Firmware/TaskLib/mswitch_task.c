@@ -164,7 +164,7 @@ MSWITCHTask(void *pvParameters)
             range = check_voltage_range(value, mode, range); // update range
             value = mswitch_message.value * range; //re-evalutate value
 
-            if((value * range) > 12){
+            if(value > 12){
               lcd_message.overlimit = 1;
             } else{
               lcd_message.overlimit = 0;
@@ -194,7 +194,7 @@ MSWITCHTask(void *pvParameters)
             value = mswitch_message.value * range_current; //re-evalutate value
             adjust_current_value(value, range_current); //adjust value to correct
 
-            if((value * range_current) > 200){
+            if(value > 200){
               lcd_message.overlimit = 1;
             } else{
               lcd_message.overlimit = 0;
@@ -233,7 +233,7 @@ MSWITCHTask(void *pvParameters)
             range_resistance = check_resistance_range(value, range_resistance); // update range
             value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0 * range_resistance; //re-evalutate value
 
-            if((value * range_resistance) > 1000){
+            if(value > 1000){
               lcd_message.overlimit = 1;
             } else{
               lcd_message.overlimit = 0;
@@ -250,7 +250,7 @@ MSWITCHTask(void *pvParameters)
             range = check_voltage_range(value, mode, range); // update range
             value = mswitch_message.value * range; //re-evalutate value
 
-            if((value * range) > 12){
+            if(value > 12){
               lcd_message.overlimit = 1;
             } else{
               lcd_message.overlimit = 0;
@@ -296,6 +296,7 @@ MSWITCHTask(void *pvParameters)
             lcd_message.value = 0;
             lcd_message.decimal = 0;
             lcd_message.overlimit = 1;
+            buzzer_message.frequency = 0;
             buzzer_message.sound = 0;
           }
 

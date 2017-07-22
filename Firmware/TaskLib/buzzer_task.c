@@ -67,7 +67,11 @@ BuzzerTask(void *pvParameters)
       {
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
 
-        state = buzzer_message2.sound;
+        if(buzzer_message2.sound){
+          state = true;
+        } else{
+          state = false;
+        }
         pwmNow = buzzer_message2.frequency/10.0 * period;
 
         PWMPulseWidthSet(PWM0_BASE, PWM_OUT_2,pwmNow);
