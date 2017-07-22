@@ -60,11 +60,11 @@ ADCTask(void *pvParameters)
 
     uint32_t data;
     uint8_t status;
-    uint8_t control;
+    //uint8_t control;
 
     char adc_mode = 'N';
-    uint8_t slow_command = 0b10000111;
-    uint8_t fast_command = 0b10000111;
+    uint8_t slow_command = 0x87; //0b10000111 (using fast command)
+    uint8_t fast_command = 0x87; //0b10000111 (currently the same)
 
     send_command(fast_command); //Self Calibrate
 
@@ -73,7 +73,7 @@ ADCTask(void *pvParameters)
     //command = 0b10000111;
     //send_command(command); //Self Calibrate
 
-    int getting_min = 0;
+    /*int getting_min = 0;
     int getting_max = 1;
     int getting_period = 0;
     int calculating_rms = 0;
@@ -92,16 +92,17 @@ ADCTask(void *pvParameters)
     float average_rms = 0;
     float sum_square_rms = 0;
     int rms_count = 0;
-    float rms = 0;
+    float rms = 0;*/
 
-    int integer;
-    int decimal;
+    //int integer;
+    //int decimal;
 
-    int getting_rms = 1;
+    //int getting_rms = 1;
 
     double converted;
 
-    portTickType period, start_time, start_calc_time, rms_start_time, read_timeout;
+    //portTickType period, start_time, start_calc_time, rms_start_time,
+    portTickType read_timeout;
 
     int hasnt_run = 1;
     while(1)
@@ -259,7 +260,7 @@ ADCTask(void *pvParameters)
 
         read_timeout = xTaskGetTickCount();
         do{
-          status = read_byte(0b11000001);
+          status = read_byte(0xC1); //0b11000001
 
           /*UARTprintf("   Status: ", status);
           for(int i = 7; i >= 0; i--){
@@ -328,8 +329,8 @@ ADCTaskInit(void)
 {
     //SysCtlDelay(10000000);
     g_pADCQueue = xQueueCreate(ADC_QUEUE_SIZE, ADC_ITEM_SIZE);
-    uint8_t status;
-    uint8_t control1;
+    //uint8_t status;
+    //uint8_t control1;
 
     spi_adc_init();
 

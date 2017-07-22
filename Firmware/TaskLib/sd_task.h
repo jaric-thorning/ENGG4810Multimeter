@@ -10,7 +10,7 @@
 extern struct sd_queue_message {
   char * filename;
   char * text;
-};
+}sd_queue_message;
 
 xQueueHandle g_pSDQueue;
 

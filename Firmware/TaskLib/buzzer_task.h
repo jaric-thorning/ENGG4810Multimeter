@@ -10,7 +10,7 @@
 extern struct buzzer_queue_message {
   int frequency;
   int sound;
-};
+}buzzer_queue_message;
 
 xQueueHandle g_pBuzzerQueue;
 
