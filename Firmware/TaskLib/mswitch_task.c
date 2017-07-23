@@ -211,18 +211,24 @@ MSWITCHTask(void *pvParameters)
 
       		} else if(mode == RESISTANCE){ //resistance
 
-            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0 * range_resistance;  //convert to value
+            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+            value = adjust_resistance_value(value, range_resistance);
             range_resistance = check_resistance_range(value, range_resistance); // update range
-            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0 * range_resistance; //re-evalutate value
+            //value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance/100; //re-evalutate value
+            //value = adjust_resistance_value(value, range_resistance);
 
-            if((value * range_resistance) > 1000){
+
+            if(value > 1000){
               lcd_message.overlimit = 1;
             } else{
               lcd_message.overlimit = 0;
             }
 
-            integer = (int)(mswitch_message.value * range_resistance);
-            decimal = ((int)((mswitch_message.value * range_resistance)*1000000))%1000000;
+            integer = mswitch_message.value * range_resistance/100;
+            decimal = ((((int)mswitch_message.value * range_resistance/100)*1000000))%1000000;
+
+            UARTprintf("Value: %d.%d\n\r", integer, decimal);
+
 
             lcd_message.type = 'R';
             lcd_message.range = range_resistance;

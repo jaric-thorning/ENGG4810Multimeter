@@ -34,45 +34,37 @@ int check_resistance_range(float value, int range_resistance){
 		if( value > 1000){
 			UARTprintf("Warning: Value out of range!\n");
 			//Reset all
-      change_resistance(1000);
       return 1;
 		} else if( value < 100){
 			UARTprintf("Switching to 100k resolution\n");
       //Switch Down
       new_range = 100;
-      change_resistance(100);
 		}
 	} else if ( range_resistance == 100){
     if( value > 100){
       UARTprintf("Switching to 1000k resolution\n");
 			new_range = 1000;
-      change_resistance(1000);
 		} else if( value < 10){
 			UARTprintf("Switching to 10k resolution\n");
       //Switch Down
       new_range = 10;
-      change_resistance(10);
 		}
 	} else if ( range_resistance == 10){
     if( value > 10){
       UARTprintf("Switching to 100k resolution\n");
 			new_range = 100;
-      change_resistance(100);
 		} else if( value < 1){
 			UARTprintf("Switching to 1k resolution\n");
       //Switch Down
       new_range = 1;
-      change_resistance(1);
 		}
 	} else if ( range_resistance == 1){
     if( value > 10){
       UARTprintf("Switching to 100k resolution\n");
 			new_range = 100;
-      change_resistance(100);
     } else if( value > 1){
       UARTprintf("Switching to 10k resolution\n");
 			new_range = 10;
-      change_resistance(10);
 		} else if( value < 1){
 			/*zero_count++;
       if(zero_count > 10){
@@ -87,5 +79,18 @@ int check_resistance_range(float value, int range_resistance){
 		//Shouldn't get here ever
 		UARTprintf("Warning, range outside of normal values!\n");
 	}
+  change_resistance(new_range);
 	return new_range;
+}
+
+double adjust_resistance_value(double value, int range_resistance){
+  double new_value = value;
+  if(range_resistance == 1){
+    new_value = value * 47/36.0;
+  } else if (range_resistance == 10){
+    new_value = value * 1.1;
+  } else if (range_resistance == 100){
+    new_value = value/10;
+  }
+  return new_value;
 }
