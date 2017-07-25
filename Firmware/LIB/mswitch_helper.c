@@ -26,7 +26,7 @@
 
 #define NUM_MODES 7
 
-#define DISABLE_AC 1
+#define DISABLE_AC 0
 
 char temp_filename[64];
 static char header_text[64] = "Time,Value,Units,IsoTime\n\0";

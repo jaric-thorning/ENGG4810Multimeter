@@ -118,10 +118,12 @@ ADCTask(void *pvParameters)
         if( xSemaphoreTake(g_pSPISemaphore,portMAX_DELAY) == pdTRUE )
         {
           if(adc_mode == 'R'){
-            if(hasnt_run){
+            /*if(hasnt_run){
               hasnt_run = 0;
               collect_samples();
-            }
+            }*/
+            collect_samples();
+            //UARTprintf("AC Done.\n\r");
           } else{
 
             send_command(slow_command); //Self Calibrate
@@ -203,6 +205,7 @@ ADCTaskInit(void)
     //uint8_t control1;
 
     spi_adc_init();
+    setup_ac();
 
   	//
   	// Enable the ADC0 module.

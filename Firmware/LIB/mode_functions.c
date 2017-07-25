@@ -32,7 +32,7 @@ void set_shift_pin(int pin, int value){
 
  void set_mode(int new_mode){
    //mode = new_mode;
-   if(new_mode == DC_VOLTAGE){
+   if(new_mode == DC_VOLTAGE || new_mode == AC_VOLTAGE){
      //write S1 to 12V mode (010)
      set_shift_pin(S1_C_PIN, 0);
      set_shift_pin(S1_B_PIN, 1);
@@ -47,7 +47,7 @@ void set_shift_pin(int pin, int value){
      set_shift_pin(S3_B_PIN, 0);
      set_shift_pin(S3_A_PIN, 1);
 
-   } else if (new_mode == AC_VOLTAGE){
+   } else if (0){//new_mode == AC_VOLTAGE){
      set_shift_pin(S1_C_PIN, 1);
      set_shift_pin(S1_B_PIN, 0);
      set_shift_pin(S1_A_PIN, 1);

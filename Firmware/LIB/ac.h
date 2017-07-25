@@ -3,5 +3,6 @@
 
 
 void collect_samples(void);
+void setup_ac(void);
 
 #endif // AC_H_

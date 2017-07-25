@@ -28,7 +28,7 @@ void change_voltage(int voltage){
 }
 
 void change_ac_voltage(int voltage){
-  if(voltage == 12){
+  /*if(voltage == 12){
     set_shift_pin(S1_C_PIN, 1);
     set_shift_pin(S1_B_PIN, 0);
     set_shift_pin(S1_A_PIN, 1);
@@ -42,6 +42,21 @@ void change_ac_voltage(int voltage){
     set_shift_pin(S1_C_PIN, 0);
     set_shift_pin(S1_B_PIN, 1);
     set_shift_pin(S1_A_PIN, 1);
+  }*/
+  if(voltage == 12){
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 1);
+    set_shift_pin(S1_A_PIN, 0);
+  }
+  else if(voltage == 5){
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 1);
+  }
+  else if(voltage == 1){
+    set_shift_pin(S1_C_PIN, 0);
+    set_shift_pin(S1_B_PIN, 0);
+    set_shift_pin(S1_A_PIN, 0);
   }
   else{
     UARTprintf("WARNING - UNKNOWN VOLTAGE LEVEL SETTING\n\r");
