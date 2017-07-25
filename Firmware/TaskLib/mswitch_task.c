@@ -49,7 +49,7 @@
 #define MSWITCH_ITEM_SIZE           sizeof(struct mswitch_queue_message)
 #define MSWITCH_QUEUE_SIZE          5
 
-#define MSWITCH_REFRESH_TIME 10
+#define MSWITCH_REFRESH_TIME 1
 
 #define DC_VOLTAGE 0
 #define AC_VOLTAGE 1
@@ -65,7 +65,7 @@
 
 
 
-int mode = RESISTANCE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
+int mode = DC_VOLTAGE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13; //V
 int range_current = 200; //mA
 int range_resistance = 1000; //kOhm
@@ -334,7 +334,6 @@ MSWITCHTask(void *pvParameters)
             record_to_sd(logging, integer, decimal, lcd_message.type, &sd_message);
         }
         xSemaphoreGive(g_pUARTSemaphore);
-
         if(logging){
           //UARTprintf("Logging...\n\r");
           if(xTaskGetTickCount() > lastledflash + 250){

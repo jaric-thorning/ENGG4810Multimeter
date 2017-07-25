@@ -171,7 +171,7 @@ extern int check_filename(char * filename){
     f_close(&g_sFileObject);
     return 1;
   } else{
-    UARTprintf("Passed because: %s\n\r", StringFromFResult(iFResult));
+    //UARTprintf("Passed because: %s\n\r", StringFromFResult(iFResult));
     f_close(&g_sFileObject);
     return 0;
   }

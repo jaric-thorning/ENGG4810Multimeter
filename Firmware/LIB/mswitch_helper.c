@@ -12,7 +12,9 @@
 
 #include "utils/uartstdio.h"
 #include "sd_task.h"
+#include "sd_card.h"
 #include "switch_task.h"
+#include "general_functions.h"
 
 #define DC_VOLTAGE 0
 #define AC_VOLTAGE 1
@@ -110,8 +112,6 @@ extern void record_to_sd(int logging, double integer, double decimal,
   char current_mode_char, struct sd_queue_message * sd_message){
 
   if(logging){
-
-
     char integer_buf[10];
     char decimal_buf[10];
 
@@ -123,24 +123,20 @@ extern void record_to_sd(int logging, double integer, double decimal,
     int ticks_seconds = xTaskGetTickCount();
     int2str(ticks_seconds / 1000, integer_buf, 10);
     int2str(ticks_seconds % 1000, decimal_buf, 10);
-
     strncpy(sd_write_line, integer_buf, 10);
     strcat(sd_write_line, ".");
     strcat(sd_write_line, decimal_buf);
     strcat(sd_write_line, ",");
-
     if(integer < 0){
       integer *= -1;
       strcat(sd_write_line, "-");
     }
     int2str(integer, integer_buf, 10);
     int2str(decimal, decimal_buf, 10);
-
     strcat(sd_write_line, integer_buf);
     strcat(sd_write_line, ".");
     strcat(sd_write_line, decimal_buf);
     strcat(sd_write_line, ",");
-
     if(current_mode_char == 'V'){
       strcat(sd_write_line, "V,");
     } else if (current_mode_char == 'C'){

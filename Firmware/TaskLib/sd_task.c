@@ -30,13 +30,14 @@
 #include "sd_card.h"
 
 #include "bget.h"
+#include "ADC_task.h"
 
-#define SDTASKSTACKSIZE        128
+#define SDTASKSTACKSIZE        512
 
 #define SD_ITEM_SIZE           sizeof(struct sd_queue_message)
 #define SD_QUEUE_SIZE          5
 
-#define SD_REFRESH_TIME 100
+#define SD_REFRESH_TIME 500
 
 #define CD 0
 #define CS 1
@@ -45,6 +46,7 @@
 #define CLK 4
 
 extern xSemaphoreHandle g_pUARTSemaphore;
+extern xSemaphoreHandle g_pSPISemaphore;
 
 void check_range(float value);
 void set_shift_pin(int pin, int value);
@@ -70,17 +72,24 @@ SDTask(void *pvParameters)
     while(1)
     {
       // Read the next message, if available on queue.
+      //Only run if can print output
       if( xSemaphoreTake(g_pUARTSemaphore,portMAX_DELAY) == pdTRUE )
       {
-        if(xQueueReceive(g_pSDQueue, &sd_message, 0) == pdPASS)
+        //only run if not another SPI action running
+        if( xSemaphoreTake(g_pSPISemaphore,portMAX_DELAY) == pdTRUE )
         {
-          //UARTprintf("Recieved filename: %s\n\r", sd_message.filename);
-          result = append_to_file(sd_message.filename, sd_message.text);
-          if(result != 0){
-            UARTprintf("FAILED TO POST TO LOG\n\r");
+          if(xQueueReceive(g_pSDQueue, &sd_message, 0) == pdPASS)
+          {
+            //UARTprintf("Recieved filename: %s\n\r", sd_message.filename);
+            result = append_to_file(sd_message.filename, sd_message.text);
+            if(result != 0){
+              UARTprintf("FAILED TO POST TO LOG\n\r");
+            }
           }
+          xSemaphoreGive(g_pSPISemaphore);
         }
      xSemaphoreGive(g_pUARTSemaphore);
+
     }
       // Wait for the required amount of time.
       vTaskDelayUntil(&ui32WakeTime, ui32SDRefreshTime / portTICK_RATE_MS);

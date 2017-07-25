@@ -13,6 +13,7 @@ extern struct adc_queue_message {
 }adc_queue_message;
 
 xQueueHandle g_pADCQueue;
+xSemaphoreHandle g_pSPISemaphore;
 
 //*****************************************************************************
 //
