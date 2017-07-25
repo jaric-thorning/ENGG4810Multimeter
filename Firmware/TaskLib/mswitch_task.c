@@ -179,6 +179,7 @@ MSWITCHTask(void *pvParameters)
           } else if (mode == AC_VOLTAGE){
             value = mswitch_message.value;
             lcd_message.type = 'W';
+            lcd_message.range = 12;
             if(value < 0){
               lcd_message.overlimit = 1;
             } else{
@@ -206,6 +207,14 @@ MSWITCHTask(void *pvParameters)
 
           } else if (mode == AC_CURRENT){
             //TODO CHANGE THIS
+            value = mswitch_message.value/12.0 * 200;
+            lcd_message.range = 200;
+            lcd_message.type = 'J';
+            if(value < 0){
+              lcd_message.overlimit = 1;
+            } else{
+              lcd_message.overlimit = 0;
+            }
             //lcd_message.type = 'J';
 
       		} else if(mode == RESISTANCE){ //resistance

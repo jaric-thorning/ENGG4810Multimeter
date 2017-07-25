@@ -120,7 +120,7 @@ extern void record_to_sd(int logging, double integer, double decimal,
     memset(sd_write_line, 0, 64);
     //memset(sd_message.text, 0, sizeof(sd_message.text));
     //sd_message.text = "TEST";
-    int ticks_seconds = xTaskGetTickCount();
+    int ticks_seconds = 2 * xTaskGetTickCount();
     int2str(ticks_seconds / 1000, integer_buf, 10);
     int2str(ticks_seconds % 1000, decimal_buf, 10);
     strncpy(sd_write_line, integer_buf, 10);
