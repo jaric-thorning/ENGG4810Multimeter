@@ -177,15 +177,14 @@ MSWITCHTask(void *pvParameters)
             lcd_message.range = range;
 
           } else if (mode == AC_VOLTAGE){
-            //TODO CHANGE THIS
-
-            /*lcd_message.type = 'W';
-            value = mswitch_message.value * range * 2 - range;
-            float max_range = mswitch_message.max_value/3.3 * range * 2 - range;
-
-            range = check_voltage_range(12, mode, range);
-            if(range > )*/
-
+            value = mswitch_message.value;
+            lcd_message.type = 'W';
+            if(value < 0){
+              lcd_message.overlimit = 1;
+            } else{
+              lcd_message.overlimit = 0;
+            }
+            //UARTprintf("VALUE: %d.%d\n\r", (int) value, (int)((int)value * 1000)%1000);
           } else if(mode == DC_CURRENT){ //current
 
             value = mswitch_message.value * range_current; //convert to value

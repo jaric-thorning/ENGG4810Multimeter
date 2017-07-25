@@ -41,7 +41,7 @@ double calculate_sqrt(double number){
   }
   return iterative_number;
 }
-void collect_samples(void){
+double collect_samples(void){
   int sample_count = 0;
   int start_time = 0;
   int total_time = 0;
@@ -121,8 +121,15 @@ void collect_samples(void){
   if(min_d < 0){
     min_d *= -1;
   }
-  UARTprintf("sum: %d.%d RMS: %d.%d | min: %d.%d  | max: %d.%d\n\r", sum_i, sum_d, ave_i, ave_d, min_i,
-        min_d, max_i, max_d);
+  //UARTprintf("sum: %d.%d RMS: %d.%d | min: %d.%d  | max: %d.%d\n\r", sum_i, sum_d, ave_i, ave_d, min_i,
+  //      min_d, max_i, max_d);
   //UARTprintf("Samples collected in %d miliseconds.\n\r", total_time);
   //brel(&samples);
+
+  if(min < -12 || max > 12){
+    return -1;
+  } else{
+    return average;
+  }
+
 }

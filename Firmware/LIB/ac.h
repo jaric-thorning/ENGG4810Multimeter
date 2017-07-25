@@ -2,7 +2,7 @@
 #define AC_H_
 
 
-void collect_samples(void);
+double collect_samples(void);
 void setup_ac(void);
 
 #endif // AC_H_

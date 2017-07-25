@@ -102,7 +102,6 @@ ADCTask(void *pvParameters)
     //int getting_rms = 1;
 
     double converted;
-
     //portTickType period, start_time, start_calc_time, rms_start_time,
     portTickType read_timeout, last_adc_read;
 
@@ -122,7 +121,8 @@ ADCTask(void *pvParameters)
               hasnt_run = 0;
               collect_samples();
             }*/
-            collect_samples();
+            converted = collect_samples();
+
             //UARTprintf("AC Done.\n\r");
           } else{
 
@@ -158,15 +158,18 @@ ADCTask(void *pvParameters)
             UARTprintf("ADC: %d.%d\n\n\r", integer, decimal);*/
 
             //
-            mswitch_message.value = converted;
-            mswitch_message.type = 'V'; //sending V for value
 
-
-            if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
-               pdPASS){
-                 UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
-               }
           }
+          //UARTprintf("Converted: %d.%d\n\r", (int) converted, (int)((int)converted * 1000)%1000);
+          mswitch_message.value = converted;
+          mswitch_message.type = 'V'; //sending V for value
+
+
+          if(xQueueSend(g_pMSWITCHQueue, &mswitch_message, portMAX_DELAY) !=
+             pdPASS){
+               UARTprintf("FAILED TO SEND TO MSWITCH QUEUE\n\r");
+             }
+
           last_adc_read = xTaskGetTickCount();
           //Return SPI usage permission
           xSemaphoreGive(g_pSPISemaphore);
