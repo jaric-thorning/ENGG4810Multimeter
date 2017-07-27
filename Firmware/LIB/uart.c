@@ -21,27 +21,29 @@ ConfigureUART(void)
     //
     // Enable the GPIO Peripheral used by the UART.
     //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 
     //
     // Enable UART0
     //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART1);
 
     //
     // Configure GPIO Pins for UART mode.
     //
-    ROM_GPIOPinConfigure(GPIO_PA0_U0RX);
-    ROM_GPIOPinConfigure(GPIO_PA1_U0TX);
-    ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    ROM_GPIOPinConfigure(GPIO_PB0_U1RX);
+    ROM_GPIOPinConfigure(GPIO_PB1_U1TX);
+    ROM_GPIOPinTypeUART(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
     //
     // Use the internal 16MHz oscillator as the UART clock source.
     //
-    UARTClockSourceSet(UART0_BASE, UART_CLOCK_PIOSC);
+    UARTClockSourceSet(UART1_BASE, UART_CLOCK_PIOSC);
 
     //
     // Initialize the UART for console I/O.
     //
-    UARTStdioConfig(0, 38400, 16000000);
+    UARTStdioConfig(1, 38400, 16000000);
+    //UARTStdioConfig(1, 9600, 16000000);
+    //UARTStdioConfig(1, 115200, 16000000);
 }

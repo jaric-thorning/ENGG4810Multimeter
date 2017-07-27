@@ -151,8 +151,12 @@ CommTask(void *pvParameters)
             mswitch_message.mode = 'V';
             if(buffer[3] == 'V'){
               mswitch_message.mode = 'V'; //sending V to for voltage
+            } else if(buffer[3] == 'W'){
+              mswitch_message.mode = 'W'; //sending I to for current
             } else if(buffer[3] == 'I'){
               mswitch_message.mode = 'I'; //sending I to for current
+            } else if(buffer[3] == 'J'){
+              mswitch_message.mode = 'J'; //sending I to for current
             } else if(buffer[3] == 'R'){
               mswitch_message.mode = 'R'; //sending R to for resistance
             } else if(buffer[3] == 'C'){

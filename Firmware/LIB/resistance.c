@@ -26,7 +26,7 @@ void change_resistance(int resistance){
 
 
 int check_resistance_range(float value, int range_resistance){
-  //UARTprintf("Recieved resistance value: %d.%d\n\r", (int)value, (int)(((int)(value * 1000))%1000));
+  UARTprintf("Recieved resistance value: %d.%d\n\r", (int)value, (int)(((int)(value * 1000))%1000));
   int new_range = range_resistance;
 	if( value < 0){
 		value *= -1;

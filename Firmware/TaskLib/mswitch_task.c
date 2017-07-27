@@ -65,7 +65,7 @@
 
 
 
-int mode = RESISTANCE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
+int mode = DC_VOLTAGE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13; //V
 int range_current = 200; //mA
 int range_resistance = 1000; //kOhm
@@ -104,6 +104,8 @@ MSWITCHTask(void *pvParameters)
     double decimal = 0;
     double value = 0;
     double prev_tested_value = 0.5;
+    int contiuous = 0;
+    int prev_tested_resistance = range_resistance;
 
     int logging = 0;
     int ledison = 1;
@@ -224,12 +226,14 @@ MSWITCHTask(void *pvParameters)
 
 
             if(mswitch_message.value > 1){
-              if(prev_tested_value == 500){
-                prev_tested_value = 0.5;
-              } else{
-                prev_tested_value *= 10;
+              if(prev_tested_resistance == range_resistance){
+                if(prev_tested_value == 500){
+                  prev_tested_value = 0.5;
+                } else{
+                  prev_tested_value *= 10;
+                }
               }
-
+              prev_tested_resistance = range_resistance;
               range_resistance = check_resistance_range(prev_tested_value, range_resistance);
             } else{
               value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
@@ -246,7 +250,7 @@ MSWITCHTask(void *pvParameters)
 
               value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
               value = adjust_resistance_value(value, range_resistance);
-              
+
             }
 
             if(value > 1000 || mswitch_message.value > 1){
@@ -265,21 +269,36 @@ MSWITCHTask(void *pvParameters)
             lcd_message.range = range_resistance;
 
       		} else if (mode == CONTINUITY){
-            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0 * range_resistance;  //convert to value
-            range_resistance = check_resistance_range(value, range_resistance); // update range
-            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/2715133.0 * range_resistance; //re-evalutate value
 
-            if(value > 1000){
-              lcd_message.overlimit = 1;
-            } else{
+            /*if(mswitch_message.value > 1){
+              if(prev_tested_value == 500){
+                prev_tested_value = 0.5;
+              } else{
+                prev_tested_value *= 10;
+              }
+              range_resistance = check_resistance_range(prev_tested_value, range_resistance);
+              contiuous = 1;
+            } else{*/
+              value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+              //value = adjust_resistance_value(value, range_resistance);
+               // update range
+
+              if(last_res_range_change + 500 < xTaskGetTickCount()){
+                int current_range = range_resistance;
+                range_resistance = check_resistance_range(value, range_resistance);
+                if(current_range != range_resistance){
+                  last_res_range_change = xTaskGetTickCount();
+                }
+              }
+
+              value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+              value = adjust_resistance_value(value, range_resistance);
+              contiuous = 0;
+            //}
+
               lcd_message.overlimit = 0;
-            }
-
-            integer = (int)(mswitch_message.value * range_resistance);
-            decimal = ((int)((mswitch_message.value * range_resistance)*1000000))%1000000;
-
-            lcd_message.type = 'C';
-            lcd_message.range = range_resistance;
+              lcd_message.type = 'C';
+              lcd_message.range = range_resistance;
 
           } else if (mode == LOGIC){
             value = mswitch_message.value * range; //convert to value
@@ -337,10 +356,11 @@ MSWITCHTask(void *pvParameters)
           }
 
         } else if (mode == CONTINUITY){
-          if(value < 5){
+          if(value > 1000){
             lcd_message.value = 1;
             lcd_message.decimal = 0;
             buzzer_message.sound = 1;
+
           } else{
             lcd_message.value = 0;
             lcd_message.decimal = 0;
