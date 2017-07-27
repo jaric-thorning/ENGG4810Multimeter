@@ -92,6 +92,7 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/uartstdio.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/ustdlib.o
 
 
+
 #------TASKS------#
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/led_task.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/switch_task.o
@@ -126,6 +127,8 @@ ${COMPILER}/$(PROJECT).axf: ${COMPILER}/current.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/resistance.o
 ${COMPILER}/$(PROJECT).axf: ${COMPILER}/mode_functions.o
 
+
+${COMPILER}/$(PROJECT).axf: ${ROOT}/grlib/${COMPILER}/libgr.a
 ${COMPILER}/$(PROJECT).axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
 ${COMPILER}/$(PROJECT).axf: $(PROJECT).ld
 

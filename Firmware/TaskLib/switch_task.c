@@ -4,6 +4,7 @@
 #include "inc/hw_types.h"
 #include "inc/hw_gpio.h"
 #include "driverlib/sysctl.h"
+#include "driverlib/systick.h"
 #include "driverlib/gpio.h"
 #include "driverlib/rom.h"
 #include "drivers/buttons.h"
@@ -67,6 +68,26 @@
 
 extern xQueueHandle g_pLEDQueue;
 extern xSemaphoreHandle g_pUARTSemaphore;
+
+volatile uint32_t g_ui32SysTickCount = 0;
+
+
+void
+SysTickWait(uint32_t ui32Ticks)
+{
+    ui32Ticks += g_ui32SysTickCount;
+    while(g_ui32SysTickCount <= ui32Ticks)
+    {
+    }
+}
+
+//*****************************************************************************
+//
+// The SysTick handler.  Increments a tick counter and debounces the push
+// button.
+//
+//*****************************************************************************
+
 
 static void
 SwitchTask(void *pvParameters)
@@ -244,25 +265,24 @@ SwitchTask(void *pvParameters)
               GPIOPinWrite(POWER_PORT,GPIO_PIN_1,GPIO_PIN_1);
               power_on = 1;
             }
-           //HIBERNATION CODE -> DO NOT REMOVE
-           /*if(HibernateIsActive()){
-             UARTprintf("Hibernation Active.\n\r");
-             uint32_t ui32Status = HibernateIntStatus(0);
-             HibernateIntClear(ui32Status);
-             if(ui32Status & HIBERNATE_INT_PIN_WAKE){
-                 UARTprintf("BUTTON\n\r");
-             } else if(ui32Status & HIBERNATE_INT_RTC_MATCH_0){
-                 UARTprintf("TIMEOUT\n\r");
-             } else
-             {
-                 UARTprintf("RESET\n\r");
-             }
-           }*/
 
-           /*HibernateWakeSet(HIBERNATE_WAKE_PIN);
            int last_flash = 0;
-           HibernateRequest();*/
-           /*while(1){
+           //HibernateRequest();
+           //SysTickWait(100);
+
+           int is_hiber = 1;
+           button6_time = xTaskGetTickCount();
+           UARTprintf("Entering hibernation.\n\r");
+           while(is_hiber){
+             //debounce button
+             if(button6_time + 200 < xTaskGetTickCount()){
+               button6 = GPIOPinRead(BUTTON6_PORT,BUTTON6_PIN);
+               if(button6 != BUTTON6_PIN){
+                 is_hiber = 0;
+               }
+                button6_time = xTaskGetTickCount();
+             }
+             //flash
              if(xTaskGetTickCount() > last_flash + 1500){
                GPIOPinWrite(LED1_PORT,LED1_PIN,LED1_PIN);
                if(xTaskGetTickCount() > last_flash + 1800){
@@ -270,9 +290,8 @@ SwitchTask(void *pvParameters)
                  last_flash = xTaskGetTickCount();
                }
              }
-           }*/
-
-          button6_time = currentTime;
+           }
+           ROM_SysCtlReset();
         }
 
 
@@ -342,13 +361,6 @@ SwitchTaskInit(void)
     ButtonsInit();
 
     // HIBERNATE SETUP
-
-    //
-    // Set up systick to generate interrupts at 100 Hz.
-    //
-    /*SysTickPeriodSet(SysCtlClockGet() / 100);
-    SysTickIntEnable();
-    SysTickEnable();*/
 
     //
     // Enable the Hibernation module.
