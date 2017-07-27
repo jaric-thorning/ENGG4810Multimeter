@@ -7,19 +7,15 @@
 
 void change_resistance(int resistance){
    if(resistance == 1){
-     UARTprintf("Actually did change to 1\n\r");
      set_shift_pin(S2_B_PIN, 0);
      set_shift_pin(S2_A_PIN, 0);
    } else if(resistance == 10){
-     UARTprintf("Actually did change to 10\n\r");
      set_shift_pin(S2_B_PIN, 0);
      set_shift_pin(S2_A_PIN, 1);
    } else if(resistance == 100){
-     UARTprintf("Actually did change to 100\n\r");
      set_shift_pin(S2_B_PIN, 1);
      set_shift_pin(S2_A_PIN, 0);
    } else if(resistance == 1000){
-     UARTprintf("Actually did change to 1000\n\r");
      set_shift_pin(S2_B_PIN, 1);
      set_shift_pin(S2_A_PIN, 1);
    } else{
@@ -30,6 +26,7 @@ void change_resistance(int resistance){
 
 
 int check_resistance_range(float value, int range_resistance){
+  //UARTprintf("Recieved resistance value: %d.%d\n\r", (int)value, (int)(((int)(value * 1000))%1000));
   int new_range = range_resistance;
 	if( value < 0){
 		value *= -1;
@@ -57,7 +54,7 @@ int check_resistance_range(float value, int range_resistance){
       UARTprintf("Switching 10k to 100k resolution\n");
 			new_range = 100;
 		} else if( value < 1){
-			UARTprintf("Switching 1k to 1k resolution\n");
+			UARTprintf("Switching 10k to 1k resolution\n");
       //Switch Down
       new_range = 1;
 		}
@@ -88,9 +85,10 @@ double adjust_resistance_value(double value, int range_resistance){
   if(range_resistance == 1){
     new_value = value * 47/36.0;
   } else if (range_resistance == 10){
-    new_value = value * 1.1;
   } else if (range_resistance == 100){
     new_value = value/10;
+  } else if(range_resistance == 1000){
+    new_value = value * 2;
   }
   return new_value;
 }

@@ -103,6 +103,7 @@ MSWITCHTask(void *pvParameters)
     double integer = 0;
     double decimal = 0;
     double value = 0;
+    double prev_tested_value = 0.5;
 
     int logging = 0;
     int ledison = 1;
@@ -110,6 +111,7 @@ MSWITCHTask(void *pvParameters)
 
     int filename_count = 0;
 
+    int last_res_range_change = xTaskGetTickCount();
 
     while(1)
     {
@@ -219,22 +221,36 @@ MSWITCHTask(void *pvParameters)
 
       		} else if(mode == RESISTANCE){ //resistance
 
-            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+
 
             if(mswitch_message.value > 1){
+              if(prev_tested_value == 500){
+                prev_tested_value = 0.5;
+              } else{
+                prev_tested_value *= 10;
+              }
 
+              range_resistance = check_resistance_range(prev_tested_value, range_resistance);
+            } else{
+              value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+              //value = adjust_resistance_value(value, range_resistance);
+               // update range
+
+              if(last_res_range_change + 5000 < xTaskGetTickCount()){
+                int current_range = range_resistance;
+                range_resistance = check_resistance_range(value, range_resistance);
+                if(current_range != range_resistance){
+                  last_res_range_change = xTaskGetTickCount();
+                }
+              }
+
+              value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+              value = adjust_resistance_value(value, range_resistance);
+              
             }
-            value = adjust_resistance_value(value, range_resistance);
-            range_resistance = check_resistance_range(value, range_resistance); // update range
 
-            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
-            //value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
-            value = adjust_resistance_value(value, range_resistance);
-
-
-            if(value > 1000){
+            if(value > 1000 || mswitch_message.value > 1){
               lcd_message.overlimit = 1;
-              range_resistance = check_resistance_range(0, 1); // update range
             } else{
               lcd_message.overlimit = 0;
             }
