@@ -7,15 +7,19 @@
 
 void change_resistance(int resistance){
    if(resistance == 1){
+     UARTprintf("Actually did change to 1\n\r");
      set_shift_pin(S2_B_PIN, 0);
      set_shift_pin(S2_A_PIN, 0);
    } else if(resistance == 10){
+     UARTprintf("Actually did change to 10\n\r");
      set_shift_pin(S2_B_PIN, 0);
      set_shift_pin(S2_A_PIN, 1);
    } else if(resistance == 100){
+     UARTprintf("Actually did change to 100\n\r");
      set_shift_pin(S2_B_PIN, 1);
      set_shift_pin(S2_A_PIN, 0);
    } else if(resistance == 1000){
+     UARTprintf("Actually did change to 1000\n\r");
      set_shift_pin(S2_B_PIN, 1);
      set_shift_pin(S2_A_PIN, 1);
    } else{
@@ -34,36 +38,32 @@ int check_resistance_range(float value, int range_resistance){
 		if( value > 1000){
 			UARTprintf("Warning: Value out of range!\n");
 			//Reset all
-      return 1;
 		} else if( value < 100){
-			UARTprintf("Switching to 100k resolution\n");
+			UARTprintf("Switching 1000k to 100k resolution\n");
       //Switch Down
       new_range = 100;
 		}
 	} else if ( range_resistance == 100){
     if( value > 100){
-      UARTprintf("Switching to 1000k resolution\n");
+      UARTprintf("Switching 100k to 1000k resolution\n");
 			new_range = 1000;
 		} else if( value < 10){
-			UARTprintf("Switching to 10k resolution\n");
+			UARTprintf("Switching 100k to 10k resolution\n");
       //Switch Down
       new_range = 10;
 		}
 	} else if ( range_resistance == 10){
     if( value > 10){
-      UARTprintf("Switching to 100k resolution\n");
+      UARTprintf("Switching 10k to 100k resolution\n");
 			new_range = 100;
 		} else if( value < 1){
-			UARTprintf("Switching to 1k resolution\n");
+			UARTprintf("Switching 1k to 1k resolution\n");
       //Switch Down
       new_range = 1;
 		}
 	} else if ( range_resistance == 1){
-    if( value > 10){
-      UARTprintf("Switching to 100k resolution\n");
-			new_range = 100;
-    } else if( value > 1){
-      UARTprintf("Switching to 10k resolution\n");
+    if( value > 1){
+      UARTprintf("Switching 1k to 10k resolution\n");
 			new_range = 10;
 		} else if( value < 1){
 			/*zero_count++;

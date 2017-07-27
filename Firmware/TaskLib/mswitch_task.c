@@ -65,7 +65,7 @@
 
 
 
-int mode = DC_VOLTAGE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
+int mode = RESISTANCE; //0 -> Current, 1 -> Voltage, 2 -> Resistance
 int range = 13; //V
 int range_current = 200; //mA
 int range_resistance = 1000; //kOhm
@@ -220,22 +220,29 @@ MSWITCHTask(void *pvParameters)
       		} else if(mode == RESISTANCE){ //resistance
 
             value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+
+            if(mswitch_message.value > 1){
+
+            }
             value = adjust_resistance_value(value, range_resistance);
             range_resistance = check_resistance_range(value, range_resistance); // update range
-            //value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance/100; //re-evalutate value
-            //value = adjust_resistance_value(value, range_resistance);
+
+            value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+            //value = ((mswitch_message.value * 5664672.0 + 5664672.0)/2.0)/5664672.0 * range_resistance;  //convert to value
+            value = adjust_resistance_value(value, range_resistance);
 
 
             if(value > 1000){
               lcd_message.overlimit = 1;
+              range_resistance = check_resistance_range(0, 1); // update range
             } else{
               lcd_message.overlimit = 0;
             }
 
-            integer = mswitch_message.value * range_resistance/100;
-            decimal = ((((int)mswitch_message.value * range_resistance/100)*1000000))%1000000;
+            int integer2 = (int)mswitch_message.value;
+            int decimal2 = ((int)(((int)(mswitch_message.value*1000))%1000));
 
-            UARTprintf("Value: %d.%d\n\r", integer, decimal);
+            UARTprintf("Value: %d.%d\n\r", integer2, decimal2);
 
 
             lcd_message.type = 'R';
